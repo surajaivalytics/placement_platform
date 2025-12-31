@@ -48,11 +48,55 @@ export async function POST(
             );
         }
 
+        // Calculate score on backend for security
+        let calculatedScore = score;
+        let calculatedTotal = total;
+
+        // Map stage to test topic for MCQ stages
+        const stageTopicMap: Record<string, string> = {
+            'foundation': 'Foundation',
+            'advanced': 'Advanced',
+            'aptitude': 'Aptitude',
+        };
+
+        const topic = stageTopicMap[stageName];
+        if (topic) {
+            // Fetch test and questions to calculate score
+            const test = await prisma.test.findFirst({
+                where: {
+                    type: 'company',
+                    company: application.company,
+                    topic: topic,
+                },
+                include: {
+                    questions: {
+                        include: {
+                            options: true,
+                        },
+                    },
+                },
+            });
+
+            if (test) {
+                calculatedTotal = test.questions.length;
+                calculatedScore = 0;
+
+                test.questions.forEach((q) => {
+                    const userAnswerText = answers[q.id];
+                    const correctOption = q.options.find((o) => o.isCorrect);
+                    
+                    if (userAnswerText && correctOption && userAnswerText === correctOption.text) {
+                        calculatedScore++;
+                    }
+                });
+            }
+        }
+
         // Calculate score and percentage
-        const percentage = total > 0 ? (score / total) * 100 : 0;
+        const percentage = calculatedTotal > 0 ? (calculatedScore / calculatedTotal) * 100 : 0;
 
         // Determine if passed based on company and stage
-        const isPassed = calculatePassStatus(application.company, stageName, percentage, score);
+        const isPassed = calculatePassStatus(application.company, stageName, percentage, calculatedScore);
 
         // Create or update assessment stage
         const assessmentStage = await prisma.assessmentStage.upsert({
@@ -62,16 +106,16 @@ export async function POST(
             create: {
                 applicationId: id,
                 stageName,
-                score,
-                total,
+                score: calculatedScore,
+                total: calculatedTotal,
                 percentage,
                 isPassed,
                 timeSpent,
                 submittedAt: new Date(),
             },
             update: {
-                score,
-                total,
+                score: calculatedScore,
+                total: calculatedTotal,
                 percentage,
                 isPassed,
                 timeSpent,
