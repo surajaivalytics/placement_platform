@@ -225,7 +225,7 @@ export default function ManageTestQuestionsPage() {
         {questions.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center text-muted-foreground">
-              No questions added yet. Click "Add Question" to get started.
+              No questions added yet. Click &quot;Add Question&quot; to get started.
             </CardContent>
           </Card>
         ) : (

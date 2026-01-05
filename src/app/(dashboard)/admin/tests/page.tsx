@@ -45,7 +45,7 @@ export default function TestsPage() {
   };
 
   const handleDelete = async (testId: string, testTitle: string) => {
-    if (!confirm(`Are you sure you want to delete "${testTitle}"? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete &quot;${testTitle}&quot;? This action cannot be undone.`)) {
       return;
     }
 

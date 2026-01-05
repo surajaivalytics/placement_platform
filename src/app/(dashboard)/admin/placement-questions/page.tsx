@@ -115,10 +115,10 @@ function BulkUploadModal({ onClose }: { onClose: () => void }) {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `text,type,category,difficulty,option1,option2,option3,option4,correctOption,testCases,sampleInput,sampleOutput,constraints
-"What is 2+2?",multiple-choice,numerical,Easy,2,3,4,5,3,,,
-"Find the sum of two numbers",coding,programming,Medium,,,,,,"Input: a, b; Output: a+b","5 10","15","1 <= a,b <= 1000"
-"Describe your career goals",essay,verbal,Easy,,,,,,,,,`;
+    const csvContent = `question,option_1,option_2,option_3,option_4,correct_option,explanation,difficulty,category,type
+"What is 2+2?","2","3","4","5","C","2+2 equals 4.","Easy","numerical","multiple-choice"
+"Find the sum of two numbers","","","","","","","Medium","programming","coding"
+"Describe your career goals","","","","","","","Easy","verbal","essay"`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -158,8 +158,9 @@ function BulkUploadModal({ onClose }: { onClose: () => void }) {
               
               <p className="mt-3"><strong>For Multiple Choice Questions (MCQ):</strong></p>
               <ul className="list-disc list-inside ml-4 space-y-1">
-                <li><code>option1, option2, option3, option4</code> - Four answer options</li>
-                <li><code>correctOption</code> - Number 1-4 indicating correct answer</li>
+                <li><code>option_1, option_2, option_3, option_4</code> - Four answer options</li>
+                <li><code>correct_option</code> - A, B, C, or D indicating the correct answer</li>
+                <li><code>explanation</code> - Optional: Explanation for the correct answer</li>
               </ul>
 
               <p className="mt-3"><strong>For Coding Questions:</strong></p>
@@ -189,7 +190,7 @@ function BulkUploadModal({ onClose }: { onClose: () => void }) {
                     ? `${test.company} - ${test.topic}` 
                     : test.title;
                   
-                  const questionCount = (test as any)._count?.questions || 0;
+                  const questionCount = (test as CompanyTest & { _count?: { questions: number } })._count?.questions || 0;
                   
                   return (
                     <option key={test.id} value={test.id}>
@@ -289,9 +290,9 @@ function BulkUploadModal({ onClose }: { onClose: () => void }) {
           <div className="border-t pt-4">
             <h4 className="font-semibold mb-2 text-sm">Example CSV Content:</h4>
             <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs overflow-x-auto">
-{`text,type,category,difficulty,option1,option2,option3,option4,correctOption
-"What is 2+2?",multiple-choice,numerical,Easy,2,3,4,5,3
-"Capital of India?",multiple-choice,verbal,Easy,Mumbai,Delhi,Kolkata,Chennai,2`}
+{`question,option_1,option_2,option_3,option_4,correct_option,explanation,difficulty,category
+"What is 2+2?",2,3,4,5,C,"2+2=4",Easy,numerical
+"Capital of India?",Mumbai,Delhi,Kolkata,Chennai,B,"Delhi is the capital",Easy,verbal`}
             </pre>
           </div>
         </CardContent>
@@ -538,7 +539,7 @@ export default function PlacementQuestionsPage() {
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No questions found</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Add questions using the "Add Question" or "Bulk Upload" buttons
+                Add questions using the &quot;Add Question&quot; or &quot;Bulk Upload&quot; buttons
               </p>
             </div>
           ) : (

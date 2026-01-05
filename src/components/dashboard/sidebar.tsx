@@ -11,34 +11,37 @@ interface SidebarProps {
   role: Role;
 }
 
-export default function Sidebar({ role }: SidebarProps) {
-  const pathname = usePathname();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+const userLinks = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/placements', label: 'Placements', icon: Briefcase },
+  { href: '/dashboard/my-tests', label: 'My Tests', icon: ClipboardList },
+  { href: '/dashboard/topics', label: 'Aptitude Topics', icon: BookOpen },
+  { href: '/dashboard/companies', label: 'Company Tests', icon: Building2 },
+  { href: '/dashboard/results', label: 'My Results', icon: BarChart3 },
+  { href: '/dashboard/profile', label: 'Profile', icon: Settings },
+];
 
-  const userLinks = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/dashboard/placements', label: 'Placements', icon: Briefcase },
-    { href: '/dashboard/my-tests', label: 'My Tests', icon: ClipboardList },
-    { href: '/dashboard/topics', label: 'Aptitude Topics', icon: BookOpen },
-    { href: '/dashboard/companies', label: 'Company Tests', icon: Building2 },
-    { href: '/dashboard/results', label: 'My Results', icon: BarChart3 },
-    { href: '/dashboard/profile', label: 'Profile', icon: Settings },
-  ];
+const adminLinks = [
+  { href: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard },
+  { href: '/admin/placements', label: 'Placements', icon: Briefcase },
+  { href: '/admin/placement-questions', label: 'Placement Questions', icon: FileQuestion },
+  { href: '/admin/questions', label: 'Questions', icon: FileQuestion },
+  { href: '/admin/tests', label: 'Tests', icon: GraduationCap },
+  { href: '/admin/company-tests', label: 'Company Tests', icon: Building2 },
+  { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+];
 
-  const adminLinks = [
-    { href: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard },
-    { href: '/admin/placements', label: 'Placements', icon: Briefcase },
-    { href: '/admin/placement-questions', label: 'Placement Questions', icon: FileQuestion },
-    { href: '/admin/questions', label: 'Questions', icon: FileQuestion },
-    { href: '/admin/tests', label: 'Tests', icon: GraduationCap },
-    { href: '/admin/company-tests', label: 'Company Tests', icon: Building2 },
-    { href: '/admin/users', label: 'Users', icon: Users },
-    { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-  ];
+interface SidebarContentProps {
+  role: Role;
+  pathname: string;
+  onLinkClick: () => void;
+}
 
+const SidebarContent = ({ role, pathname, onLinkClick }: SidebarContentProps) => {
   const links = role === 'admin' ? adminLinks : userLinks;
 
-  const SidebarContent = () => (
+  return (
     <>
       <div className="p-6 border-b border-border/30">
         <h1 className="text-xl font-bold text-foreground">
@@ -56,7 +59,7 @@ export default function Sidebar({ role }: SidebarProps) {
             <Link
               key={link.href}
               href={link.href}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={onLinkClick}
               className={cn(
                 "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
                 isActive
@@ -83,12 +86,17 @@ export default function Sidebar({ role }: SidebarProps) {
       </div>
     </>
   );
+};
+
+export default function Sidebar({ role }: SidebarProps) {
+  const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className="w-60 bg-card border-r border-border/50 hidden lg:flex flex-col">
-        <SidebarContent />
+        <SidebarContent role={role} pathname={pathname} onLinkClick={() => {}} />
       </aside>
 
       {/* Mobile Menu Button */}
@@ -115,7 +123,7 @@ export default function Sidebar({ role }: SidebarProps) {
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <SidebarContent />
+        <SidebarContent role={role} pathname={pathname} onLinkClick={() => setIsMobileMenuOpen(false)} />
       </aside>
     </>
   );

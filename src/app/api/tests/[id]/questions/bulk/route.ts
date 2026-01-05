@@ -3,6 +3,17 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+interface Option {
+    text: string;
+    isCorrect: boolean;
+}
+
+interface RequestQuestion {
+    text: string;
+    type?: string;
+    options: Option[];
+}
+
 export async function POST(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -34,7 +45,7 @@ export async function POST(
                 );
             }
 
-            const correctOptions = q.options.filter((o: any) => o.isCorrect);
+            const correctOptions = q.options.filter((o: Option) => o.isCorrect);
             if (correctOptions.length !== 1) {
                 return NextResponse.json(
                     { error: 'Each question must have exactly one correct option' },
@@ -45,14 +56,14 @@ export async function POST(
 
         // Create questions in bulk
         const createdQuestions = await Promise.all(
-            questions.map(async (q: any) => {
+            questions.map(async (q: RequestQuestion) => {
                 const question = await prisma.question.create({
                     data: {
                         testId: id,
                         text: q.text,
                         type: q.type || 'multiple-choice',
                         options: {
-                            create: q.options.map((opt: any) => ({
+                            create: q.options.map((opt: Option) => ({
                                 text: opt.text,
                                 isCorrect: opt.isCorrect || false,
                             })),

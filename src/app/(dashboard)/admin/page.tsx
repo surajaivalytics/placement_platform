@@ -47,11 +47,11 @@ export default function AdminDashboard() {
       const totalUsers = usersData.users?.length || 0;
       const tests = testsData.tests || [];
       const totalTests = tests.length;
-      const topicTests = tests.filter((t: any) => t.type === 'topic').length;
-      const companyTests = tests.filter((t: any) => t.type === 'company').length;
+      const topicTests = tests.filter((t: { type: string }) => t.type === 'topic').length;
+      const companyTests = tests.filter((t: { type: string }) => t.type === 'company').length;
       
       // Count total questions
-      const totalQuestions = tests.reduce((sum: number, test: any) => {
+      const totalQuestions = tests.reduce((sum: number, test: { _count?: { questions: number } }) => {
         return sum + (test._count?.questions || 0);
       }, 0);
 

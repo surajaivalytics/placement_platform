@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,11 +36,7 @@ export default function CompanyTestsPage() {
     duration: 60,
   });
 
-  useEffect(() => {
-    fetchCompanyTests();
-  }, []);
-
-  const fetchCompanyTests = async () => {
+  const fetchCompanyTests = useCallback(async () => {
     try {
       const res = await fetch('/api/tests?type=company');
       const data = await res.json();
@@ -50,7 +46,11 @@ export default function CompanyTestsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCompanyTests();
+  }, [fetchCompanyTests]);
 
   const handleCreateTest = async (e: React.FormEvent) => {
     e.preventDefault();

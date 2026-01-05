@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -32,22 +32,29 @@ export default function UserDashboard() {
   const [recentTests, setRecentTests] = useState<RecentTest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       // Fetch user's results
       const resultsRes = await fetch('/api/results');
       const resultsData = await resultsRes.json();
       
       if (resultsData.results && resultsData.results.length > 0) {
+        interface ApiResult {
+          id: string;
+          score: number;
+          total: number;
+          createdAt: string;
+          test?: {
+            title?: string;
+            topic?: string;
+            company?: string;
+          };
+        }
         const results = resultsData.results;
         
         // Calculate statistics
         const testsTaken = results.length;
-        const totalPercentage = results.reduce((sum: number, r: any) => {
+        const totalPercentage = results.reduce((sum: number, r: ApiResult) => {
           return sum + (r.score / r.total) * 100;
         }, 0);
         const avgScore = Math.round(totalPercentage / testsTaken);
@@ -57,7 +64,7 @@ export default function UserDashboard() {
         
         // Find strongest topic
         const topicScores: Record<string, { total: number; count: number }> = {};
-        results.forEach((r: any) => {
+        results.forEach((r: ApiResult) => {
           const topic = r.test?.topic || r.test?.company || 'General';
           const percentage = (r.score / r.total) * 100;
           if (!topicScores[topic]) {
@@ -85,7 +92,7 @@ export default function UserDashboard() {
         });
         
         // Format recent tests
-        const recent = results.slice(0, 5).map((r: any) => ({
+        const recent = results.slice(0, 5).map((r: ApiResult) => ({
           id: r.id,
           name: r.test?.title || 'Test',
           score: r.score,
@@ -100,7 +107,11 @@ export default function UserDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   if (loading) {
     return (

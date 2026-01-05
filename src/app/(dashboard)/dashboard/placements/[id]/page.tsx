@@ -30,7 +30,11 @@ interface Application {
   finalDecision: string | null;
   createdAt: Date;
   assessmentStages: AssessmentStage[];
-  voiceAssessment: any;
+  voiceAssessment: {
+    assessedAt?: string | Date;
+    isPassed?: boolean;
+    score?: number;
+  } | null;
 }
 
 export default function ApplicationDetailPage() {
@@ -164,7 +168,7 @@ export default function ApplicationDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-yellow-900">
               <Award className="w-6 h-6" />
-              Congratulations! You've been selected
+              Congratulations! You&apos;ve been selected
             </CardTitle>
           </CardHeader>
           <CardContent>

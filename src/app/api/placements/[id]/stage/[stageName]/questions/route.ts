@@ -3,6 +3,20 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+interface QuestionWithOptions {
+    id: string;
+    text: string;
+    type: string;
+    category: string | null;
+    difficulty: string | null;
+    metadata: string | null;
+    options: {
+        id: string;
+        text: string;
+        isCorrect: boolean;
+    }[];
+}
+
 /**
  * GET /api/placements/[id]/stage/[stageName]/questions
  * Fetches questions for a specific placement stage (TCS/Wipro)
@@ -99,19 +113,30 @@ export async function GET(
         );
 
         // Remove correct answers from options for user view
-        const sanitizedQuestions = selectedQuestions.map((q) => ({
-            id: q.id,
-            text: q.text,
-            type: q.type,
-            category: q.category,
-            difficulty: q.difficulty,
-            metadata: q.metadata,
-            options: q.options.map((opt: { id: string; text: string; isCorrect: boolean }) => ({
-                id: opt.id,
-                text: opt.text,
-                // Don't send isCorrect to client
-            })),
-        }));
+        const sanitizedQuestions = selectedQuestions.map((q) => {
+            let parsedMetadata = null;
+            if (q.metadata) {
+                try {
+                    parsedMetadata = JSON.parse(q.metadata);
+                } catch (e) {
+                    console.error('Failed to parse metadata for question', q.id, e);
+                }
+            }
+
+            return {
+                id: q.id,
+                text: q.text,
+                type: q.type,
+                category: q.category,
+                difficulty: q.difficulty,
+                metadata: parsedMetadata,
+                options: q.options.map((opt: { id: string; text: string; isCorrect: boolean }) => ({
+                    id: opt.id,
+                    text: opt.text,
+                    // Don't send isCorrect to client
+                })),
+            };
+        });
 
         return NextResponse.json({
             test: {
@@ -164,9 +189,9 @@ async function findTestForStage(company: string, stageName: string) {
     const test = await prisma.test.findFirst({
         where: {
             type: 'company',
-            company: mapping.company,
+            company: { equals: mapping.company, mode: 'insensitive' },
             OR: [
-                { topic: mapping.topic },
+                { topic: { equals: mapping.topic, mode: 'insensitive' } },
                 { title: { contains: mapping.topic, mode: 'insensitive' } },
             ],
         },
@@ -182,8 +207,8 @@ async function findTestForStage(company: string, stageName: string) {
 function selectQuestionsForStage(
     company: string,
     stageName: string,
-    questions: any[]
-): any[] {
+    questions: QuestionWithOptions[]
+): QuestionWithOptions[] {
     const stageConfig: Record<string, { count?: number; categories?: Record<string, number> }> = {
         // TCS Foundation: 30 questions (10 Numerical, 10 Verbal, 10 Reasoning)
         foundation: {
@@ -226,13 +251,20 @@ function selectQuestionsForStage(
     }
 
     if (config.categories) {
-        const selected: any[] = [];
+        const selected: QuestionWithOptions[] = [];
         for (const [category, count] of Object.entries(config.categories)) {
             const categoryQuestions = questions.filter(
                 (q) => q.category?.toLowerCase() === category.toLowerCase()
             );
             selected.push(...categoryQuestions.slice(0, count));
         }
+
+        // Fallback: If no questions matched categories, return top questions from the test
+        if (selected.length === 0) {
+            console.log(`No questions found for specific categories in ${stageName}, falling back to top questions`);
+            return questions.slice(0, 30);
+        }
+
         return selected;
     }
 

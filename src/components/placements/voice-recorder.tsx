@@ -319,7 +319,7 @@ export function VoiceRecorder({ prompt, duration, onSubmit, isSubmitting = false
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 font-bold">•</span>
-              <span>Ensure you're in a quiet environment</span>
+              <span>Ensure you&apos;re in a quiet environment</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 font-bold">•</span>

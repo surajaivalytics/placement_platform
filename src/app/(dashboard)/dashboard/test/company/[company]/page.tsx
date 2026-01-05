@@ -11,7 +11,11 @@ export default async function CompanyTestPage({ params }: { params: Promise<{ co
   let testId = '';
   if (response.ok) {
     const data = await response.json();
-    const companyTest = data.tests?.find((test: any) => test.company === company);
+    interface CompanyTest {
+      id: string;
+      company: string;
+    }
+    const companyTest = data.tests?.find((test: CompanyTest) => test.company === company);
     testId = companyTest?.id || '';
   }
   

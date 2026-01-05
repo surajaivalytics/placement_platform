@@ -170,7 +170,7 @@ export function CodingEditor({ problem, onSubmit, isSubmitting = false }: Coding
               
               <TabsContent value="output" className="flex-1 mt-4">
                 <div className="w-full h-[400px] p-4 font-mono text-sm bg-gray-900 text-green-400 rounded-lg border border-gray-700 overflow-y-auto whitespace-pre-wrap">
-                  {testOutput || 'Click "Run Code" to see output...'}
+                  {testOutput || 'Click &quot;Run Code&quot; to see output...'}
                 </div>
               </TabsContent>
             </Tabs>

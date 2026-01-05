@@ -95,9 +95,9 @@ export default function PlacementTestPage() {
       // Calculate score
       let score = 0;
       const questions = config?.questions || [];
-      questions.forEach((q: any) => {
+      questions.forEach((q: { id: string; options: Array<{ text: string; isCorrect: boolean }> }) => {
         const userAnswer = answers[q.id];
-        const correctOption = q.options.find((opt: any) => opt.isCorrect);
+        const correctOption = q.options.find((opt: { text: string; isCorrect: boolean }) => opt.isCorrect);
         if (userAnswer === correctOption?.text) {
           score++;
         }
@@ -258,15 +258,13 @@ export default function PlacementTestPage() {
   // Render based on test type
   if (config.type === 'mcq' && config.questions) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4">
-        <PlacementMCQTest
-          questions={config.questions as any}
-          duration={config.duration}
-          testTitle={config.title}
-          onSubmit={handleMCQSubmit}
-          onTimeUp={() => alert('Time is up!')}
-        />
-      </div>
+      <PlacementMCQTest
+        questions={config.questions as { id: string; text: string; type: "multiple-choice"; options: { text: string; isCorrect?: boolean }[] }[]}
+        duration={config.duration}
+        testTitle={config.title}
+        onSubmit={handleMCQSubmit}
+        onTimeUp={() => alert('Time is up!')}
+      />
     );
   }
 

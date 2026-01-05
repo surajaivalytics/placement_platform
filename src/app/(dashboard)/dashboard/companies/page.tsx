@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Building2, Loader2, FileText, Code, Mic, MessageSquare, Award } from "lucide-react";
+import { Building2, Loader2, FileText, Code, Mic, MessageSquare, Award, LucideIcon } from "lucide-react";
 
 interface Test {
   id: string;
@@ -21,7 +21,7 @@ interface PlacementTest {
   company: string;
   title: string;
   description: string;
-  icon: any;
+  icon: LucideIcon;
   duration: string;
   questions: number;
   route: string;

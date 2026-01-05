@@ -27,7 +27,7 @@ export default function WiproVoiceAssessmentPage() {
 
   useEffect(() => {
     fetchApplication();
-  }, []);
+  }, [applicationId]);
 
   const fetchApplication = async () => {
     try {

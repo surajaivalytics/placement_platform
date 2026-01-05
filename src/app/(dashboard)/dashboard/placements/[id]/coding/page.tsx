@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { CodingEditor } from '@/components/placements/coding-editor';
 import { fetchPlacementQuestions } from '@/lib/placement-questions';
@@ -37,28 +37,7 @@ export default function TCSCodingTestPage() {
   const [selectedProblems, setSelectedProblems] = useState<CodingProblem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTestData();
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading && selectedProblems.length > 0) {
-      // Timer
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 0) {
-            handleAutoSubmit();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [isLoading, selectedProblems]);
-
-  const loadTestData = async () => {
+  const loadTestData = useCallback(async () => {
     try {
       // Fetch application details
       const appRes = await fetch(`/api/placements/${applicationId}`);
@@ -69,7 +48,7 @@ export default function TCSCodingTestPage() {
       
       // Check if already completed this stage
       const codingStage = appData.assessmentStages?.find(
-        (s: any) => s.stageName === 'coding'
+        (s: { stageName: string; submittedAt?: string | Date }) => s.stageName === 'coding'
       );
       if (codingStage?.submittedAt) {
         router.push(`/dashboard/placements/${applicationId}`);
@@ -80,7 +59,21 @@ export default function TCSCodingTestPage() {
       const questionsData = await fetchPlacementQuestions(applicationId, 'coding');
       
       // Transform questions to coding problem format
-      const problems: CodingProblem[] = questionsData.questions.map((q: any) => ({
+      interface ApiQuestion {
+        id: string;
+        text: string;
+        difficulty?: string;
+        metadata?: {
+          inputFormat?: string;
+          outputFormat?: string;
+          constraints?: string | string[];
+          sampleInput?: string;
+          sampleOutput?: string;
+          explanation?: string;
+          testCases?: { input: string; output: string }[];
+        };
+      }
+      const problems: CodingProblem[] = questionsData.questions.map((q: ApiQuestion) => ({
         id: q.id,
         title: q.text,
         description: q.text,
@@ -100,13 +93,18 @@ export default function TCSCodingTestPage() {
 
       setSelectedProblems(problems);
       setTimeLeft(questionsData.test.duration * 60 || 90 * 60);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading test data:', error);
-      setError(error.message || 'Failed to load test. Please try again.');
+      const message = error instanceof Error ? error.message : 'Failed to load test. Please try again.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [applicationId, router]);
+
+  useEffect(() => {
+    loadTestData();
+  }, [loadTestData]);
 
   const handleSaveSolution = (code: string, language: string) => {
     setSolutions({
@@ -115,12 +113,7 @@ export default function TCSCodingTestPage() {
     });
   };
 
-  const handleAutoSubmit = () => {
-    alert('Time is up! Your test will be auto-submitted.');
-    handleFinalSubmit();
-  };
-
-  const handleFinalSubmit = async () => {
+  const handleFinalSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
       // Calculate score (simplified - in real scenario, run test cases)
@@ -151,7 +144,29 @@ export default function TCSCodingTestPage() {
       alert('An error occurred. Please try again.');
       setIsSubmitting(false);
     }
-  };
+  }, [applicationId, router, solutions, timeLeft]);
+
+  const handleAutoSubmit = useCallback(() => {
+    alert('Time is up! Your test will be auto-submitted.');
+    handleFinalSubmit();
+  }, [handleFinalSubmit]);
+
+  useEffect(() => {
+    if (!isLoading && selectedProblems.length > 0) {
+      // Timer
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 0) {
+            handleAutoSubmit();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [isLoading, selectedProblems, handleAutoSubmit]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

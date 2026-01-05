@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { PlacementMCQTest } from '@/components/placements/placement-mcq-test';
 import { fetchPlacementQuestions } from '@/lib/placement-questions';
@@ -23,16 +23,12 @@ export default function TCSFoundationTestPage() {
   const params = useParams();
   const applicationId = params.id as string;
   const [isLoading, setIsLoading] = useState(true);
-  const [application, setApplication] = useState<any>(null);
+  const [application, setApplication] = useState<{ assessmentStages?: Array<{ stageName: string; submittedAt?: string | Date }> } | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [testDuration, setTestDuration] = useState(90);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTestData();
-  }, []);
-
-  const loadTestData = async () => {
+  const loadTestData = useCallback(async () => {
     try {
       // Fetch application details
       const appRes = await fetch(`/api/placements/${applicationId}`);
@@ -44,7 +40,7 @@ export default function TCSFoundationTestPage() {
       
       // Check if already completed this stage
       const foundationStage = appData.assessmentStages?.find(
-        (s: any) => s.stageName === 'foundation'
+        (s: { stageName: string; submittedAt?: string | Date }) => s.stageName === 'foundation'
       );
       if (foundationStage?.submittedAt) {
         router.push(`/dashboard/placements/${applicationId}`);
@@ -55,13 +51,18 @@ export default function TCSFoundationTestPage() {
       const questionsData = await fetchPlacementQuestions(applicationId, 'foundation');
       setQuestions(questionsData.questions as Question[]);
       setTestDuration(questionsData.test.duration || 90);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading test data:', error);
-      setError(error.message || 'Failed to load test. Please try again.');
+      const message = error instanceof Error ? error.message : 'Failed to load test. Please try again.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [applicationId, router]);
+
+  useEffect(() => {
+    loadTestData();
+  }, [loadTestData]);
 
   const handleSubmit = async (answers: Record<string, string>) => {
     try {
