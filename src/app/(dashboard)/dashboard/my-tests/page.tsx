@@ -66,7 +66,7 @@ export default function MyTestsPage() {
           <AlertCircle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-xl font-semibold mb-2">No Tests Assigned</h3>
           <p className="text-muted-foreground">
-            You don't have any tests assigned yet. Check back later or contact your instructor.
+            You don&apos;t have any tests assigned yet. Check back later or contact your instructor.
           </p>
         </Card>
       )}

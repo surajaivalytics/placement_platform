@@ -1,17 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
     try {
-        // Check authorization
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== 'admin') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const formData = await req.formData();
+        const formData = await request.formData();
         const file = formData.get('file') as File;
         const testId = formData.get('testId') as string;
 
@@ -20,52 +19,95 @@ export async function POST(req: Request) {
         }
 
         const text = await file.text();
-        const lines = text.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
+        const lines = text.split('\n').filter(line => line.trim());
 
-        // Expected format: question,option1,option2,option3,option4,correctOption(1-4)
+        if (lines.length < 2) {
+            return NextResponse.json({ error: 'CSV file is empty' }, { status: 400 });
+        }
+
+        // Parse header
+        const rawHeaders = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const headerMapping: Record<string, string> = {
+            'id': 'id',
+            'question': 'question',
+            'text': 'question',
+            'option_1': 'option_1',
+            'option1': 'option_1',
+            'option_2': 'option_2',
+            'option2': 'option_2',
+            'option_3': 'option_3',
+            'option3': 'option_3',
+            'option_4': 'option_4',
+            'option4': 'option_4',
+            'correct_option': 'correct_option',
+            'correctoption': 'correct_option',
+            'correct_index': 'correct_option',
+            'explanation': 'explanation',
+            'difficulty': 'difficulty',
+            'category': 'category'
+        };
+
+        const headers = rawHeaders.map(h => headerMapping[h] || h);
+        const requiredHeaders = ['question', 'option_1', 'option_2', 'option_3', 'option_4', 'correct_option'];
+        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+
+        if (missingHeaders.length > 0) {
+            return NextResponse.json({ error: `Missing required headers: ${missingHeaders.join(', ')}` }, { status: 400 });
+        }
 
         let successCount = 0;
         let errorCount = 0;
 
-        // Skip header
         for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
-
-            const values = line.split(',').map(v => v.trim());
-            if (values.length < 6) {
-                errorCount++;
-                continue;
-            }
-
-            const [questionText, opt1, opt2, opt3, opt4, correctIndexStr] = values;
-            const correctIndex = parseInt(correctIndexStr);
-
-            if (isNaN(correctIndex) || correctIndex < 1 || correctIndex > 4) {
-                errorCount++;
-                continue;
-            }
-
             try {
+                const values = parseCSVLine(lines[i]);
+                if (values.length === 0) continue;
+
+                const row: Record<string, string> = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index]?.trim() || '';
+                });
+
+                if (!row.question || !row.correct_option) {
+                    errorCount++;
+                    continue;
+                }
+
+                let correctIndex = -1;
+                const co = row.correct_option.toUpperCase();
+                if (co === 'A') correctIndex = 1;
+                else if (co === 'B') correctIndex = 2;
+                else if (co === 'C') correctIndex = 3;
+                else if (co === 'D') correctIndex = 4;
+                else correctIndex = parseInt(row.correct_option);
+
+                if (isNaN(correctIndex) || correctIndex < 1 || correctIndex > 4) {
+                    errorCount++;
+                    continue;
+                }
+
+                const metadata = row.explanation ? JSON.stringify({ explanation: row.explanation }) : null;
+
                 await prisma.question.create({
                     data: {
                         testId,
-                        text: questionText,
+                        text: row.question,
                         type: 'multiple-choice',
+                        category: row.category || 'General',
+                        difficulty: row.difficulty || 'Medium',
+                        metadata,
                         options: {
                             create: [
-                                { text: opt1, isCorrect: correctIndex === 1 },
-                                { text: opt2, isCorrect: correctIndex === 2 },
-                                { text: opt3, isCorrect: correctIndex === 3 },
-                                { text: opt4, isCorrect: correctIndex === 4 },
+                                { text: row.option_1, isCorrect: correctIndex === 1 },
+                                { text: row.option_2, isCorrect: correctIndex === 2 },
+                                { text: row.option_3, isCorrect: correctIndex === 3 },
+                                { text: row.option_4, isCorrect: correctIndex === 4 },
                             ],
                         },
                     },
                 });
                 successCount++;
             } catch (e) {
-                console.error('Error creating question:', e);
                 errorCount++;
             }
         }
@@ -80,4 +122,28 @@ export async function POST(req: Request) {
         console.error('Upload error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
+}
+
+function parseCSVLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+    return result.map(v => v.trim().replace(/^"|"$/g, ''));
 }

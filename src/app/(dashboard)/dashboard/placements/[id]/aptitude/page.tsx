@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { PlacementMCQTest } from '@/components/placements/placement-mcq-test';
 import { fetchPlacementQuestions } from '@/lib/placement-questions';
@@ -23,16 +23,12 @@ export default function WiproAptitudeTestPage() {
   const params = useParams();
   const applicationId = params.id as string;
   const [isLoading, setIsLoading] = useState(true);
-  const [application, setApplication] = useState<any>(null);
+  const [application, setApplication] = useState<{ assessmentStages?: Array<{ stageName: string; submittedAt?: string | Date }> } | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [testDuration, setTestDuration] = useState(60);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTestData();
-  }, []);
-
-  const loadTestData = async () => {
+  const loadTestData = useCallback(async () => {
     try {
       const appRes = await fetch(`/api/placements/${applicationId}`);
       if (!appRes.ok) {
@@ -42,7 +38,7 @@ export default function WiproAptitudeTestPage() {
       setApplication(appData);
       
       const aptitudeStage = appData.assessmentStages?.find(
-        (s: any) => s.stageName === 'aptitude'
+        (s: { stageName: string; submittedAt?: string | Date }) => s.stageName === 'aptitude'
       );
       if (aptitudeStage?.submittedAt) {
         router.push(`/dashboard/placements/${applicationId}`);
@@ -52,13 +48,18 @@ export default function WiproAptitudeTestPage() {
       const questionsData = await fetchPlacementQuestions(applicationId, 'aptitude');
       setQuestions(questionsData.questions as Question[]);
       setTestDuration(questionsData.test.duration || 60);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading test data:', error);
-      setError(error.message || 'Failed to load test. Please try again.');
+      const message = error instanceof Error ? error.message : 'Failed to load test. Please try again.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [applicationId, router]);
+
+  useEffect(() => {
+    loadTestData();
+  }, [loadTestData]);
 
   const handleSubmit = async (answers: Record<string, string>) => {
     try {

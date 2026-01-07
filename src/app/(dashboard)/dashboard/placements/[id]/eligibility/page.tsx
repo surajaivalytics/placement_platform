@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,11 +37,7 @@ export default function EligibilityPage() {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof EligibilityData, string>>>({});
 
-  useEffect(() => {
-    fetchApplication();
-  }, []);
-
-  const fetchApplication = async () => {
+  const fetchApplication = useCallback(async () => {
     try {
       const response = await fetch(`/api/placements/${applicationId}`);
       if (response.ok) {
@@ -68,7 +64,11 @@ export default function EligibilityPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [applicationId, router]);
+
+  useEffect(() => {
+    fetchApplication();
+  }, [fetchApplication]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof EligibilityData, string>> = {};

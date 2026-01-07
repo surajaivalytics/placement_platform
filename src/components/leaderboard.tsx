@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Trophy, Medal, Award, TrendingUp } from 'lucide-react';
@@ -31,14 +31,7 @@ export default function Leaderboard({ testId, limit = 10 }: LeaderboardProps) {
   const [userRank, setUserRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLeaderboard();
-    // Refresh every 30 seconds for real-time updates
-    const interval = setInterval(fetchLeaderboard, 30000);
-    return () => clearInterval(interval);
-  }, [testId, limit]);
-
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       params.append('limit', limit.toString());
@@ -56,7 +49,14 @@ export default function Leaderboard({ testId, limit = 10 }: LeaderboardProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [testId, limit]);
+
+  useEffect(() => {
+    fetchLeaderboard();
+    // Refresh every 30 seconds for real-time updates
+    const interval = setInterval(fetchLeaderboard, 30000);
+    return () => clearInterval(interval);
+  }, [fetchLeaderboard]);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {

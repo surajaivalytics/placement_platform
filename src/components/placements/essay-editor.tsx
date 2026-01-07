@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle2, FileText } from 'lucide-react';
@@ -24,13 +24,13 @@ interface EssayEditorProps {
 
 export function EssayEditor({ prompt, onSubmit, isSubmitting = false }: EssayEditorProps) {
   const [essay, setEssay] = useState('');
-  const [wordCount, setWordCount] = useState(0);
-  const [charCount, setCharCount] = useState(0);
 
-  useEffect(() => {
+  const { wordCount, charCount } = useMemo(() => {
     const words = essay.trim().split(/\s+/).filter(word => word.length > 0);
-    setWordCount(words.length);
-    setCharCount(essay.length);
+    return {
+      wordCount: words.length,
+      charCount: essay.length
+    };
   }, [essay]);
 
   const getWordCountStatus = () => {

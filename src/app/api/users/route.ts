@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // GET all users (Admin only)
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
     try {
         const session = await getServerSession(authOptions);
 

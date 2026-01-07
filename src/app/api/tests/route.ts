@@ -92,11 +92,11 @@ export async function POST(req: Request) {
                 company,
                 topic,
                 questions: {
-                    create: questions?.map((q: any) => ({
+                    create: questions?.map((q: { text: string; type?: string; options: Array<{ text: string; isCorrect: boolean }> }) => ({
                         text: q.text,
                         type: q.type || 'multiple-choice',
                         options: {
-                            create: q.options?.map((opt: any) => ({
+                            create: q.options?.map((opt: { text: string; isCorrect: boolean }) => ({
                                 text: opt.text,
                                 isCorrect: opt.isCorrect || false,
                             })),

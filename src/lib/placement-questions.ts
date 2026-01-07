@@ -9,7 +9,7 @@ export interface PlacementQuestion {
     type: 'multiple-choice' | 'coding' | 'essay';
     category?: string;
     difficulty?: string;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
     options: {
         id: string;
         text: string;

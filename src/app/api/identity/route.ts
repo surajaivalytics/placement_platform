@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
 // GET - Get identity verification status
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
     try {
         const session = await getServerSession(authOptions);
 
@@ -17,9 +17,9 @@ export async function GET(req: Request) {
         // In development mode, auto-verify authenticated users
         // In production, this would check actual identity verification status
         // from a database or external service
-        const isDevMode = process.env.NODE_ENV === 'development' || 
-                         process.env.NEXT_PUBLIC_DEV_ID_VERIFY === 'true';
-        
+        const isDevMode = process.env.NODE_ENV === 'development' ||
+            process.env.NEXT_PUBLIC_DEV_ID_VERIFY === 'true';
+
         if (isDevMode) {
             // Auto-verify in development mode for authenticated users
             return NextResponse.json({
@@ -27,7 +27,7 @@ export async function GET(req: Request) {
                 reason: null,
             });
         }
-        
+
         // In production, return pending until actual verification is done
         return NextResponse.json({
             status: 'pending',
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 }
 
 // POST - Verify identity (for development/testing)
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
     try {
         const session = await getServerSession(authOptions);
 
@@ -56,8 +56,8 @@ export async function POST(req: Request) {
 
         // In development, allow manual verification
         // In production, this would trigger actual identity verification process
-        const isDevMode = process.env.NEXT_PUBLIC_DEV_ID_VERIFY === 'true' || 
-                         process.env.NODE_ENV === 'development';
+        const isDevMode = process.env.NEXT_PUBLIC_DEV_ID_VERIFY === 'true' ||
+            process.env.NODE_ENV === 'development';
 
         if (!isDevMode) {
             return NextResponse.json(

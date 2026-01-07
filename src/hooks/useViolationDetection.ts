@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import type React from 'react';
 
-export type ViolationType = 
+export type ViolationType =
   | 'fullscreen_exit'
   | 'tab_switch'
   | 'window_blur'
@@ -60,7 +60,11 @@ export function useViolationDetection(config: ViolationDetectionConfig) {
   const violationsRef = useRef<ViolationLog[]>([]);
   const faceDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const faceAwayTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastFaceDetectedRef = useRef<number>(Date.now());
+  const lastFaceDetectedRef = useRef<number>(0);
+
+  useEffect(() => {
+    lastFaceDetectedRef.current = Date.now();
+  }, []);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -104,9 +108,9 @@ export function useViolationDetection(config: ViolationDetectionConfig) {
     const handleFullscreenChange = () => {
       const isFullscreen = Boolean(
         document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement
+        (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement ||
+        (document as Document & { mozFullScreenElement?: Element }).mozFullScreenElement ||
+        (document as Document & { msFullscreenElement?: Element }).msFullscreenElement
       );
 
       if (!isFullscreen) {
@@ -328,7 +332,7 @@ export function useViolationDetection(config: ViolationDetectionConfig) {
    */
   useEffect(() => {
     if (!enabled || !faceDetectionEnabled) return;
-    
+
     const videoElement = getVideoElement();
     if (!videoElement) return;
 
@@ -372,7 +376,7 @@ export function useViolationDetection(config: ViolationDetectionConfig) {
           // Y = 0.299R + 0.587G + 0.114B
           // Cb = -0.169R - 0.331G + 0.500B + 128
           // Cr = 0.500R - 0.419G - 0.081B + 128
-          
+
           const y = 0.299 * r + 0.587 * g + 0.114 * b;
           const cb = -0.169 * r - 0.331 * g + 0.500 * b + 128;
           const cr = 0.500 * r - 0.419 * g - 0.081 * b + 128;
@@ -381,18 +385,18 @@ export function useViolationDetection(config: ViolationDetectionConfig) {
           if (cb >= 77 && cb <= 127 && cr >= 133 && cr <= 173) {
             skinPixels++;
           }
-          
+
           // Also keep a relaxed RGB check as fallback/union
           // to catch cases where YCbCr might miss
           else if (
-             r > 60 && g > 40 && b > 20 &&
-             Math.max(r, g, b) - Math.min(r, g, b) > 10 &&
-             Math.abs(r - g) > 10 &&
-             r > g && r > b
+            r > 60 && g > 40 && b > 20 &&
+            Math.max(r, g, b) - Math.min(r, g, b) > 10 &&
+            Math.abs(r - g) > 10 &&
+            r > g && r > b
           ) {
-             skinPixels++;
+            skinPixels++;
           }
-          
+
           totalPixels++;
         }
 

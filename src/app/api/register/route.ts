@@ -49,16 +49,16 @@ export async function POST(req: Request) {
             { message: 'User created successfully', user },
             { status: 201 }
         );
-    } catch (error: any) {
+    } catch (error) {
         console.error('Registration error:', error);
-        
+
         // Provide more detailed error information in development
-        const errorMessage = process.env.NODE_ENV === 'development' 
+        const errorMessage = process.env.NODE_ENV === 'development' && error instanceof Error
             ? error.message || 'Internal server error'
             : 'Internal server error';
-        
+
         return NextResponse.json(
-            { error: errorMessage, details: process.env.NODE_ENV === 'development' ? error.stack : undefined },
+            { error: errorMessage, details: (process.env.NODE_ENV === 'development' && error instanceof Error) ? error.stack : undefined },
             { status: 500 }
         );
     }

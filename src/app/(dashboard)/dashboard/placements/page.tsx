@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,7 @@ export default function PlacementsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchApplications();
-  }, []);
-
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     try {
       const response = await fetch("/api/placements/my-applications");
       if (response.ok) {
@@ -38,7 +34,11 @@ export default function PlacementsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
   const handleApply = async (company: string) => {
     try {
@@ -84,7 +84,7 @@ export default function PlacementsPage() {
     {
       name: "TCS",
       fullName: "Tata Consultancy Services",
-      description: "India's largest IT services company with global presence",
+      description: "India&apos;s largest IT services company with global presence",
       process: [
         "Eligibility Check",
         "Foundation Test (75 mins)",

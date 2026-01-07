@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { EssayEditor } from '@/components/placements/essay-editor';
 import { fetchPlacementQuestions } from '@/lib/placement-questions';
@@ -27,11 +27,7 @@ export default function WiproEssayTestPage() {
   const [selectedPrompt, setSelectedPrompt] = useState<EssayPrompt | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTestData();
-  }, []);
-
-  const loadTestData = async () => {
+  const loadTestData = useCallback(async () => {
     try {
       // Fetch application details
       const appRes = await fetch(`/api/placements/${applicationId}`);
@@ -42,7 +38,7 @@ export default function WiproEssayTestPage() {
       
       // Check if already completed this stage
       const essayStage = appData.assessmentStages?.find(
-        (s: any) => s.stageName === 'essay'
+        (s: { stageName: string; submittedAt?: string | Date }) => s.stageName === 'essay'
       );
       if (essayStage?.submittedAt) {
         router.push(`/dashboard/placements/${applicationId}`);
@@ -58,15 +54,22 @@ export default function WiproEssayTestPage() {
 
       // Transform question to essay prompt format
       const question = questionsData.questions[0]; // Get first essay question
+      interface EssayMetadata {
+        title?: string;
+        wordLimit?: { min: number; max: number };
+        guidelines?: string[];
+      }
+      const metadata = (question.metadata || {}) as EssayMetadata;
+
       const prompt: EssayPrompt = {
         id: question.id,
-        title: question.metadata?.title || 'Essay Writing',
+        title: metadata.title || 'Essay Writing',
         prompt: question.text,
         wordLimit: {
-          min: question.metadata?.wordLimit?.min || 300,
-          max: question.metadata?.wordLimit?.max || 500,
+          min: metadata.wordLimit?.min || 300,
+          max: metadata.wordLimit?.max || 500,
         },
-        guidelines: question.metadata?.guidelines || [
+        guidelines: metadata.guidelines || [
           'Write clearly and concisely',
           'Use proper grammar and punctuation',
           'Organize your thoughts logically',
@@ -75,13 +78,18 @@ export default function WiproEssayTestPage() {
       };
 
       setSelectedPrompt(prompt);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading test data:', error);
-      setError(error.message || 'Failed to load test. Please try again.');
+      const message = error instanceof Error ? error.message : 'Failed to load test. Please try again.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [applicationId, router]);
+
+  useEffect(() => {
+    loadTestData();
+  }, [loadTestData]);
 
   const handleSubmit = async (essay: string) => {
     if (!selectedPrompt) return;
