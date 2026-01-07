@@ -52,6 +52,9 @@ model User {
   bio           String?
   phone         String?
   address       String?
+  coverImage    String?
+  accountType   String?   @default("Regular") // "Regular", "Pro", etc.
+  autoPayout    Boolean   @default(false)
   
   // Academic Details for Placement
   tenthPercentage   Float?

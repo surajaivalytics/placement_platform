@@ -15,8 +15,11 @@ export const authOptions: NextAuthOptions = {
             },
             async authorize(credentials) {
                 if (!credentials?.email || !credentials?.password) {
+                    console.log('❌ Login failed: Missing credentials');
                     return null;
                 }
+
+                console.log('🔄 Attempting login for:', credentials.email);
 
                 // Find user in database
                 const user = await prisma.user.findUnique({
@@ -24,6 +27,7 @@ export const authOptions: NextAuthOptions = {
                 });
 
                 if (!user || !user.password) {
+                    console.log('❌ Login failed: User not found or no password');
                     return null;
                 }
 
@@ -34,8 +38,11 @@ export const authOptions: NextAuthOptions = {
                 );
 
                 if (!isPasswordValid) {
+                    console.log('❌ Login failed: Invalid password');
                     return null;
                 }
+
+                console.log('✅ Login successful for:', user.email);
 
                 // Return user object with role
                 return {

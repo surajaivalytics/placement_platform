@@ -1,11 +1,18 @@
-"use client";
+'use client';
 
+import { ApplicationsTable } from "@/components/placements/applications-table";
+import { PlacementFilters } from "@/components/placements/placement-filters";
+import { ProUpgradeCard } from "@/components/dashboard/pro-upgrade-card";
+import { LayoutDashboard, Briefcase, TrendingUp, Clock, Award, Building2, ChevronRight } from "lucide-react";
+
+import Link from "next/link";
+import { motion, Variants } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Building2, ArrowRight, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
 
 interface Application {
   id: string;
@@ -18,7 +25,6 @@ interface Application {
 }
 
 export default function PlacementsPage() {
-  const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,229 +46,188 @@ export default function PlacementsPage() {
     fetchApplications();
   }, [fetchApplications]);
 
-  const handleApply = async (company: string) => {
-    try {
-      const response = await fetch("/api/placements/apply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        router.push(`/dashboard/placements/${data.id}/eligibility`);
-      } else {
-        const error = await response.json();
-        alert(error.error || "Failed to start application");
-      }
-    } catch (error) {
-      console.error("Error starting application:", error);
-      alert("Failed to start application");
+  const container: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-      eligibility_check: { label: "Eligibility Check", variant: "secondary" },
-      foundation: { label: "Foundation Test", variant: "default" },
-      advanced: { label: "Advanced Test", variant: "default" },
-      coding: { label: "Coding Test", variant: "default" },
-      aptitude: { label: "Aptitude Test", variant: "default" },
-      essay: { label: "Essay Writing", variant: "default" },
-      voice: { label: "Voice Assessment", variant: "default" },
-      interview: { label: "Interview", variant: "default" },
-      completed: { label: "Completed", variant: "default" },
-      rejected: { label: "Rejected", variant: "destructive" },
-      withdrawn: { label: "Withdrawn", variant: "outline" },
-    };
-
-    const config = statusConfig[status] || { label: status, variant: "secondary" };
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+  const item: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   };
-
-  const companies = [
-    {
-      name: "TCS",
-      fullName: "Tata Consultancy Services",
-      description: "India&apos;s largest IT services company with global presence",
-      process: [
-        "Eligibility Check",
-        "Foundation Test (75 mins)",
-        "Advanced Test (115 mins)",
-        "Track Assignment (Digital/Ninja)",
-        "Interview",
-      ],
-      eligibility: [
-        "≥60% in 10th, 12th & Graduation",
-        "≤1 Active Backlog",
-        "≤24 months gap",
-      ],
-      color: "from-blue-500 to-blue-600",
-    },
-    {
-      name: "Wipro",
-      fullName: "Wipro Limited",
-      description: "Leading global information technology company",
-      process: [
-        "Eligibility Check",
-        "Aptitude Test (48 mins)",
-        "Essay Writing (20 mins)",
-        "Coding Test (60 mins)",
-        "Voice Assessment",
-        "Track Assignment (Turbo/Elite)",
-        "Interview",
-      ],
-      eligibility: [
-        "≥60% in 10th, 12th & Graduation",
-        "≤1 Active Backlog",
-        "≤3 years pre-graduation gap",
-        "No gap during graduation",
-      ],
-      color: "from-purple-500 to-purple-600",
-    },
-  ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Campus Placements</h1>
-        <p className="text-muted-foreground">
-          Apply for campus placement drives and track your application progress
-        </p>
-      </div>
-
-      {/* My Applications */}
-      {applications.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">My Applications</h2>
-          <div className="grid gap-4">
-            {applications.map((app) => (
-              <Card key={app.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${app.company === "TCS" ? "from-blue-500 to-blue-600" : "from-purple-500 to-purple-600"} flex items-center justify-center text-white font-bold text-lg`}>
-                        {app.company[0]}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">{app.company}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Applied on {new Date(app.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      {getStatusBadge(app.status)}
-                      {app.finalTrack && (
-                        <Badge variant="outline" className="font-semibold">
-                          {app.finalTrack}
-                        </Badge>
-                      )}
-                      {app.status !== "rejected" && app.status !== "withdrawn" && app.status !== "completed" && (
-                        <Button
-                          onClick={() => router.push(`/dashboard/placements/${app.id}`)}
-                        >
-                          Continue
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+    <div className="min-h-screen bg-gray-50">
+      {/* Clean Header Section - Professional & Minimal */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-[1600px] mx-auto px-6 py-12">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">Placements</h1>
+              <p className="text-lg text-gray-600 mt-2">Track your applications and manage your placement journey</p>
+            </div>
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              Placement Drive 2025–2026 • Active
+            </Badge>
           </div>
         </div>
-      )}
+      </header>
 
-      {/* Available Companies */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Available Companies</h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          {companies.map((company) => {
-            const hasActiveApplication = applications.some(
-              (app) => app.company === company.name && !["rejected", "withdrawn", "completed"].includes(app.status)
-            );
-
-            return (
-              <Card key={company.name} className="hover:shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${company.color} flex items-center justify-center text-white shadow-lg`}>
-                        <Building2 className="w-7 h-7" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl">{company.fullName}</CardTitle>
-                        <CardDescription className="mt-1">{company.description}</CardDescription>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Eligibility Criteria */}
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-500" />
-                      Eligibility Criteria
-                    </h4>
-                    <ul className="space-y-1 text-sm text-muted-foreground">
-                      {company.eligibility.map((criteria, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                          {criteria}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Selection Process */}
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-blue-500" />
-                      Selection Process
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {company.process.map((step, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">
-                          {idx + 1}. {step}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={() => handleApply(company.name)}
-                    disabled={hasActiveApplication}
-                  >
-                    {hasActiveApplication ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        Application In Progress
-                      </>
-                    ) : (
-                      <>
-                        Apply Now
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+      {/* Breadcrumbs */}
+      <div className="max-w-[1600px] mx-auto px-6 pt-6">
+        <nav className="flex items-center gap-2 text-sm text-gray-600">
+          <Link href="/dashboard" className="flex items-center gap-2 hover:text-blue-600 transition-colors">
+            <LayoutDashboard className="w-4 h-4" />
+            Dashboard
+          </Link>
+          <ChevronRight className="w-4 h-4" />
+          <span className="font-medium text-gray-900">Placements</span>
+        </nav>
       </div>
+
+      {/* Main Content */}
+      <motion.main
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="max-w-[1600px] mx-auto px-6 py-8 grid grid-cols-1 xl:grid-cols-4 gap-8"
+      >
+        {/* Main Area - 3 columns */}
+        <motion.div variants={item} className="xl:col-span-3 space-y-8">
+          {/* Filters Card */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle>Filters</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PlacementFilters />
+            </CardContent>
+          </Card>
+
+          {/* Applications Table */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl">Your Applications</CardTitle>
+                  <CardDescription>Real-time progress across all active drives</CardDescription>
+                </div>
+                <Badge variant="outline">{applications.length} Applications</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ApplicationsTable />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Sidebar - 1 column */}
+        <div className="space-y-8">
+          {/* Pro Upgrade Card */}
+          <motion.div variants={item}>
+            <ProUpgradeCard />
+          </motion.div>
+
+          {/* Quick Stats Card */}
+          <motion.div variants={item}>
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <TrendingUp className="w-6 h-6 text-blue-600" />
+                  Placement Insights
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarFallback className="bg-blue-100 text-blue-700">
+                        <Briefcase className="w-5 h-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Applications</p>
+                      <p className="text-2xl font-semibold">1,248</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarFallback className="bg-green-100 text-green-700">
+                        <Award className="w-5 h-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm text-gray-600">Selection Growth</p>
+                      <p className="text-2xl font-semibold text-green-600">+14.2%</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarFallback className="bg-amber-100 text-amber-700">
+                        <Clock className="w-5 h-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm text-gray-600">Pending Actions</p>
+                      <p className="text-2xl font-semibold text-amber-600">45</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-600">Profile Completeness</span>
+                    <span className="font-semibold">75%</span>
+                  </div>
+                  <Progress value={75} className="h-3" />
+                  <p className="text-sm text-gray-600 mt-2">Complete your profile to increase visibility</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Urgent Drives Card */}
+          <motion.div variants={item}>
+            <Card className="shadow-sm border-l-4 border-emerald-500">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-emerald-100 rounded-lg">
+                    <Building2 className="w-6 h-6 text-emerald-700" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg mb-1">Drives Closing Soon</h4>
+                    <p className="text-sm text-gray-600 mb-4">TCS, Wipro, Infosys — assessments in progress</p>
+                    <Button variant="outline" size="sm">
+                      View Drives <ChevronRight className="ml-1 w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </motion.main>
     </div>
   );
 }

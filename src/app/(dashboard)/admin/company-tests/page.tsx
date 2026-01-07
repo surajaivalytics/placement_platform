@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Building2, Plus, Pencil, Trash2, Upload } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2, Upload, BookOpen, Shield, Target, Clock } from 'lucide-react';
 
 interface CompanyTest {
   id: string;
@@ -54,7 +54,7 @@ export default function CompanyTestsPage() {
 
   const handleCreateTest = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const res = await fetch('/api/tests', {
         method: 'POST',
@@ -116,64 +116,87 @@ export default function CompanyTestsPage() {
             Manage company-specific aptitude tests
           </p>
         </div>
-        <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+        <Button onClick={() => setShowCreateForm(!showCreateForm)} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20">
           <Plus className="h-4 w-4 mr-2" />
           Create Company Test
         </Button>
       </div>
 
       {showCreateForm && (
-        <Card>
+        <Card className="border-none shadow-xl shadow-blue-500/5 overflow-hidden">
+          <div className="h-2 bg-blue-600 w-full" />
           <CardHeader>
-            <CardTitle>Create New Company Test</CardTitle>
-            <CardDescription>
-              Create a test for a specific company
-            </CardDescription>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+                <Plus className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Create New Company Test</CardTitle>
+                <CardDescription>
+                  Setup a specialized test for a specific company recruitment drive
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreateTest} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleCreateTest} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company Name</Label>
+                  <Label htmlFor="company" className="text-sm font-semibold flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-blue-500" />
+                    Company Name
+                  </Label>
                   <Input
                     id="company"
                     value={formData.company}
                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                     placeholder="e.g., Google, Microsoft, Amazon"
+                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="title">Test Title</Label>
+                  <Label htmlFor="title" className="text-sm font-semibold flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-blue-500" />
+                    Test Title
+                  </Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="e.g., Google Aptitude Test 2024"
+                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description" className="text-sm font-semibold flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-blue-500" />
+                  Description
+                </Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Describe the test content and format"
+                  className="min-h-[100px] rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
                   rows={3}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="difficulty">Difficulty</Label>
+                  <Label htmlFor="difficulty" className="text-sm font-semibold flex items-center gap-2">
+                    <Target className="w-4 h-4 text-blue-500" />
+                    Difficulty
+                  </Label>
                   <Select
                     value={formData.difficulty}
                     onValueChange={(value) => setFormData({ ...formData, difficulty: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -184,21 +207,27 @@ export default function CompanyTestsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Duration (minutes)</Label>
+                  <Label htmlFor="duration" className="text-sm font-semibold flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-blue-500" />
+                    Duration (minutes)
+                  </Label>
                   <Input
                     id="duration"
                     type="number"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
                     min="1"
+                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
                     required
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button type="submit">Create Test</Button>
-                <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
+              <div className="flex gap-4 pt-2">
+                <Button type="submit" className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20">
+                  Create Assessment
+                </Button>
+                <Button type="button" variant="outline" className="h-12 rounded-xl" onClick={() => setShowCreateForm(false)}>
                   Cancel
                 </Button>
               </div>
@@ -207,19 +236,23 @@ export default function CompanyTestsPage() {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {tests.map((test) => (
-          <Card key={test.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
+          <Card key={test.id} className="hover:shadow-xl hover:shadow-blue-500/5 transition-all border-gray-100 group">
+            <CardHeader className="pb-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{test.company}</CardTitle>
-                  <CardDescription className="mt-1">{test.title}</CardDescription>
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <Building2 className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-xl font-bold">{test.company}</CardTitle>
+                  <CardDescription className="mt-1 font-medium text-blue-600">{test.title}</CardDescription>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                   <Button
                     size="icon"
                     variant="ghost"
+                    className="rounded-full hover:bg-blue-50 hover:text-blue-600"
                     onClick={() => router.push(`/admin/company-tests/${test.id}/questions`)}
                   >
                     <Upload className="h-4 w-4" />
@@ -227,6 +260,7 @@ export default function CompanyTestsPage() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    className="rounded-full hover:bg-blue-50 hover:text-blue-600"
                     onClick={() => router.push(`/admin/company-tests/${test.id}/edit`)}
                   >
                     <Pencil className="h-4 w-4" />
@@ -234,50 +268,59 @@ export default function CompanyTestsPage() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    className="rounded-full hover:bg-red-50 hover:text-red-600"
                     onClick={() => handleDeleteTest(test.id)}
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Difficulty:</span>
-                  <span className="font-medium">{test.difficulty}</span>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-2xl">
+                  <div className="space-y-1">
+                    <p className="text-gray-400 font-medium">Difficulty</p>
+                    <p className="font-bold text-gray-900">{test.difficulty}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-gray-400 font-medium">Duration</p>
+                    <p className="font-bold text-gray-900">{test.duration}m</p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Duration:</span>
-                  <span className="font-medium">{test.duration} mins</span>
+
+                <div className="flex items-center justify-between text-sm px-1">
+                  <span className="text-muted-foreground font-medium flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    {test._count.questions} Questions
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Questions:</span>
-                  <span className="font-medium">{test._count.questions}</span>
-                </div>
+
+                <Button
+                  className="w-full h-11 rounded-xl border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all font-bold"
+                  variant="outline"
+                  onClick={() => router.push(`/admin/company-tests/${test.id}/assign`)}
+                >
+                  Assign to Users
+                </Button>
               </div>
-              <Button
-                className="w-full mt-4"
-                variant="outline"
-                onClick={() => router.push(`/admin/company-tests/${test.id}/assign`)}
-              >
-                Assign to Users
-              </Button>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {tests.length === 0 && !showCreateForm && (
-        <Card className="p-12 text-center">
-          <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No Company Tests Yet</h3>
-          <p className="text-muted-foreground mb-4">
-            Create your first company-specific test to get started
+        <Card className="p-16 text-center border-dashed border-2 border-gray-100 shadow-none">
+          <div className="w-20 h-20 rounded-3xl bg-blue-50 flex items-center justify-center mx-auto mb-6">
+            <Building2 className="h-10 w-10 text-blue-600" />
+          </div>
+          <h3 className="text-2xl font-bold mb-2">No Company Tests Yet</h3>
+          <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+            Create specialized assessments for top companies to help students prepare for their dream placements.
           </p>
-          <Button onClick={() => setShowCreateForm(true)}>
+          <Button onClick={() => setShowCreateForm(true)} className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xl shadow-blue-500/20">
             <Plus className="h-4 w-4 mr-2" />
-            Create Company Test
+            Create Your First Test
           </Button>
         </Card>
       )}

@@ -42,7 +42,7 @@ export default function AnalyticsPage() {
     try {
       setLoading(true);
       const response = await fetch('/api/admin/analytics');
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch analytics');
       }
@@ -65,14 +65,14 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-6 md:p-10">
         <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
         <Card>
           <CardContent className="pt-6">
@@ -107,10 +107,10 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 md:p-10">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
-        <TrendingUp className="h-8 w-8 text-primary" />
+        <TrendingUp className="h-8 w-8 text-blue-600" />
       </div>
 
       {/* Top Performers Section */}

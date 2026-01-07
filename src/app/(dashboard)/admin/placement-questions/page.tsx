@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Plus, Upload, Download, Edit, Trash2, Loader2, 
-  FileText, Code, MessageSquare, Search 
+import {
+  Plus, Upload, Download, Edit, Trash2, Loader2,
+  FileText, Code, MessageSquare, Search, X, CheckCircle2, AlertCircle
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PlacementQuestion {
   id: string;
@@ -47,16 +48,11 @@ function BulkUploadModal({ onClose }: { onClose: () => void }) {
   } | null>(null);
 
   useEffect(() => {
-    // Fetch placement tests (auto-creates if they don't exist)
     fetch('/api/admin/placement-tests')
       .then(res => res.json())
       .then(data => {
         if (data.tests) {
           setTests(data.tests);
-          console.log('Placement tests loaded:', data.tests);
-          if (data.created > 0) {
-            console.log(`Created ${data.created} new placement tests`);
-          }
         }
       })
       .catch(err => console.error('Failed to fetch placement tests:', err));
@@ -130,177 +126,213 @@ function BulkUploadModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Bulk Upload Placement Questions</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              ✕
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Instructions */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              CSV Format Instructions
-            </h3>
-            <div className="text-sm space-y-2">
-              <p><strong>Required columns for all questions:</strong></p>
-              <ul className="list-disc list-inside ml-4 space-y-1">
-                <li><code>text</code> - Question text</li>
-                <li><code>type</code> - Question type: multiple-choice, coding, or essay</li>
-                <li><code>category</code> - Category: numerical, verbal, reasoning, logical, quant, programming</li>
-                <li><code>difficulty</code> - Optional: Easy, Medium, Hard</li>
-              </ul>
-              
-              <p className="mt-3"><strong>For Multiple Choice Questions (MCQ):</strong></p>
-              <ul className="list-disc list-inside ml-4 space-y-1">
-                <li><code>option_1, option_2, option_3, option_4</code> - Four answer options</li>
-                <li><code>correct_option</code> - A, B, C, or D indicating the correct answer</li>
-                <li><code>explanation</code> - Optional: Explanation for the correct answer</li>
-              </ul>
-
-              <p className="mt-3"><strong>For Coding Questions:</strong></p>
-              <ul className="list-disc list-inside ml-4 space-y-1">
-                <li><code>testCases</code> - Optional: Test cases description</li>
-                <li><code>sampleInput</code> - Optional: Sample input</li>
-                <li><code>sampleOutput</code> - Optional: Sample output</li>
-                <li><code>constraints</code> - Optional: Problem constraints</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Upload Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Select Placement Test</label>
-              <select
-                value={selectedTest}
-                onChange={(e) => setSelectedTest(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-                required
-              >
-                <option value="">Choose a test...</option>
-                {tests.map(test => {
-                  // Format display: "TCS - Foundation (10 questions)" or "Wipro - Aptitude (0 questions)"
-                  const displayName = test.topic 
-                    ? `${test.company} - ${test.topic}` 
-                    : test.title;
-                  
-                  const questionCount = (test as CompanyTest & { _count?: { questions: number } })._count?.questions || 0;
-                  
-                  return (
-                    <option key={test.id} value={test.id}>
-                      {displayName} ({questionCount} questions)
-                    </option>
-                  );
-                })}
-              </select>
-              <p className="text-xs text-gray-500">
-                Select the test type that matches your questions (e.g., TCS - Foundation for foundation test questions)
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">CSV File</label>
-              <input
-                id="csv-file"
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 border rounded-lg cursor-pointer"
-                required
-              />
-            </div>
-
-            {/* Result Messages */}
-            {result && (
-              <div className={`p-4 rounded-lg ${
-                result.success 
-                  ? 'bg-green-50 dark:bg-green-900/20 border border-green-200' 
-                  : 'bg-red-50 dark:bg-red-900/20 border border-red-200'
-              }`}>
-                <h4 className={`font-semibold mb-2 ${
-                  result.success ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'
-                }`}>
-                  {result.success ? '✓ Success' : '✗ Error'}
-                </h4>
-                <p className={`text-sm ${
-                  result.success ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
-                }`}>
-                  {result.message}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="max-w-4xl w-full"
+      >
+        <Card className="max-h-[85vh] overflow-y-auto border-gray-200/50 dark:border-gray-800/50 shadow-2xl bg-white/95 dark:bg-gray-900/95">
+          <CardHeader className="sticky top-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md z-10 border-b">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <Upload className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span>Bulk Upload Questions</span>
+              </div>
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                <X className="w-5 h-5" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            {/* Instructions */}
+            <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 p-5 rounded-xl">
+              <h3 className="font-semibold mb-3 flex items-center gap-2 text-blue-800 dark:text-blue-300">
+                <FileText className="w-5 h-5" />
+                CSV Format Instructions
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6 text-sm">
+                <div className="space-y-3">
+                  <p className="font-medium text-blue-900 dark:text-blue-200">Required columns:</p>
+                  <ul className="space-y-2">
+                    {['text', 'type', 'category', 'difficulty'].map((col) => (
+                      <li key={col} className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                        <code>{col}</code>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-3">
+                  <p className="font-medium text-blue-900 dark:text-blue-200">Question Types:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['multiple-choice', 'coding', 'essay'].map((type) => (
+                      <Badge key={type} variant="secondary" className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400">
+                        {type}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-blue-100 dark:border-blue-900/30">
+                <p className="text-xs text-blue-600 dark:text-blue-500 italic">
+                  * For MCQ, include option1-4 and correctOption (1-4). For Coding, sampleInput/Output are recommended.
                 </p>
-                {result.created !== undefined && (
-                  <p className="text-sm text-green-700 dark:text-green-400 mt-1">
-                    {result.created} questions uploaded successfully
-                  </p>
-                )}
-                {result.errors && result.errors.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-sm font-medium text-red-800 dark:text-red-300 mb-1">
-                      Errors encountered:
-                    </p>
-                    <div className="max-h-40 overflow-y-auto bg-white dark:bg-gray-800 p-2 rounded border">
-                      {result.errors.map((error, idx) => (
-                        <p key={idx} className="text-xs text-red-600 dark:text-red-400">
-                          • {error}
+              </div>
+            </div>
+
+            {/* Upload Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Placement Test</label>
+                  <select
+                    value={selectedTest}
+                    onChange={(e) => setSelectedTest(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    required
+                  >
+                    <option value="">Choose a test...</option>
+                    {tests.map(test => {
+                      const displayName = test.topic
+                        ? `${test.company} - ${test.topic}`
+                        : test.title;
+                      const questionCount = (test as any)._count?.questions || 0;
+                      return (
+                        <option key={test.id} value={test.id}>
+                          {displayName} ({questionCount} questions)
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">CSV File</label>
+                  <div className="relative">
+                    <input
+                      id="csv-file"
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      required
+                    />
+                    <label
+                      htmlFor="csv-file"
+                      className="flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:border-blue-400 transition-colors"
+                    >
+                      <span className="text-sm text-gray-500 truncate mr-2">
+                        {file ? file.name : 'Choose a CSV file...'}
+                      </span>
+                      <Upload className="w-4 h-4 text-gray-400" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Result Messages */}
+              {result && (
+                <div className={`p-4 rounded-xl border ${result.success
+                  ? 'bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-800/30'
+                  : 'bg-red-50/50 dark:bg-red-950/20 border-red-200 dark:border-red-800/30'
+                  }`}>
+                  <div className="flex items-start gap-3">
+                    {result.success ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                    )}
+                    <div className="flex-1">
+                      <h4 className={`font-semibold mb-1 ${result.success ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'
+                        }`}>
+                        {result.success ? 'Success' : 'Upload Failed'}
+                      </h4>
+                      <p className={`text-sm ${result.success ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
+                        }`}>
+                        {result.message}
+                      </p>
+                      {result.created !== undefined && result.created > 0 && (
+                        <p className="text-sm text-green-700 dark:text-green-400 mt-1 font-medium">
+                          Created {result.created} new questions.
                         </p>
-                      ))}
+                      )}
+                      {result.errors && result.errors.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-sm font-medium text-red-800 dark:text-red-300 mb-2">
+                            Errors ({result.errors.length}):
+                          </p>
+                          <div className="max-h-40 overflow-y-auto bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg border border-red-100 dark:border-red-900/20">
+                            {result.errors.map((error, idx) => (
+                              <p key={idx} className="text-xs text-red-600 dark:text-red-400 pb-1 border-b border-red-50 dark:border-red-900/10 mb-1 last:border-0 last:pb-0">
+                                • {error}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={downloadTemplate}
+                  className="flex-1 h-11 rounded-xl border-gray-200 dark:border-gray-700"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Template
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading || !file || !selectedTest}
+                  className="flex-[2] h-11 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Confirm Upload
+                    </>
+                  )}
+                </Button>
               </div>
-            )}
+            </form>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={downloadTemplate}
-                className="flex-1"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Template
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading || !file || !selectedTest}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Questions
-                  </>
-                )}
-              </Button>
+            {/* Example Preview */}
+            <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-xs uppercase tracking-wider text-gray-500">CSV Example Preview</h4>
+                <Badge variant="outline" className="text-[10px] h-4">Valid Structure</Badge>
+              </div>
+              <pre className="text-[11px] font-mono p-3 bg-gray-900 text-gray-300 rounded-lg overflow-x-auto ring-1 ring-white/10">
+                {`text,type,category,difficulty,option1,option2,option3,option4,correctOption
+"What is React?",multiple-choice,programming,Easy,Library,Framework,Language,Tool,1
+"Dynamic Programming is?",essay,logical,Hard,,,,,,`}
+              </pre>
             </div>
-          </form>
-
-          {/* Example */}
-          <div className="border-t pt-4">
-            <h4 className="font-semibold mb-2 text-sm">Example CSV Content:</h4>
-            <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs overflow-x-auto">
-{`question,option_1,option_2,option_3,option_4,correct_option,explanation,difficulty,category
-"What is 2+2?",2,3,4,5,C,"2+2=4",Easy,numerical
-"Capital of India?",Mumbai,Delhi,Kolkata,Chennai,B,"Delhi is the capital",Easy,verbal`}
-            </pre>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 }
-
 
 export default function PlacementQuestionsPage() {
   const [questions, setQuestions] = useState<PlacementQuestion[]>([]);
@@ -368,7 +400,7 @@ export default function PlacementQuestionsPage() {
   const getTypeBadge = (type: string) => {
     const colors: Record<string, string> = {
       'multiple-choice': 'bg-blue-100 text-blue-800',
-      'coding': 'bg-green-100 text-green-800',
+      'coding': 'bg-indigo-100 text-indigo-800',
       'essay': 'bg-purple-100 text-purple-800',
     };
     return colors[type] || 'bg-gray-100 text-gray-800';
@@ -377,7 +409,7 @@ export default function PlacementQuestionsPage() {
   const getDifficultyBadge = (difficulty: string | null) => {
     if (!difficulty) return 'bg-gray-100 text-gray-800';
     const colors: Record<string, string> = {
-      'Easy': 'bg-green-100 text-green-800',
+      'Easy': 'bg-blue-100 text-blue-800',
       'Medium': 'bg-yellow-100 text-yellow-800',
       'Hard': 'bg-red-100 text-red-800',
     };
@@ -393,7 +425,7 @@ export default function PlacementQuestionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 md:p-10">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Placement Questions</h1>
@@ -574,11 +606,10 @@ export default function PlacementQuestionsPage() {
                           {question.options.map((opt, idx) => (
                             <div
                               key={opt.id}
-                              className={`text-xs p-2 rounded ${
-                                opt.isCorrect
-                                  ? 'bg-green-50 border border-green-200'
-                                  : 'bg-gray-50'
-                              }`}
+                              className={`text-xs p-2 rounded ${opt.isCorrect
+                                ? 'bg-blue-50 border border-blue-200 text-blue-700'
+                                : 'bg-gray-50'
+                                }`}
                             >
                               {String.fromCharCode(65 + idx)}. {opt.text}
                               {opt.isCorrect && ' ✓'}
@@ -594,7 +625,7 @@ export default function PlacementQuestionsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {/* Edit functionality */}}
+                        onClick={() => {/* Edit functionality */ }}
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -638,14 +669,16 @@ export default function PlacementQuestionsPage() {
       )}
 
       {/* Bulk Upload Modal */}
-      {showBulkUpload && (
-        <BulkUploadModal
-          onClose={() => {
-            setShowBulkUpload(false);
-            fetchQuestions(); // Refresh questions after upload
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {showBulkUpload && (
+          <BulkUploadModal
+            onClose={() => {
+              setShowBulkUpload(false);
+              fetchQuestions(); // Refresh questions after upload
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

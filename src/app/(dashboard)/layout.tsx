@@ -1,29 +1,46 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+
+"use client";
+
+import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import Sidebar from "@/components/dashboard/sidebar";
-import Navbar from "@/components/dashboard/navbar";
+// import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { useSession } from "next-auth/react";
 
-export default async function DashboardLayout({
-  children,
+export default function DashboardLayout({
+    children,
 }: {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
+    const { data: session } = useSession();
+    const pathname = usePathname();
 
-  if (!session) {
-    redirect('/login');
-  }
+    const isTestPage = pathname?.startsWith('/dashboard/test');
 
-  return (
-    <div className="flex h-screen gradient-bg">
-      <Sidebar role={session.user.role} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar user={session.user} />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
+    return (
+        <div className="flex h-screen w-full bg-slate-50/50 overflow-hidden">
+            {/* Sidebar - Fixed on desktop, sliding on mobile under layout control */}
+            {!isTestPage && (
+                <Sidebar
+                    setMobileOpen={setMobileOpen}
+                    collapsed={collapsed}
+                    setCollapsed={setCollapsed}
+                    role={session?.user?.role}
+                />
+            )}
+
+            {/* Main Content Area */}
+            <main className="flex-1 h-screen overflow-y-auto overflow-x-hidden md:ml-0 transition-all duration-300">
+                <div className={`transition-all duration-300 min-h-screen flex flex-col ${!isTestPage ? (collapsed ? 'md:pl-20' : 'md:pl-72') : ''}`}>
+                    {/* <DashboardHeader setMobileOpen={setMobileOpen} /> */}
+
+                    <div className="flex-1 w-full relative p-4 md:p-6 lg:p-8">
+                        {children}
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
 }

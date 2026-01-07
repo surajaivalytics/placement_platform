@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Users, Building2, CheckCircle2, XCircle, Loader2, 
-  Award, TrendingUp, Filter 
+import {
+  Users, Building2, CheckCircle2, XCircle, Loader2,
+  Award, TrendingUp, Filter
 } from 'lucide-react';
 
 interface Application {
@@ -100,13 +100,13 @@ export default function AdminPlacementsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 md:p-10">
       <div>
         <h1 className="text-3xl font-bold">Placement Applications</h1>
         <p className="text-muted-foreground mt-1">
@@ -271,7 +271,7 @@ export default function AdminPlacementsPage() {
                   applications.map((app) => {
                     const statusBadge = getStatusBadge(app.status);
                     const completedStages = app.assessmentStages.filter(s => s.isPassed).length;
-                    
+
                     return (
                       <tr key={app.id} className="border-b hover:bg-gray-50">
                         <td className="p-3">
@@ -309,8 +309,8 @@ export default function AdminPlacementsPage() {
                             <div className="flex-1 bg-gray-200 rounded-full h-2">
                               <div
                                 className="bg-blue-600 h-2 rounded-full"
-                                style={{ 
-                                  width: `${(completedStages / (app.company === 'TCS' ? 4 : 5)) * 100}%` 
+                                style={{
+                                  width: `${(completedStages / (app.company === 'TCS' ? 4 : 5)) * 100}%`
                                 }}
                               />
                             </div>

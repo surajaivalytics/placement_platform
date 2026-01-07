@@ -81,10 +81,10 @@ export default function TestsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 md:p-10">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Tests</h1>
-        <Button asChild>
+        <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20">
           <Link href="/admin/tests/new">
             <Plus className="mr-2 h-4 w-4" />
             Create Test
@@ -103,8 +103,8 @@ export default function TestsPage() {
           {tests.map((test) => (
             <Card key={test.id}>
               <CardHeader className="flex flex-row items-center gap-4">
-                <div className="p-2 bg-primary/10 rounded-full">
-                  <GraduationCap className="w-6 h-6 text-primary" />
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <GraduationCap className="w-6 h-6 text-blue-600" />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">{test.title}</CardTitle>
@@ -119,9 +119,9 @@ export default function TestsPage() {
                   <span>{test.duration} mins</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex-1"
                     asChild
                   >
@@ -130,8 +130,8 @@ export default function TestsPage() {
                       Manage Questions
                     </Link>
                   </Button>
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     size="sm"
                     onClick={() => handleDelete(test.id, test.title)}
                     disabled={deletingId === test.id}

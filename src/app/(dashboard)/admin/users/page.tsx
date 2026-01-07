@@ -25,7 +25,7 @@ export default function UsersPage() {
     try {
       const res = await fetch('/api/users');
       const data = await res.json();
-      
+
       if (data.users) {
         setUsers(data.users);
       }
@@ -49,14 +49,14 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 md:p-10">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Users</h1>
         <p className="text-muted-foreground mt-1">
           Manage all registered users and their roles
         </p>
       </div>
-      
+
       <Card>
         <CardContent className="p-0">
           {users.length === 0 ? (
