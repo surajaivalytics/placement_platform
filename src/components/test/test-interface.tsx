@@ -104,6 +104,7 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
   const [currentViolationType, setCurrentViolationType] = useState<ViolationLog['type'] | null>(null);
   const [isMaxViolations, setIsMaxViolations] = useState(false);
   const [violationLogs, setViolationLogs] = useState<ViolationLog[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isSubmittingRef = useRef(false);
   const submitTestRef = useRef<() => void>(() => { });
@@ -120,6 +121,9 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
 
   // Violation detection handlers
   const handleViolationDetected = useCallback((violation: ViolationLog) => {
+    // Don't show warnings if we're already submitting
+    if (isSubmittingRef.current || isSubmitting) return;
+    
     setCurrentViolationType(violation.type);
     setViolationLogs(prev => [...prev, violation]);
     setShowWarningModal(true);
@@ -129,11 +133,12 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
       timestamp: violation.timestamp,
       ...violation.metadata,
     });
-  }, [handleMonitoringEvent]);
+  }, [handleMonitoringEvent, isSubmitting]);
 
   const handleMaxViolations = useCallback(async (violations: ViolationLog[]) => {
-    if (isMaxViolations || isSubmittingRef.current) return;
+    if (isMaxViolations || isSubmittingRef.current || isSubmitting) return;
     setIsMaxViolations(true);
+    setIsSubmitting(true);
     setShowWarningModal(true);
     setViolationLogs(violations);
 
@@ -149,14 +154,14 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
     setTimeout(() => {
       submitTestRef.current();
     }, 2000);
-  }, [handleMonitoringEvent, isMaxViolations]);
+  }, [handleMonitoringEvent, isMaxViolations, isSubmitting]);
 
   // Initialize violation detection
   const { warningCount, resetViolations } = useViolationDetection({
     maxWarnings: 3,
     onViolation: handleViolationDetected,
     onMaxViolations: handleMaxViolations,
-    enabled: examStarted,
+    enabled: examStarted && !isSubmitting, // Disable violation detection when submitting
     videoElementRef: previewVideoRef,
     faceDetectionEnabled: true,
     faceAwayThreshold: 3,
@@ -273,8 +278,12 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
   }, [examStarted, stream]);
 
   const submitTest = useCallback(async () => {
-    if (isSubmittingRef.current) return;
+    if (isSubmittingRef.current || isSubmitting) return;
     isSubmittingRef.current = true;
+    setIsSubmitting(true);
+    
+    // Close any open warning modals
+    setShowWarningModal(false);
 
     // Stop camera stream
     if (stream) {
@@ -359,7 +368,7 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
     }));
 
     router.push('/dashboard/results/latest');
-  }, [answers, monitoringEvents, questions, router, testId, stream, violationLogs, warningCount]);
+  }, [answers, monitoringEvents, questions, router, testId, stream, violationLogs, warningCount, isSubmitting]);
 
   useEffect(() => {
     submitTestRef.current = submitTest;

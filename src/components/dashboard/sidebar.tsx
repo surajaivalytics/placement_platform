@@ -123,6 +123,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen, collapsed, setColla
     { href: '/dashboard/profile', label: 'Setting', icon: Settings },
   ];
 
+const SidebarContent = ({ role, pathname, onLinkClick }: SidebarContentProps) => {
   const links = role === 'admin' ? adminLinks : userLinks;
 
   const SidebarContent = () => (
@@ -205,6 +206,11 @@ export default function Sidebar({ mobileOpen, setMobileOpen, collapsed, setColla
       </div>
     </div>
   );
+};
+
+export default function Sidebar({ role }: SidebarProps) {
+  const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <>
