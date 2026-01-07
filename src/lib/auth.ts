@@ -14,18 +14,12 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                // BYPASS LOGIN: Always return mock admin user
-                return {
-                    id: "mock-admin-id",
-                    name: "Dev Admin",
-                    email: "admin@example.com",
-                    role: "admin",
-                } as any; // Cast to any to avoid strict type checks if User type is complex
-
-                /*
                 if (!credentials?.email || !credentials?.password) {
+                    console.log('❌ Login failed: Missing credentials');
                     return null;
                 }
+
+                console.log('🔄 Attempting login for:', credentials.email);
 
                 // Find user in database
                 const user = await prisma.user.findUnique({
@@ -33,6 +27,7 @@ export const authOptions: NextAuthOptions = {
                 });
 
                 if (!user || !user.password) {
+                    console.log('❌ Login failed: User not found or no password');
                     return null;
                 }
 
@@ -43,8 +38,11 @@ export const authOptions: NextAuthOptions = {
                 );
 
                 if (!isPasswordValid) {
+                    console.log('❌ Login failed: Invalid password');
                     return null;
                 }
+
+                console.log('✅ Login successful for:', user.email);
 
                 // Return user object with role
                 return {
@@ -53,7 +51,6 @@ export const authOptions: NextAuthOptions = {
                     email: user.email,
                     role: user.role as "admin" | "user",
                 };
-                */
             }
         })
     ],

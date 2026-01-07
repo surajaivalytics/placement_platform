@@ -116,7 +116,7 @@ export default function EligibilityResultPage() {
                 </div>
                 <div>
                   <div className="text-2xl text-red-600 dark:text-red-500">Not Eligible</div>
-                  <div className="text-sm font-normal text-muted-foreground">Unfortunately, you don't meet the criteria</div>
+                  <div className="text-sm font-normal text-muted-foreground">Unfortunately, you don&apos;t meet the criteria</div>
                 </div>
               </>
             )}
@@ -191,7 +191,7 @@ export default function EligibilityResultPage() {
               </Alert>
 
               <div className="bg-muted p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">What's Next?</h3>
+                <h3 className="font-semibold mb-2">What&apos;s Next?</h3>
                 <p className="text-sm text-muted-foreground">
                   We encourage you to improve your academic performance and apply again in the future. 
                   You can explore other opportunities available on our platform.

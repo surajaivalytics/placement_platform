@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { StageResult } from '@/components/placements/stage-result';
 import { Loader2 } from 'lucide-react';
@@ -10,13 +10,19 @@ export default function StageResultPage() {
   const applicationId = params.id as string;
   const stageName = params.stageName as string;
   const [isLoading, setIsLoading] = useState(true);
-  const [resultData, setResultData] = useState<any>(null);
+  const [resultData, setResultData] = useState<{
+    stageName: string;
+    isPassed: boolean;
+    score: number;
+    total: number;
+    percentage: number;
+    nextStage: string;
+    track: string | null;
+    timeSpent?: number;
+    feedback?: string;
+  } | null>(null);
 
-  useEffect(() => {
-    fetchResult();
-  }, []);
-
-  const fetchResult = async () => {
+  const fetchResult = useCallback(async () => {
     try {
       const res = await fetch(`/api/placements/${applicationId}`);
       if (res.ok) {
@@ -24,7 +30,7 @@ export default function StageResultPage() {
         
         // Find the stage result
         const stage = data.assessmentStages?.find(
-          (s: any) => s.stageName === stageName
+          (s: { stageName: string; isPassed: boolean; score?: number; total?: number; percentage?: number; timeSpent?: number }) => s.stageName === stageName
         );
 
         if (stage) {
@@ -60,7 +66,11 @@ export default function StageResultPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [applicationId, stageName]);
+
+  useEffect(() => {
+    fetchResult();
+  }, [fetchResult]);
 
   if (isLoading) {
     return (
@@ -84,6 +94,7 @@ export default function StageResultPage() {
   return (
     <StageResult
       {...resultData}
+      track={resultData.track || undefined}
       applicationId={applicationId}
     />
   );

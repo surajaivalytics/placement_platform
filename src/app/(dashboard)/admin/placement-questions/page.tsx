@@ -111,10 +111,10 @@ function BulkUploadModal({ onClose }: { onClose: () => void }) {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `text,type,category,difficulty,option1,option2,option3,option4,correctOption,testCases,sampleInput,sampleOutput,constraints
-"What is 2+2?",multiple-choice,numerical,Easy,2,3,4,5,3,,,
-"Find the sum of two numbers",coding,programming,Medium,,,,,,"Input: a, b; Output: a+b","5 10","15","1 <= a,b <= 1000"
-"Describe your career goals",essay,verbal,Easy,,,,,,,,,`;
+    const csvContent = `question,option_1,option_2,option_3,option_4,correct_option,explanation,difficulty,category,type
+"What is 2+2?","2","3","4","5","C","2+2 equals 4.","Easy","numerical","multiple-choice"
+"Find the sum of two numbers","","","","","","","Medium","programming","coding"
+"Describe your career goals","","","","","","","Easy","verbal","essay"`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -333,7 +333,6 @@ function BulkUploadModal({ onClose }: { onClose: () => void }) {
     </motion.div>
   );
 }
-
 
 export default function PlacementQuestionsPage() {
   const [questions, setQuestions] = useState<PlacementQuestion[]>([]);
@@ -572,7 +571,7 @@ export default function PlacementQuestionsPage() {
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No questions found</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Add questions using the "Add Question" or "Bulk Upload" buttons
+                Add questions using the &quot;Add Question&quot; or &quot;Bulk Upload&quot; buttons
               </p>
             </div>
           ) : (
@@ -607,7 +606,7 @@ export default function PlacementQuestionsPage() {
                           {question.options.map((opt, idx) => (
                             <div
                               key={opt.id}
-                                className={`text-xs p-2 rounded ${opt.isCorrect
+                              className={`text-xs p-2 rounded ${opt.isCorrect
                                 ? 'bg-blue-50 border border-blue-200 text-blue-700'
                                 : 'bg-gray-50'
                                 }`}

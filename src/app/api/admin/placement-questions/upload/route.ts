@@ -4,19 +4,16 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 interface CSVRow {
-    text: string;
-    type: string;
-    category: string;
-    difficulty: string;
-    option1?: string;
-    option2?: string;
-    option3?: string;
-    option4?: string;
-    correctOption?: string;
-    testCases?: string;
-    sampleInput?: string;
-    sampleOutput?: string;
-    constraints?: string;
+    question: string;
+    option_1: string;
+    option_2: string;
+    option_3: string;
+    option_4: string;
+    correct_option: string;
+    explanation?: string;
+    difficulty?: string;
+    category?: string;
+    type?: string; // Optional, default to multiple-choice
 }
 
 export async function POST(request: NextRequest) {
@@ -45,14 +42,14 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Verify test exists and is a company test
+        // Verify test exists
         const test = await prisma.test.findUnique({
             where: { id: testId },
         });
 
-        if (!test || test.type !== 'company') {
+        if (!test) {
             return NextResponse.json(
-                { error: 'Invalid test. Must be a company/placement test.' },
+                { error: 'Invalid test ID' },
                 { status: 400 }
             );
         }
@@ -69,10 +66,34 @@ export async function POST(request: NextRequest) {
         }
 
         // Parse header
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const rawHeaders = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+        // Define mapping for flexible header names
+        const headerMapping: Record<string, string> = {
+            'id': 'id',
+            'question': 'question',
+            'text': 'question',
+            'option_1': 'option_1',
+            'option1': 'option_1',
+            'option_2': 'option_2',
+            'option2': 'option_2',
+            'option_3': 'option_3',
+            'option3': 'option_3',
+            'option_4': 'option_4',
+            'option4': 'option_4',
+            'correct_option': 'correct_option',
+            'correctoption': 'correct_option',
+            'correct_index': 'correct_option',
+            'explanation': 'explanation',
+            'difficulty': 'difficulty',
+            'category': 'category',
+            'type': 'type'
+        };
+
+        const headers = rawHeaders.map(h => headerMapping[h] || h);
 
         // Validate required headers
-        const requiredHeaders = ['text', 'type', 'category'];
+        const requiredHeaders = ['question', 'option_1', 'option_2', 'option_3', 'option_4', 'correct_option'];
         const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
 
         if (missingHeaders.length > 0) {
@@ -82,10 +103,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const questionsCreated: any[] = [];
+        const questionsCreated: Array<{ id: string; text: string }> = [];
         const errors: string[] = [];
 
-        // Get the current max order for this test to maintain sequence
+        // Get the current max order for this test
         const maxOrderQuestion = await prisma.question.findFirst({
             where: { testId },
             orderBy: { order: 'desc' },
@@ -98,48 +119,57 @@ export async function POST(request: NextRequest) {
         for (let i = 1; i < lines.length; i++) {
             try {
                 const values = parseCSVLine(lines[i]);
-
                 if (values.length === 0) continue;
 
-                const row: any = {};
+                const row: Record<string, string> = {};
                 headers.forEach((header, index) => {
                     row[header] = values[index]?.trim() || '';
                 });
 
                 // Validate required fields
-                if (!row.text || !row.type || !row.category) {
-                    errors.push(`Row ${i + 1}: Missing required fields (text, type, category)`);
+                if (!row.question || !row.correct_option) {
+                    errors.push(`Row ${i + 1}: Missing question or correct_option`);
                     continue;
                 }
 
-                // Create question based on type
-                if (row.type === 'multiple-choice') {
-                    // Validate MCQ fields
-                    if (!row.option1 || !row.option2 || !row.option3 || !row.option4 || !row.correctoption) {
-                        errors.push(`Row ${i + 1}: MCQ must have 4 options and correctOption`);
+                // Determine question type (default to multiple-choice if not specified)
+                const questionType = row.type || 'multiple-choice';
+
+                if (questionType === 'multiple-choice') {
+                    // Convert correct_option (A, B, C, D or 1, 2, 3, 4) to index
+                    let correctIndex = -1;
+                    const co = row.correct_option.toUpperCase();
+                    if (co === 'A') correctIndex = 1;
+                    else if (co === 'B') correctIndex = 2;
+                    else if (co === 'C') correctIndex = 3;
+                    else if (co === 'D') correctIndex = 4;
+                    else {
+                        correctIndex = parseInt(row.correct_option);
+                    }
+
+                    if (isNaN(correctIndex) || correctIndex < 1 || correctIndex > 4) {
+                        errors.push(`Row ${i + 1}: Invalid correct_option '${row.correct_option}'. Use A, B, C, D or 1-4`);
                         continue;
                     }
 
-                    const correctIndex = parseInt(row.correctoption);
-                    if (isNaN(correctIndex) || correctIndex < 1 || correctIndex > 4) {
-                        errors.push(`Row ${i + 1}: correctOption must be 1, 2, 3, or 4`);
-                        continue;
-                    }
+                    // Store explanation in metadata if it exists
+                    const metadata = row.explanation ? JSON.stringify({ explanation: row.explanation }) : null;
 
                     const question = await prisma.question.create({
                         data: {
                             testId,
-                            text: row.text,
+                            text: row.question,
                             type: 'multiple-choice',
-                            category: row.category,
-                            difficulty: row.difficulty || null,
+                            category: row.category || 'General',
+                            difficulty: row.difficulty || 'Medium',
                             order: currentOrder,
+                            metadata,
                             options: {
                                 create: [
-                                    { text: row.option1, isCorrect: correctIndex === 1 },
-                                    { text: row.option2, isCorrect: correctIndex === 2 },
-                                    { text: row.option3, isCorrect: correctIndex === 3 },
-                                    { text: row.option4, isCorrect: correctIndex === 4 },
+                                    { text: row.option_1, isCorrect: correctIndex === 1 },
+                                    { text: row.option_2, isCorrect: correctIndex === 2 },
+                                    { text: row.option_3, isCorrect: correctIndex === 3 },
+                                    { text: row.option_4, isCorrect: correctIndex === 4 },
                                 ],
                             },
                         },
@@ -148,49 +178,13 @@ export async function POST(request: NextRequest) {
 
                     questionsCreated.push(question);
                     currentOrder++;
-                } else if (row.type === 'coding') {
-                    // Create coding question
-                    const metadata: any = {};
-
-                    if (row.testcases) metadata.testCases = row.testcases;
-                    if (row.sampleinput) metadata.sampleInput = row.sampleinput;
-                    if (row.sampleoutput) metadata.sampleOutput = row.sampleoutput;
-                    if (row.constraints) metadata.constraints = row.constraints;
-
-                    const question = await prisma.question.create({
-                        data: {
-                            testId,
-                            text: row.text,
-                            type: 'coding',
-                            category: row.category,
-                            difficulty: row.difficulty || null,
-                            order: currentOrder,
-                            metadata: Object.keys(metadata).length > 0 ? metadata : null,
-                        },
-                    });
-
-                    questionsCreated.push(question);
-                    currentOrder++;
-                } else if (row.type === 'essay') {
-                    // Create essay question
-                    const question = await prisma.question.create({
-                        data: {
-                            testId,
-                            text: row.text,
-                            type: 'essay',
-                            category: row.category,
-                            difficulty: row.difficulty || null,
-                            order: currentOrder,
-                        },
-                    });
-
-                    questionsCreated.push(question);
-                    currentOrder++;
                 } else {
-                    errors.push(`Row ${i + 1}: Invalid question type '${row.type}'. Must be 'multiple-choice', 'coding', or 'essay'`);
+                    // Handle other types (coding, essay) if needed, but the shared CSV is all MCQs
+                    errors.push(`Row ${i + 1}: Unsupported question type '${questionType}' in this upload format`);
                 }
-            } catch (error: any) {
-                errors.push(`Row ${i + 1}: ${error.message}`);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Unknown error';
+                errors.push(`Row ${i + 1}: ${message}`);
             }
         }
 
@@ -208,7 +202,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// Helper function to parse CSV line (handles quoted values)
+// Helper function to parse CSV line (handles quoted values and escaped quotes)
 function parseCSVLine(line: string): string[] {
     const result: string[] = [];
     let current = '';
@@ -218,7 +212,13 @@ function parseCSVLine(line: string): string[] {
         const char = line[i];
 
         if (char === '"') {
-            inQuotes = !inQuotes;
+            // Check for escaped quote (double double quote)
+            if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                current += '"';
+                i++; // Skip the next quote
+            } else {
+                inQuotes = !inQuotes;
+            }
         } else if (char === ',' && !inQuotes) {
             result.push(current);
             current = '';
@@ -228,5 +228,6 @@ function parseCSVLine(line: string): string[] {
     }
 
     result.push(current);
+    // Remove potential carriage return and strip outer quotes
     return result.map(v => v.trim().replace(/^"|"$/g, ''));
 }

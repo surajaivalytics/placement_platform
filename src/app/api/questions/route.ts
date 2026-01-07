@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     }
 }
 
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
     // Optional: Add filtering logic here based on query params
     const questions = await getQuestions();
     return NextResponse.json(questions);

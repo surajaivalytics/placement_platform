@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,13 @@ interface Application {
     name: string;
     email: string;
   };
-  assessmentStages: any[];
+  assessmentStages: {
+    id: string;
+    stageName: string;
+    isPassed: boolean;
+    score: number | null;
+    total: number | null;
+  }[];
 }
 
 interface Stats {
@@ -51,11 +57,7 @@ export default function AdminPlacementsPage() {
     track: '',
   });
 
-  useEffect(() => {
-    fetchApplications();
-  }, [filters]);
-
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (filters.company) params.append('company', filters.company);
@@ -73,7 +75,11 @@ export default function AdminPlacementsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; className: string }> = {

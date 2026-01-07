@@ -38,7 +38,11 @@ interface Application {
   finalDecision: string | null;
   createdAt: Date;
   assessmentStages: AssessmentStage[];
-  voiceAssessment: any;
+  voiceAssessment: {
+    assessedAt?: string | Date;
+    isPassed?: boolean;
+    score?: number;
+  } | null;
 }
 
 export default function ApplicationDetailPage() {

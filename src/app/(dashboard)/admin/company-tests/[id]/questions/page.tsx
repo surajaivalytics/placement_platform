@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,20 +14,22 @@ interface Question {
   options: Array<{ id: string; text: string; isCorrect: boolean }>;
 }
 
+interface Test {
+  id: string;
+  title: string;
+  company: string;
+}
+
 export default function CompanyTestQuestionsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const [test, setTest] = useState<any>(null);
+  const [test, setTest] = useState<Test | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  useEffect(() => {
-    fetchTestAndQuestions();
-  }, [id]);
-
-  const fetchTestAndQuestions = async () => {
+  const fetchTestAndQuestions = useCallback(async () => {
     try {
       const res = await fetch(`/api/tests/${id}/questions`);
       const data = await res.json();
@@ -38,7 +40,11 @@ export default function CompanyTestQuestionsPage({ params }: { params: Promise<{
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchTestAndQuestions();
+  }, [fetchTestAndQuestions]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -106,9 +112,9 @@ export default function CompanyTestQuestionsPage({ params }: { params: Promise<{
     return <div className="p-8">Loading...</div>;
   }
 
-  const exampleFormat = `Question,Option 1,Option 2,Option 3,Option 4,Correct Index
-What is 2+2?,3,4,5,6,2
-Capital of France?,London,Berlin,Madrid,Paris,4`;
+  const exampleFormat = `question,option_1,option_2,option_3,option_4,correct_option,explanation,difficulty,category
+"What is 2+2?",3,4,5,6,B,"2+2=4",Easy,numerical
+"Capital of France?",London,Berlin,Madrid,Paris,D,"Paris is the capital",Easy,General`;
 
   return (
     <div className="p-8 space-y-6">

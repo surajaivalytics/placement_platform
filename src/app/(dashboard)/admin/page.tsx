@@ -1,88 +1,147 @@
+import React from "react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { DashboardStats } from "@/components/admin/dashboard-stats";
+import { PerformanceChart } from "@/components/admin/performance-chart";
+import { RecentStudentsTable } from "@/components/admin/recent-students-table";
+import { getDashboardStats } from "@/lib/admin-stats";
+import { Calendar } from "@/components/ui/calendar";
+import { Bell, Search, Settings, Activity, UserPlus, FileText } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import { KpiCard } from "@/components/dashboard/kpi-card";
-import { QuickAction } from "@/components/dashboard/quick-action";
-import { AnalyticsPlaceholders } from "@/components/dashboard/analytics-placeholder";
-import { Users, FileQuestion, GraduationCap, Activity, PlusCircle, UploadCloud, FileText, Building2, Settings, UserCog } from "lucide-react";
-import { Button } from "@/components/ui/button";
+export default async function AdminDashboard() {
+  const session = await getServerSession(authOptions);
+  const data = await getDashboardStats();
 
-export default function AdminDashboard() {
   return (
-    <div className="space-y-8 p-6 md:p-10 max-w-[1600px] mx-auto min-h-screen">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Welcome back, Admin. Here&apos;s what&apos;s happening today.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back, {session?.user?.name || "Admin"}
+          </h1>
+          <p className="text-gray-500 text-sm">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </span>
-          <Button className="rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20">
-            Download Report
-          </Button>
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2 bg-white p-2 rounded-full shadow-sm">
+            <Search className="w-5 h-5 text-gray-400 ml-2" />
+            <input type="text" placeholder="Search..." className="bg-transparent border-none outline-none text-sm w-40" />
+          </div>
+          <button className="p-2 bg-white rounded-full shadow-sm text-gray-500 hover:text-gray-900">
+            <Bell className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-3 bg-white p-1 pl-3 pr-1 rounded-full shadow-sm">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-semibold text-gray-900 leading-none">{session?.user?.name}</p>
+              <p className="text-xs text-gray-400 leading-none mt-1">{session?.user?.email}</p>
+            </div>
+            <Avatar>
+              <AvatarImage src={session?.user?.image || ""} />
+              <AvatarFallback className="bg-gray-900 text-white">AD</AvatarFallback>
+            </Avatar>
+          </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KpiCard
-          title="Total Users"
-          value="12,345"
-          change="+12.5%"
-          trend="up"
-          icon={Users}
-          colorClass="text-blue-600 bg-blue-50"
-        />
-        <KpiCard
-          title="Total Questions"
-          value="4,890"
-          change="+5.2%"
-          trend="up"
-          icon={FileQuestion}
-          colorClass="text-blue-600 bg-blue-50"
-        />
-        <KpiCard
-          title="Active Tests"
-          value="156"
-          change="-2.4%"
-          trend="down"
-          icon={GraduationCap}
-          colorClass="text-blue-600 bg-blue-50"
-        />
-        <KpiCard
-          title="Avg. Score"
-          value="78%"
-          change="+1.8%"
-          trend="up"
-          icon={Activity}
-          colorClass="text-blue-600 bg-blue-50"
-        />
+      {/* Overview Stats */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Overview</h2>
+        <DashboardStats stats={data} />
       </div>
 
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-          <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <QuickAction label="New Question" icon={PlusCircle} variant="blue" />
-          <QuickAction label="Bulk Upload" icon={UploadCloud} />
-          <QuickAction label="Create Test" icon={FileText} />
-          <QuickAction label="Company Tests" icon={Building2} />
-          <QuickAction label="Manage Users" icon={UserCog} />
-          <QuickAction label="Settings" icon={Settings} />
+      {/* Main Grid: Activity & Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {/* Recent Activity (Takes 2 Columns) */}
+        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-gray-900">Recent Activity</h3>
+            <span className="text-xs font-medium text-blue-600 cursor-pointer hover:underline">View log</span>
+          </div>
+          <div className="space-y-4">
+            {/* @ts-ignore */}
+            {data.recentActivities?.length > 0 ? (
+              // @ts-ignore
+              data.recentActivities.map((item: any, i: number) => (
+                <div key={i} className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${item.type === 'user_signup' ? 'bg-green-100 text-green-600' :
+                      item.type === 'system' ? 'bg-orange-100 text-orange-600' :
+                        'bg-blue-100 text-blue-600'
+                    }`}>
+                    {item.type === 'user_signup' ? <UserPlus className="w-6 h-6" /> :
+                      item.type === 'system' ? <Settings className="w-6 h-6" /> :
+                        <Activity className="w-6 h-6" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-gray-900">{item.title}</h4>
+                    <p className="text-sm text-gray-500 truncate">{item.description}</p>
+                  </div>
+                  <div className="text-xs text-gray-400 font-medium whitespace-nowrap bg-gray-50 px-2 py-1 rounded">
+                    {item.time}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-500 py-8">No recent activity</div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Chart & Calendar */}
+        <div className="lg:col-span-1 space-y-8">
+          {/* Student Performance Chart */}
+          <div className="h-[300px]">
+            <PerformanceChart data={data.statusDistribution} />
+          </div>
+
+          {/* Calendar */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900">Calendar</h3>
+            </div>
+            <div className="flex justify-center">
+              <Calendar
+                mode="single"
+                selected={new Date()}
+                className="rounded-md border-0"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Analytics Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-          <span className="w-1 h-6 bg-indigo-600 rounded-full"></span>
-          Platform Analytics
-        </h2>
-        <AnalyticsPlaceholders />
+      {/* Bottom Grid: Tables */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Students Table */}
+        <div className="lg:col-span-2">
+          <RecentStudentsTable students={data.recentApplications} />
+        </div>
+
+        {/* Weekly Timetable */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-gray-900">Weekly Timetable</h3>
+            <span className="text-xs font-medium text-blue-600 cursor-pointer">View all</span>
+          </div>
+          <div className="space-y-4">
+            {[
+              { time: "10:00", title: "Assessment Review", sub: "Class 3A" },
+              { time: "11:30", title: "System Check", sub: "All Servers" },
+              { time: "15:30", title: "Placement Drive", sub: "TCS Ninja" }
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-colors">
+                <div className="text-xs font-semibold text-gray-500 bg-white px-2 py-1 rounded shadow-sm">{item.time}</div>
+                <div>
+                  <h4 className="font-semibold text-sm text-gray-900">{item.title}</h4>
+                  <p className="text-xs text-gray-500">{item.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

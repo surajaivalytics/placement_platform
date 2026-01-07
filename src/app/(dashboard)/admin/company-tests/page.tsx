@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Building2, Plus, Pencil, Trash2, Upload } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2, Upload, BookOpen, Shield, Target, Clock } from 'lucide-react';
 
 interface CompanyTest {
   id: string;
@@ -36,11 +36,7 @@ export default function CompanyTestsPage() {
     duration: 60,
   });
 
-  useEffect(() => {
-    fetchCompanyTests();
-  }, []);
-
-  const fetchCompanyTests = async () => {
+  const fetchCompanyTests = useCallback(async () => {
     try {
       const res = await fetch('/api/tests?type=company');
       const data = await res.json();
@@ -50,7 +46,11 @@ export default function CompanyTestsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCompanyTests();
+  }, [fetchCompanyTests]);
 
   const handleCreateTest = async (e: React.FormEvent) => {
     e.preventDefault();

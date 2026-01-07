@@ -99,7 +99,7 @@ export default function MyTestsPage() {
             </div>
             <h3 className="text-xl font-bold mb-2 text-gray-900">No Tests Assigned</h3>
             <p className="text-gray-500 max-w-md mx-auto">
-              You don't have any tests assigned yet. Check back later or contact your instructor.
+              You don&apos;t have any tests assigned yet. Check back later or contact your instructor.
             </p>
           </Card>
         </motion.div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,21 +22,23 @@ interface Assignment {
   createdAt: string;
 }
 
+interface Test {
+  id: string;
+  title: string;
+  company: string;
+}
+
 export default function AssignTestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const [test, setTest] = useState<any>(null);
+  const [test, setTest] = useState<Test | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [id]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Fetch test details
       const testRes = await fetch(`/api/tests?id=${id}`);
@@ -61,7 +63,11 @@ export default function AssignTestPage({ params }: { params: Promise<{ id: strin
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleAssign = async () => {
     try {

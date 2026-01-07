@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
     try {
-        const { name, email, password } = await req.json();
+        const { name, email, password, phone } = await req.json();
 
         // Validate input
         if (!name || !email || !password) {
@@ -34,6 +34,7 @@ export async function POST(req: Request) {
             data: {
                 name,
                 email,
+                phone, // Add phone number
                 password: hashedPassword,
                 role: 'user', // Default role
             },
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
                 name: true,
                 email: true,
                 role: true,
+                phone: true,
             },
         });
 
@@ -49,16 +51,16 @@ export async function POST(req: Request) {
             { message: 'User created successfully', user },
             { status: 201 }
         );
-    } catch (error: any) {
+    } catch (error) {
         console.error('Registration error:', error);
-        
+
         // Provide more detailed error information in development
-        const errorMessage = process.env.NODE_ENV === 'development' 
+        const errorMessage = process.env.NODE_ENV === 'development' && error instanceof Error
             ? error.message || 'Internal server error'
             : 'Internal server error';
-        
+
         return NextResponse.json(
-            { error: errorMessage, details: process.env.NODE_ENV === 'development' ? error.stack : undefined },
+            { error: errorMessage, details: (process.env.NODE_ENV === 'development' && error instanceof Error) ? error.stack : undefined },
             { status: 500 }
         );
     }

@@ -84,7 +84,7 @@ export async function POST(
                 test.questions.forEach((q) => {
                     const userAnswerText = answers[q.id];
                     const correctOption = q.options.find((o) => o.isCorrect);
-                    
+
                     if (userAnswerText && correctOption && userAnswerText === correctOption.text) {
                         calculatedScore++;
                     }
@@ -235,7 +235,7 @@ function isLastStage(company: string, stage: string): boolean {
 
 async function assignTrack(
     company: string,
-    stages: any[]
+    stages: { stageName: string; percentage: number | null }[]
 ): Promise<string> {
     if (company === 'TCS') {
         // Digital track: Coding score >= 2.5/3 (83%+)
