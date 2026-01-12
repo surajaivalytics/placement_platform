@@ -6,25 +6,22 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
-
-
-
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -46,28 +43,29 @@ model User {
   emailVerified DateTime?
   image         String?
   role          String    @default("user") // "admin" or "user"
-  password      String?   // For credentials auth
-  
+  password      String? // For credentials auth
+
   // Profile Data
-  bio           String?
-  phone         String?
-  address       String?
-  coverImage    String?
-  accountType   String?   @default("Regular") // "Regular", "Pro", etc.
-  autoPayout    Boolean   @default(false)
-  
+  bio         String?
+  phone       String?
+  address     String?
+  coverImage  String?
+  accountType String? @default("Regular") // "Regular", "Pro", etc.
+  autoPayout  Boolean @default(false)
+
   // Academic Details for Placement
   tenthPercentage   Float?
   twelfthPercentage Float?
   graduationCGPA    Float?
-  backlogs          Int?      @default(0)
-  gapYears          Int?      @default(0)
-  gapDuringGrad     Boolean?  @default(false)
-  
+  backlogs          Int?     @default(0)
+  gapYears          Int?     @default(0)
+  gapDuringGrad     Boolean? @default(false)
+
   accounts              Account[]
   sessions              Session[]
   results               Result[]
   placementApplications PlacementApplication[]
+  interviewSessions     InterviewSession[]
 }
 
 model VerificationToken {
@@ -79,151 +77,180 @@ model VerificationToken {
 }
 
 model Test {
-  id                 String           @id @default(cuid())
-  title              String
-  description        String?
-  duration           Int              // in minutes
-  difficulty         String           // Easy, Medium, Hard
-  type               String?          @default("topic") // "topic" or "company"
-  company            String?
-  topic              String?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  
-  questions          Question[]
-  results            Result[]
-  assignments        TestAssignment[]
-  assessmentStages   AssessmentStage[]
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  duration    Int // in minutes
+  difficulty  String // Easy, Medium, Hard
+  type        String?  @default("topic") // "topic" or "company"
+  company     String?
+  topic       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions        Question[]
+  results          Result[]
+  assignments      TestAssignment[]
+  assessmentStages AssessmentStage[]
 }
 
 model Question {
-  id          String   @id @default(cuid())
-  testId      String
-  text        String
-  type        String   @default("multiple-choice") // multiple-choice, true-false, coding, essay
-  category    String?  // numerical, verbal, reasoning, logical, quant
-  difficulty  String?  // Easy, Medium, Hard
-  metadata    String?  @db.Text // JSON for coding problems, essay prompts, etc.
-  order       Int?     // Sequence order for maintaining upload sequence
-  
-  options     Option[]
-  
-  test        Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  id         String  @id @default(cuid())
+  testId     String
+  text       String
+  type       String  @default("multiple-choice") // multiple-choice, true-false, coding, essay
+  category   String? // numerical, verbal, reasoning, logical, quant
+  difficulty String? // Easy, Medium, Hard
+  metadata   String? @db.Text // JSON for coding problems, essay prompts, etc.
+  order      Int? // Sequence order for maintaining upload sequence
+
+  options Option[]
+
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
 }
 
 model Option {
-  id          String   @id @default(cuid())
-  questionId  String
-  text        String
-  isCorrect   Boolean  @default(false)
-  
-  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 model Result {
-  id                String              @id @default(cuid())
-  userId            String
-  testId            String
-  score             Int
-  total             Int
-  aiFeedback        String?             @db.Text // AI-generated feedback from Gemini
-  monitoringEvents  MonitoringEvent[]
-  createdAt         DateTime            @default(now())
-  
-  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  test              Test                @relation(fields: [testId], references: [id], onDelete: Cascade)
+  id               String            @id @default(cuid())
+  userId           String
+  testId           String
+  score            Int
+  total            Int
+  aiFeedback       String?           @db.Text // AI-generated feedback from Gemini
+  monitoringEvents MonitoringEvent[]
+  createdAt        DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
 }
 
 model TestAssignment {
-  id        String   @id @default(cuid())
-  testId    String
-  userId    String
-  assignedBy String  // Admin who assigned it
-  isPublic  Boolean  @default(false) // If true, available to all users
-  createdAt DateTime @default(now())
-  
-  test      Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  testId     String
+  userId     String
+  assignedBy String // Admin who assigned it
+  isPublic   Boolean  @default(false) // If true, available to all users
+  createdAt  DateTime @default(now())
+
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+
   @@unique([testId, userId])
 }
 
 model MonitoringEvent {
-  id          String   @id @default(cuid())
-  resultId    String
-  eventType   String   // "tab_switch", "window_blur", etc.
-  timestamp   DateTime @default(now())
-  metadata    String?  @db.Text // JSON metadata about the event
-  
-  result      Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  resultId  String
+  eventType String // "tab_switch", "window_blur", etc.
+  timestamp DateTime @default(now())
+  metadata  String?  @db.Text // JSON metadata about the event
+
+  result Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
+}
+
+// Interview & Assessment Models
+model InterviewSession {
+  id             String    @id @default(cuid())
+  userId         String
+  interviewType  String // "technical", "managerial", "hr", "business_discussion"
+  companyType    String // "TCS", "Wipro", etc.
+  startedAt      DateTime  @default(now())
+  endedAt        DateTime?
+  scores         Json? // { technicalKnowledge: number, communication: number, ... }
+  feedback       String?   @db.Text
+  overallVerdict String? // "Hire", "Maybe", "Needs Improvement"
+  recordingUrl   String?
+  transcript     String?   @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VoiceAssessment {
+  id            String  @id @default(cuid())
+  applicationId String  @unique
+  audioUrl      String?
+  transcript    String? @db.Text
+
+  // Scoring
+  fluencyScore       Float?
+  pronunciationScore Float?
+  paceScore          Float?
+  clarityScore       Float?
+  totalScore         Float? // Renamed/Aliased from overallScore for consistency
+
+  // Meta
+  confidenceScore Float?
+  status          String? @default("PENDING") // Using String for flexibility: PASSED, FAILED, HUMAN_REVIEW_PENDING
+  reviewType      String? @default("AI_ONLY") // AI_ONLY, HUMAN_VERIFIED
+
+  isPassed   Boolean @default(false)
+  feedback   String? @db.Text // Legacy summary
+  aiFeedback Json? // Detailed breakdown
+
+  assessedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  application PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 // Placement Flow Models
 model PlacementApplication {
-  id                String              @id @default(cuid())
+  id                String    @id @default(cuid())
   userId            String
-  company           String              // "TCS" or "Wipro"
-  status            String              // "eligibility_check", "foundation", "advanced", "coding", "essay", "voice", "interview", "completed", "rejected", "withdrawn"
+  company           String // "TCS" or "Wipro"
+  status            String // "eligibility_check", "foundation", "advanced", "coding", "essay", "voice", "interview", "completed", "rejected", "withdrawn"
   currentStage      String?
-  eligibilityStatus String?             // "eligible", "rejected"
-  finalTrack        String?             // "Digital", "Ninja", "Turbo", "Elite"
-  finalDecision     String?             // "selected", "rejected", "withdrawn"
+  eligibilityStatus String? // "eligible", "rejected"
+  finalTrack        String? // "Digital", "Ninja", "Turbo", "Elite"
+  finalDecision     String? // "selected", "rejected", "withdrawn"
   withdrawnAt       DateTime?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  
-  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eligibilityCheck  EligibilityCheck?
-  assessmentStages  AssessmentStage[]
-  voiceAssessment   VoiceAssessment?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eligibilityCheck EligibilityCheck?
+  assessmentStages AssessmentStage[]
+  voiceAssessment  VoiceAssessment?
 }
 
 model EligibilityCheck {
-  id                    String                @id @default(cuid())
-  applicationId         String                @unique
-  tenthPercentage       Float
-  twelfthPercentage     Float
-  graduationCGPA        Float
-  backlogs              Int
-  gapYears              Int
-  gapDuringGrad         Boolean
-  isEligible            Boolean
-  rejectionReasons      String?               @db.Text
-  checkedAt             DateTime              @default(now())
-  
-  application           PlacementApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  id                String   @id @default(cuid())
+  applicationId     String   @unique
+  tenthPercentage   Float
+  twelfthPercentage Float
+  graduationCGPA    Float
+  backlogs          Int
+  gapYears          Int
+  gapDuringGrad     Boolean
+  isEligible        Boolean
+  rejectionReasons  String?  @db.Text
+  checkedAt         DateTime @default(now())
+
+  application PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model AssessmentStage {
-  id                String                @id @default(cuid())
-  applicationId     String
-  stageName         String                // "foundation", "advanced", "coding", "aptitude", "essay"
-  testId            String?
-  score             Int?
-  total             Int?
-  percentage        Float?
-  isPassed          Boolean               @default(false)
-  timeSpent         Int?                  // in seconds
-  submittedAt       DateTime?
-  createdAt         DateTime              @default(now())
-  
-  application       PlacementApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  test              Test?                 @relation(fields: [testId], references: [id])
-}
+  id            String    @id @default(cuid())
+  applicationId String
+  stageName     String // "foundation", "advanced", "coding", "aptitude", "essay"
+  testId        String?
+  score         Int?
+  total         Int?
+  percentage    Float?
+  isPassed      Boolean   @default(false)
+  timeSpent     Int? // in seconds
+  submittedAt   DateTime?
+  createdAt     DateTime  @default(now())
 
-model VoiceAssessment {
-  id                String                @id @default(cuid())
-  applicationId     String                @unique
-  audioUrl          String?
-  transcript        String?               @db.Text
-  fluencyScore      Float?
-  pronunciationScore Float?
-  paceScore         Float?
-  clarityScore      Float?
-  overallScore      Float?
-  isPassed          Boolean               @default(false)
-  feedback          String?               @db.Text
-  assessedAt        DateTime?
-  createdAt         DateTime              @default(now())
-  
-  application       PlacementApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  test        Test?                @relation(fields: [testId], references: [id])
 }

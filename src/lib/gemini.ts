@@ -15,7 +15,7 @@ export async function generateFeedback(stats: {
 
     try {
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3-pro" });
 
         const prompt = `
       Analyze the following aptitude test performance and provide personalized coaching feedback (max 150 words).

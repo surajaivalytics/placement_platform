@@ -2,7 +2,6 @@
 
 import { ApplicationsTable } from "@/components/placements/applications-table";
 import { PlacementFilters } from "@/components/placements/placement-filters";
-import { ProUpgradeCard } from "@/components/dashboard/pro-upgrade-card";
 import { LayoutDashboard, Briefcase, TrendingUp, Clock, Award, Building2, ChevronRight } from "lucide-react";
 
 import Link from "next/link";
@@ -138,10 +137,6 @@ export default function PlacementsPage() {
 
         {/* Sidebar - 1 column */}
         <div className="space-y-8">
-          {/* Pro Upgrade Card */}
-          <motion.div variants={item}>
-            <ProUpgradeCard />
-          </motion.div>
 
           {/* Quick Stats Card */}
           <motion.div variants={item}>

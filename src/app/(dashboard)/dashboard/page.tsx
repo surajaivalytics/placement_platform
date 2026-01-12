@@ -297,29 +297,29 @@ export default function UserDashboard() {
             ))}
           </div>
 
-          {/* Upcoming Drives Section */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-[32px] p-8 text-white shadow-lg overflow-hidden relative">
+          {/* Upcoming Tests Section */}
+          <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 overflow-hidden relative">
             <div className="flex justify-between items-center mb-6 relative z-10">
-              <h3 className="text-xl font-bold">Upcoming Drives</h3>
-              <Button variant="secondary" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-0 backdrop-blur-md">View Calendar</Button>
+              <h3 className="text-xl font-bold text-gray-900">Upcoming Tests</h3>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200">View Calendar</Button>
             </div>
 
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide relative z-10">
               {[
-                { company: 'Google', role: 'SDE Intern', date: '12th Aug' },
-                { company: 'Microsoft', role: 'Full Stack', date: '15th Aug' },
-                { company: 'Amazon', role: 'Data Analyst', date: '20th Aug' },
-                { company: 'TCS', role: 'System Eng.', date: '25th Aug' },
+                { company: 'Google', role: 'SDE Assessment', date: '12th Aug' },
+                { company: 'Microsoft', role: 'Coding Round', date: '15th Aug' },
+                { company: 'Amazon', role: 'Aptitude Test', date: '20th Aug' },
+                { company: 'TCS', role: 'NQT Exam', date: '25th Aug' },
               ].map((drive, i) => (
-                <div key={i} className="min-w-[200px] bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 flex flex-col justify-between hover:bg-white/20 transition-all cursor-pointer">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-4">
+                <div key={i} className="min-w-[200px] bg-white p-4 rounded-2xl border border-gray-100 flex flex-col justify-between hover:shadow-md transition-all cursor-pointer group">
+                  <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-indigo-100 transition-colors">
                     <Building2 className="w-5 h-5 text-indigo-600" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-lg">{drive.company}</h4>
-                    <p className="text-sm text-indigo-100">{drive.role}</p>
+                    <h4 className="font-bold text-lg text-gray-900">{drive.company}</h4>
+                    <p className="text-sm text-gray-500">{drive.role}</p>
                   </div>
-                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold bg-white/20 w-fit px-2 py-1 rounded-lg">
+                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold bg-gray-50 text-gray-600 w-fit px-2 py-1 rounded-lg">
                     <Calendar className="w-3 h-3" /> {drive.date}
                   </div>
                 </div>
