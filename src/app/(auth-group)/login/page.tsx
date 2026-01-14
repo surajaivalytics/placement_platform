@@ -72,7 +72,7 @@ export default function LoginPage() {
                         <Input
                             type="email"
                             placeholder="name@company.com"
-                            className="h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            className="h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -88,7 +88,7 @@ export default function LoginPage() {
                             <Input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="••••••••"
-                                className="h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 pr-12"
+                                className="h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 pr-12"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -104,7 +104,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <Checkbox id="remember" className="border-gray-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600 rounded-md" />
+                        <Checkbox id="remember" className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 rounded-md" />
                         <label htmlFor="remember" className="text-sm font-medium text-gray-600 cursor-pointer">
                             Remember me for 30 days
                         </label>
@@ -115,7 +115,7 @@ export default function LoginPage() {
                     <Button
                         type="submit"
                         disabled={loading}
-                        className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg shadow-lg shadow-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign In"}
                     </Button>
@@ -133,7 +133,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="text-center text-sm text-gray-600">
-                    Don't have an account? <Link href="/signup" className="text-emerald-600 font-bold hover:underline">Create Account</Link>
+                    Don't have an account? <Link href="/signup" className="text-blue-600 font-bold hover:underline">Create Account</Link>
                 </div>
             </form>
         </div>

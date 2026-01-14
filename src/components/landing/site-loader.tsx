@@ -32,11 +32,11 @@ export function SiteLoader() {
                             transition={{ duration: 0.5 }}
                             className="relative"
                         >
-                            <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-                                <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
+                            <div className="w-20 h-20 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                                <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
                             </div>
                             <motion.div
-                                className="absolute inset-0 rounded-2xl border-2 border-emerald-500/30"
+                                className="absolute inset-0 rounded-2xl border-2 border-blue-600/30"
                                 animate={{ rotate: 180 }}
                                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
                             />
@@ -55,7 +55,7 @@ export function SiteLoader() {
                             className="h-1 w-32 bg-muted overflow-hidden rounded-full mt-2"
                         >
                             <motion.div
-                                className="h-full bg-emerald-500"
+                                className="h-full bg-blue-600"
                                 initial={{ x: "-100%" }}
                                 animate={{ x: "100%" }}
                                 transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}

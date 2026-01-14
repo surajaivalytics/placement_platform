@@ -38,7 +38,9 @@ export async function submitVoiceAssessment(formData: FormData) {
         const buffer = Buffer.from(arrayBuffer);
 
         // 2. Analyze with Gemini
-        const analysis = await analyzeVoiceRecording(buffer);
+        console.log("Calling analyzeVoiceRecording...");
+        const analysis = await analyzeVoiceRecording(buffer, "audio/webm");
+        console.log("Analysis complete:", JSON.stringify(analysis).substring(0, 100) + "...");
 
         // 3. Determine Final Status based on Hybrid Logic
         let status = "PASSED";

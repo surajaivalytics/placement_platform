@@ -75,15 +75,15 @@ export default function Home() {
               {/* Right Content - Visual Elements */}
               <div className="w-full lg:flex-1 relative">
                 <ScrollAnimation delay={0.2} className="relative z-10 flex justify-end">
-                  <div className="relative w-[560px] rounded-xl ">
+                  <div className="relative w-full max-w-[560px] rounded-xl ">
                     <img
                       src="/images/image copy 2.png"
                       alt="Student Success"
-                      className="w-[560px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl"
+                      className="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl"
                     />
 
                     {/* Floating Badges */}
-                    <div className="absolute top-0 -left-6 lg:-left-12 bg-white p-3 lg:p-4 rounded-3xl shadow-2xl border border-gray-100 flex items-center gap-3 lg:gap-4 animate-bounce duration-[3000ms]">
+                    <div className="absolute top-0 -left-2 lg:-left-12 bg-white p-3 lg:p-4 rounded-3xl shadow-2xl border border-gray-100 flex items-center gap-3 lg:gap-4 animate-bounce duration-[3000ms]">
                       <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-xl lg:text-2xl">🏆</div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -94,7 +94,7 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="absolute bottom-12 -right-4 lg:-right-8 bg-white p-3 lg:p-4 rounded-3xl shadow-2xl border border-gray-100 flex items-center gap-3 lg:gap-4">
+                    <div className="absolute bottom-12 -right-2 lg:-right-8 bg-white p-3 lg:p-4 rounded-3xl shadow-2xl border border-gray-100 flex items-center gap-3 lg:gap-4">
                       <div className="text-right">
                         <p className="text-lg lg:text-xl font-black text-white">4.5</p>
                         <p className="text-[8px] lg:text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Google Reviews</p>
@@ -274,7 +274,7 @@ export default function Home() {
                 <img
                   src="/images/image.png"
                   alt="Success Image"
-                  className="relative h-[400px] lg:h-[400px] w-auto object-contain z-10 scale-[1.6] translate-y-12 drop-shadow-2xl"
+                  className="relative h-[250px] lg:h-[400px] w-auto object-contain z-10 scale-100 lg:scale-[1.6] translate-y-0 lg:translate-y-12 drop-shadow-2xl"
                 />
               </div>
             </div>

@@ -367,8 +367,10 @@ export default function InterviewInterface({ company, type }: InterviewInterface
     );
   }
 
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 relative">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className={`${companyColor} text-white p-6 rounded-2xl shadow-lg mb-6`}>
@@ -377,11 +379,21 @@ export default function InterviewInterface({ company, type }: InterviewInterface
               <h1 className="text-2xl font-bold">{interviewConfig?.title}</h1>
               <p className="opacity-90">{company} Interview Simulation</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               {interviewStarted && !interviewCompleted && (
-                <Badge variant="secondary" className="bg-white/20 text-white">
-                  Question {questionIndex + 1}
-                </Badge>
+                <>
+                  <Button
+                    onClick={() => setShowConfirmDialog(true)}
+                    variant="secondary"
+                    className="bg-red-500/20 text-white hover:bg-red-500/40 border-0"
+                    size="sm"
+                  >
+                    Finish Interview
+                  </Button>
+                  <Badge variant="secondary" className="bg-white/20 text-white">
+                    Question {questionIndex + 1}
+                  </Badge>
+                </>
               )}
             </div>
           </div>
@@ -604,9 +616,9 @@ export default function InterviewInterface({ company, type }: InterviewInterface
                     <div className="relative">
                       <textarea
                         value={userAnswer}
-                        onChange={(e) => setUserAnswer(e.target.value)}
-                        placeholder="Type your answer here or use the microphone..."
-                        className="w-full p-4 pr-12 border border-gray-300 rounded-xl min-h-[120px] focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg resize-none"
+                        readOnly
+                        placeholder="Speak to answer..."
+                        className="w-full p-4 pr-12 border border-gray-300 rounded-xl min-h-[120px] bg-gray-50 text-lg resize-none focus:outline-none cursor-default"
                         disabled={isProcessing}
                       />
                       <div className="absolute bottom-4 right-4">
@@ -657,6 +669,36 @@ export default function InterviewInterface({ company, type }: InterviewInterface
           </div>
         )}
       </div>
+
+      {/* Custom Confirmation Modal */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <Card className="w-full max-w-md bg-white border-0 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <CardHeader className="p-6 pb-2">
+              <CardTitle className="text-xl font-bold text-gray-900">Finish Interview Early?</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-2">
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to finish the interview early? This will submit your current progress and you cannot undo this action.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowConfirmDialog(false);
+                    completeInterview();
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Confirm Finish
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

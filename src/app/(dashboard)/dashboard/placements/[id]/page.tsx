@@ -128,7 +128,7 @@ export default function ApplicationDetailPage() {
     router.push(`/dashboard/placements/${applicationId}/${stageName}`);
   };
 
-  if (loading) return <div className="flex justify-center py-20 min-h-screen bg-slate-50/50 items-center"><Loader2 className="animate-spin text-emerald-600 w-10 h-10" /></div>;
+  if (loading) return <div className="flex justify-center py-20 min-h-screen bg-slate-50/50 items-center"><Loader2 className="animate-spin text-blue-600 w-10 h-10" /></div>;
   if (!application) return null;
 
   const stages = getStageConfig(application.company);

@@ -99,7 +99,7 @@ export default function CompanyTestsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }

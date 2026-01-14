@@ -30,10 +30,10 @@ export async function getAIInterviewResponse(context: InterviewContext): Promise
 
   try {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = buildInterviewPrompt(context);
-    
+
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
@@ -151,7 +151,7 @@ export async function generateInterviewEvaluation(
 
   try {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `
       Evaluate the following interview performance for a ${companyType} ${interviewType} interview.

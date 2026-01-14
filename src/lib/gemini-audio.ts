@@ -1,16 +1,18 @@
+// Move API key check inside to avoid build-time errors if env is missing
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+export async function analyzeVoiceRecording(audioBuffer: Buffer, mimeType: string = "audio/webm") {
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) {
+        console.error("GEMINI_API_KEY is missing in environment variables");
+        throw new Error("GEMINI_API_KEY is not defined");
+    }
 
-if (!GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is not defined");
-}
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
-export async function analyzeVoiceRecording(audioBuffer: Buffer) {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+        console.log(`Analyzing audio: ${audioBuffer.length} bytes, type: ${mimeType}`);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
       Act as a professional Speech Assessor for Wipro/TCS placement interviews.
@@ -48,7 +50,7 @@ export async function analyzeVoiceRecording(audioBuffer: Buffer) {
             prompt,
             {
                 inlineData: {
-                    mimeType: "audio/wav", // Assuming WAV, but WebM is also supported often
+                    mimeType: mimeType,
                     data: audioBuffer.toString("base64"),
                 },
             },
@@ -62,7 +64,11 @@ export async function analyzeVoiceRecording(audioBuffer: Buffer) {
         return JSON.parse(jsonStr);
 
     } catch (error) {
-        console.error("Error analyzing voice:", error);
-        throw new Error("Failed to analyze voice recording");
+        console.error("Error analyzing voice with Gemini:", error);
+        if (error instanceof Error) {
+            console.error("Error message:", error.message);
+            console.error("Error stack:", error.stack);
+        }
+        throw new Error("Failed to analyze voice recording. Please check backend logs.");
     }
 }

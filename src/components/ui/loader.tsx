@@ -15,8 +15,8 @@ export function Loader({ className, size = "default" }: LoaderProps) {
 
     return (
         <div className={cn("relative flex items-center justify-center", className)}>
-            <div className={cn("rounded-full border-primary/30", sizeClasses[size])}></div>
-            <div className={cn("absolute rounded-full border-primary border-t-transparent animate-spin", sizeClasses[size])}></div>
+            <div className={cn("rounded-full border-blue-600/30", sizeClasses[size])}></div>
+            <div className={cn("absolute rounded-full border-blue-600 border-t-transparent animate-spin", sizeClasses[size])}></div>
         </div>
     );
 }

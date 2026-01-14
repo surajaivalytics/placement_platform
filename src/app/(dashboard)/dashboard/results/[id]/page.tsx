@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { 
-  CheckCircle, XCircle, Loader2, Sparkles, 
-  ChevronLeft, Award, Target, BookOpen, Brain 
+import {
+  CheckCircle, XCircle, Loader2, Sparkles,
+  ChevronLeft, Award, Target, BookOpen, Brain
 } from "lucide-react";
 
 interface ResultData {
@@ -88,7 +88,7 @@ export default function ResultDetailPage() {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-      <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+      <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
       <p className="text-slate-500 font-medium">Loading your results...</p>
     </div>
   );
@@ -113,7 +113,7 @@ export default function ResultDetailPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Report Summary</h1>
         </div>
         <div className="flex gap-2">
-           <Badge variant="outline" className="px-3 py-1 bg-white shadow-sm capitalize">
+          <Badge variant="outline" className="px-3 py-1 bg-white shadow-sm capitalize">
             {result.test.difficulty} Difficulty
           </Badge>
           <Badge className="px-3 py-1 bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-50 shadow-sm">
@@ -133,7 +133,7 @@ export default function ResultDetailPage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center py-6 text-center">
             <div className="relative flex items-center justify-center mb-4">
-               <svg className="w-32 h-32 transform -rotate-90">
+              <svg className="w-32 h-32 transform -rotate-90">
                 <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-800" />
                 <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={364} strokeDashoffset={364 - (364 * result.percentage) / 100} className="text-indigo-400 transition-all duration-1000" />
               </svg>
@@ -145,42 +145,42 @@ export default function ResultDetailPage() {
         </Card>
 
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-           <Card className="shadow-sm border-slate-100">
-             <CardContent className="p-6 flex items-center gap-4">
-               <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600"><Target /></div>
-               <div>
-                 <p className="text-sm text-slate-500">Total Accuracy</p>
-                 <p className="text-xl font-bold">{result.percentage}% Correct</p>
-               </div>
-             </CardContent>
-           </Card>
-           <Card className="shadow-sm border-slate-100">
-             <CardContent className="p-6 flex items-center gap-4">
-               <div className="p-3 bg-blue-50 rounded-2xl text-blue-600"><Brain /></div>
-               <div>
-                 <p className="text-sm text-slate-500">Topic Title</p>
-                 <p className="text-xl font-bold truncate max-w-[150px]">{result.test.title}</p>
-               </div>
-             </CardContent>
-           </Card>
-           <Card className="shadow-sm border-slate-100">
-             <CardContent className="p-6 flex items-center gap-4">
-               <div className="p-3 bg-purple-50 rounded-2xl text-purple-600"><BookOpen /></div>
-               <div>
-                 <p className="text-sm text-slate-500">Attempt Date</p>
-                 <p className="text-xl font-bold">{new Date(result.createdAt).toLocaleDateString()}</p>
-               </div>
-             </CardContent>
-           </Card>
-           <Card className="shadow-sm border-slate-100">
-             <CardContent className="p-6 flex items-center gap-4">
-               <div className="p-3 bg-amber-50 rounded-2xl text-amber-600"><Award /></div>
-               <div>
-                 <p className="text-sm text-slate-500">Correct Answers</p>
-                 <p className="text-xl font-bold">{result.score} Questions</p>
-               </div>
-             </CardContent>
-           </Card>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600"><Target /></div>
+              <div>
+                <p className="text-sm text-slate-500">Total Accuracy</p>
+                <p className="text-xl font-bold">{result.percentage}% Correct</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-3 bg-blue-50 rounded-2xl text-blue-600"><Brain /></div>
+              <div>
+                <p className="text-sm text-slate-500">Topic Title</p>
+                <p className="text-xl font-bold truncate max-w-[150px]">{result.test.title}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-3 bg-purple-50 rounded-2xl text-purple-600"><BookOpen /></div>
+              <div>
+                <p className="text-sm text-slate-500">Attempt Date</p>
+                <p className="text-xl font-bold">{new Date(result.createdAt).toLocaleDateString()}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-3 bg-amber-50 rounded-2xl text-amber-600"><Award /></div>
+              <div>
+                <p className="text-sm text-slate-500">Correct Answers</p>
+                <p className="text-xl font-bold">{result.score} Questions</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -196,7 +196,7 @@ export default function ResultDetailPage() {
         <CardContent className="p-6">
           {ailoading ? (
             <div className="flex flex-col items-center py-12 gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
               <p className="text-indigo-600/70 animate-pulse font-medium">Consulting AI Coach...</p>
             </div>
           ) : aiFeedback ? (
