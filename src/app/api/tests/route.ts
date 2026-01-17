@@ -119,8 +119,18 @@ export async function POST(req: Request) {
         );
     } catch (error) {
         console.error('Test creation error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorDetails = process.env.NODE_ENV === 'development' ? {
+            message: errorMessage,
+            stack: error instanceof Error ? error.stack : undefined
+        } : undefined;
+
         return NextResponse.json(
-            { error: 'Internal server error' },
+            {
+                error: 'Failed to create test',
+                details: errorMessage,
+                debug: errorDetails
+            },
             { status: 500 }
         );
     }

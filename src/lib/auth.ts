@@ -1,11 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
-    adapter: PrismaAdapter(prisma) as any,
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -14,43 +12,49 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) {
-                    console.log('❌ Login failed: Missing credentials');
+                try {
+                    if (!credentials?.email || !credentials?.password) {
+                        console.log('❌ Login failed: Missing credentials');
+                        throw new Error('Missing credentials');
+                    }
+
+                    console.log('🔄 Attempting login for:', credentials.email);
+
+                    // Find user in database
+                    const user = await prisma.user.findUnique({
+                        where: { email: credentials.email },
+                    });
+
+                    if (!user || !user.password) {
+                        console.log('❌ Login failed: User not found or no password');
+                        throw new Error('Invalid credentials');
+                    }
+
+                    // Verify password
+                    const isPasswordValid = await bcrypt.compare(
+                        credentials.password,
+                        user.password
+                    );
+
+                    if (!isPasswordValid) {
+                        console.log('❌ Login failed: Invalid password');
+                        throw new Error('Invalid credentials');
+                    }
+
+                    console.log('✅ Login successful for:', user.email);
+
+                    // Return user object with role
+                    return {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role as "admin" | "user",
+                    };
+                } catch (error) {
+                    console.error('❌ Authorization error:', error);
+                    // Return null to trigger CredentialsSignin error
                     return null;
                 }
-
-                console.log('🔄 Attempting login for:', credentials.email);
-
-                // Find user in database
-                const user = await prisma.user.findUnique({
-                    where: { email: credentials.email },
-                });
-
-                if (!user || !user.password) {
-                    console.log('❌ Login failed: User not found or no password');
-                    return null;
-                }
-
-                // Verify password
-                const isPasswordValid = await bcrypt.compare(
-                    credentials.password,
-                    user.password
-                );
-
-                if (!isPasswordValid) {
-                    console.log('❌ Login failed: Invalid password');
-                    return null;
-                }
-
-                console.log('✅ Login successful for:', user.email);
-
-                // Return user object with role
-                return {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role as "admin" | "user",
-                };
             }
         })
     ],
@@ -75,5 +79,6 @@ export const authOptions: NextAuthOptions = {
     },
     pages: {
         signIn: '/login',
-    }
+    },
+    debug: process.env.NODE_ENV === 'development',
 };

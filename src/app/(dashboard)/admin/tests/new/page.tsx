@@ -53,12 +53,15 @@ export default function NewTestPage() {
         router.push('/admin/tests');
         router.refresh();
       } else {
-        console.error('Failed to create test');
-        alert('Failed to create test');
+        const errorData = await res.json();
+        const errorMessage = errorData.details || errorData.error || 'Failed to create test';
+        console.error('Failed to create test:', errorData);
+        alert(`Failed to create test: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error creating test:', error);
-      alert('Error creating test');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Error creating test: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

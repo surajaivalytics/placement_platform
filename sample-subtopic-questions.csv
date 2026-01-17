@@ -1,0 +1,4 @@
+question,option_1,option_2,option_3,option_4,correct_option,explanation,difficulty,category
+"A can complete a work in 10 days and B can complete the same work in 15 days. If they work together, how many days will it take to complete the work?","5 days","6 days","7.5 days","8 days","B","Combined work rate = 1/10 + 1/15 = 1/6. So they complete the work in 6 days.",Medium,Time and Work
+"If 12 men can complete a work in 18 days, how many days will 9 men take to complete the same work?","20 days","22 days","24 days","26 days","C","Work = Men × Days. 12 × 18 = 9 × x, so x = 24 days.",Medium,Time and Work
+"A and B can do a piece of work in 12 days, B and C in 15 days, and C and A in 20 days. How long will A alone take to do the work?","30 days","40 days","50 days","60 days","A","Let A, B, C do work in a, b, c days. Solving: 1/a + 1/b = 1/12, 1/b + 1/c = 1/15, 1/c + 1/a = 1/20. Result: a = 30 days.",Hard,Time and Work

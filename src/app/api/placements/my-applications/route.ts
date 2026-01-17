@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { handlePrismaError } from "@/lib/prisma-errors";
 
 export async function GET() {
     try {
@@ -31,17 +32,6 @@ export async function GET() {
 
         return NextResponse.json(applications);
     } catch (error) {
-        console.error("Error fetching applications:", error);
-        console.error("Error details:", {
-            message: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined,
-        });
-        return NextResponse.json(
-            {
-                error: "Failed to fetch applications",
-                details: error instanceof Error ? error.message : 'Unknown error'
-            },
-            { status: 500 }
-        );
+        return handlePrismaError(error, 'Fetch applications');
     }
 }

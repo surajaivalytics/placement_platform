@@ -56,11 +56,11 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
     if (!mounted) return <div className="bg-white rounded-2xl p-6 shadow-sm h-full flex items-center justify-center">Loading chart...</div>;
 
     return (
-        <div className="bg-white rounded-2xl p-6 shadow-sm h-full">
+        <div className="bg-white rounded-2xl p-6 shadow-sm h-full min-h-[350px]">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="font-bold text-gray-900">Student Performance</h3>
             </div>
-            <div className="h-[250px] w-full">
+            <div className="h-[250px] w-full min-h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
@@ -93,4 +93,5 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
             </div>
         </div>
     );
+
 }

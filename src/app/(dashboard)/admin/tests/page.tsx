@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Plus, GraduationCap, Trash2, FileEdit } from "lucide-react";
+import { Plus, GraduationCap, Trash2, FileEdit, BookOpen } from "lucide-react";
 import { useRouter } from 'next/navigation';
 
 interface Test {
@@ -118,25 +118,40 @@ export default function TestsPage() {
                   <span>{test._count.questions} Questions</span>
                   <span>{test.duration} mins</span>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    asChild
-                  >
-                    <Link href={`/admin/tests/${test.id}/questions`}>
-                      <FileEdit className="mr-2 h-4 w-4" />
-                      Manage Questions
-                    </Link>
-                  </Button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      asChild
+                    >
+                      <Link href={`/admin/tests/${test.id}/questions`}>
+                        <FileEdit className="mr-2 h-4 w-4" />
+                        Questions
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      asChild
+                    >
+                      <Link href={`/admin/tests/${test.id}/subtopics`}>
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        Subtopics
+                      </Link>
+                    </Button>
+                  </div>
                   <Button
                     variant="destructive"
                     size="sm"
                     onClick={() => handleDelete(test.id, test.title)}
                     disabled={deletingId === test.id}
+                    className="w-full"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Test
                   </Button>
                 </div>
               </CardContent>

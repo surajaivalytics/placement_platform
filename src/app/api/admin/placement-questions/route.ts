@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { handlePrismaError } from '@/lib/prisma-errors';
 
 export async function GET(request: NextRequest) {
     try {
@@ -68,11 +69,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({ questions });
     } catch (error) {
-        console.error('Error fetching placement questions:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch questions' },
-            { status: 500 }
-        );
+        return handlePrismaError(error, 'Fetch placement questions');
     }
 }
 
@@ -115,10 +112,6 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ question });
     } catch (error) {
-        console.error('Error creating question:', error);
-        return NextResponse.json(
-            { error: 'Failed to create question' },
-            { status: 500 }
-        );
+        return handlePrismaError(error, 'Create question');
     }
 }

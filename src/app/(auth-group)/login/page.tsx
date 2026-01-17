@@ -35,11 +35,13 @@ export default function LoginPage() {
             if (result?.error) {
                 // Show error
                 console.error("Login failed:", result.error);
-                alert("Invalid email or password"); // Fallback if no toast
-            } else {
+                toast.error("Invalid email or password. Please try again.");
+            } else if (result?.ok) {
                 // Fetch session to check role
                 const response = await fetch("/api/auth/session");
                 const session = await response.json();
+
+                toast.success("Login successful!");
 
                 if (session?.user?.role === 'admin') {
                     router.push('/admin');
@@ -50,7 +52,7 @@ export default function LoginPage() {
             }
         } catch (error) {
             console.error("Login error:", error);
-            alert("Something went wrong");
+            toast.error("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }

@@ -52,18 +52,6 @@ export default async function AdminDashboard() {
         <DashboardStats stats={data} />
       </div>
 
-      // Calculate statistics
-      const totalUsers = usersData.users?.length || 0;
-      const tests = testsData.tests || [];
-      const totalTests = tests.length;
-      const topicTests = tests.filter((t: { type: string }) => t.type === 'topic').length;
-      const companyTests = tests.filter((t: { type: string }) => t.type === 'company').length;
-      
-      // Count total questions
-      const totalQuestions = tests.reduce((sum: number, test: { _count?: { questions: number } }) => {
-        return sum + (test._count?.questions || 0);
-      }, 0);
-
         {/* Recent Activity (Takes 2 Columns) */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
@@ -120,7 +108,7 @@ export default async function AdminDashboard() {
             </div>
           </div>
         </div>
-      </div>
+      
 
       {/* Bottom Grid: Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

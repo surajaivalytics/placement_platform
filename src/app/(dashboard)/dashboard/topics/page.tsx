@@ -140,7 +140,7 @@ export default function TopicsPage() {
                     {test._count?.questions || 0} Qs
                   </div>
 
-                  <Link href={`/dashboard/test/${test.id}`} className="w-full ml-4">
+                  <Link href={`/dashboard/test/${test.id}/subtopics`} className="w-full ml-4">
                     <Button className="w-full bg-gray-900 hover:bg-blue-600 text-white rounded-xl shadow-lg shadow-gray-200 group-hover:shadow-blue-200 transition-all font-semibold h-10 text-sm">
                       Start
                     </Button>
