@@ -29,8 +29,10 @@ import {
   Calendar,
   Target,
   Award,
-  ArrowUpRight
+  ArrowUpRight,
+  AlertTriangle
 } from "lucide-react";
+import { getMonitoringEvents } from "@/app/actions/monitoring";
 
 /* ---------------- animations ---------------- */
 
@@ -66,22 +68,31 @@ export default function ResultsHistoryPage() {
   const [results, setResults] = useState<ResultData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchResults = async () => {
-      try {
-        const res = await fetch("/api/results");
-        if (!res.ok) throw new Error("Failed to fetch results");
 
-        const data = await res.json();
-        setResults(data.results || []);
+  const [violations, setViolations] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [res, events] = await Promise.all([
+          fetch("/api/results"),
+          getMonitoringEvents()
+        ]);
+
+        if (res.ok) {
+          const data = await res.json();
+          setResults(data.results || []);
+        }
+        setViolations(events);
+
       } catch (error) {
-        console.error("Results fetch error:", error);
+        console.error("Fetch error:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchResults();
+    fetchData();
   }, []);
 
   return (
@@ -168,15 +179,15 @@ export default function ResultsHistoryPage() {
                           result.percentage >= 75
                             ? "bg-emerald-100 text-emerald-700"
                             : result.percentage >= 50
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
                         }
                       >
                         {result.percentage >= 75
                           ? "Excellent"
                           : result.percentage >= 50
-                          ? "Average"
-                          : "Needs Improvement"}
+                            ? "Average"
+                            : "Needs Improvement"}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -189,6 +200,66 @@ export default function ResultsHistoryPage() {
                       className="text-center text-muted-foreground py-6"
                     >
                       No results found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* ---------- Violations Table ---------- */}
+      <motion.div variants={item}>
+        <Card className="rounded-2xl border border-red-100 overflow-hidden shadow-sm">
+          <CardHeader className="border-b bg-red-50/50">
+            <CardTitle className="flex items-center gap-2 text-red-900">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              Proctoring Violations
+            </CardTitle>
+            <CardDescription>
+              Security incidents recorded during your assessments.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Test / Company</TableHead>
+                  <TableHead>Violation Type</TableHead>
+                  <TableHead>Details</TableHead>
+                  <TableHead className="text-right">Time</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {violations.map((v) => (
+                  <TableRow key={v.id} className="hover:bg-red-50/20">
+                    <TableCell className="font-medium text-gray-900">{v.testType}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="border-red-200 text-red-700 bg-red-50">
+                        {v.violationType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-gray-600 truncate max-w-xs" title={v.details}>
+                      {v.details}
+                    </TableCell>
+                    <TableCell className="text-right text-gray-400 text-sm">
+                      {new Date(v.timestamp).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                {!loading && violations.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                          <Award className="w-5 h-5" />
+                        </div>
+                        <p>Clean Record! No violations detected.</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}

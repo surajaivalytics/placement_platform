@@ -36,6 +36,7 @@ export default function InterviewInterface({ company, type }: InterviewInterface
   const [interviewStarted, setInterviewStarted] = useState(false);
   const [interviewCompleted, setInterviewCompleted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Audio State
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -367,7 +368,7 @@ export default function InterviewInterface({ company, type }: InterviewInterface
     );
   }
 
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 relative">

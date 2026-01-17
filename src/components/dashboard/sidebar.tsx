@@ -23,6 +23,8 @@ import {
   ChevronRight,
   Zap,
   HelpCircle,
+  MonitorPlay,
+  AudioLines
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -94,9 +96,10 @@ const SidebarContent = ({
     { href: "/dashboard/placements", label: "Placements", icon: Briefcase },
     { href: "/dashboard/my-tests", label: "My Tests", icon: ClipboardList },
     { href: "/dashboard/interview-suite", label: "AI Interview Suite", icon: Mic },
-    { href: "/dashboard/voice-assessment", label: "Voice Assessment", icon: Mic },
+    { href: "/dashboard/voice-assessment", label: "Voice Assessment", icon: AudioLines },
     { href: "/dashboard/topics", label: "Topics", icon: BookOpen },
     { href: "/dashboard/companies", label: "Companies", icon: Building2 },
+    { href: "/dashboard/mock-tests", label: "Mock Tests", icon: MonitorPlay },
     { href: "/dashboard/results", label: "Results", icon: BarChart3 },
     { href: "/dashboard/profile", label: "Settings", icon: Settings },
   ];

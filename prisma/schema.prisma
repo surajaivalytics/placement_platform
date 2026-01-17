@@ -66,6 +66,8 @@ model User {
   results               Result[]
   placementApplications PlacementApplication[]
   interviewSessions     InterviewSession[]
+  monitoringEvents      MonitoringEvent[]
+  mockDrives            MockDriveSession[]
 }
 
 model VerificationToken {
@@ -146,13 +148,16 @@ model TestAssignment {
 }
 
 model MonitoringEvent {
-  id        String   @id @default(cuid())
-  resultId  String
-  eventType String // "tab_switch", "window_blur", etc.
-  timestamp DateTime @default(now())
-  metadata  String?  @db.Text // JSON metadata about the event
+  id            String   @id @default(cuid())
+  userId        String
+  testType      String?
+  violationType String
+  details       String?
+  timestamp     DateTime @default(now())
 
-  result Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  resultId String?
+  result   Result? @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Interview & Assessment Models
@@ -207,6 +212,7 @@ model PlacementApplication {
   id                String    @id @default(cuid())
   userId            String
   company           String // "TCS" or "Wipro"
+  candidateId       String?   @unique // Generated ID like DT2026...
   status            String // "eligibility_check", "foundation", "advanced", "coding", "essay", "voice", "interview", "completed", "rejected", "withdrawn"
   currentStage      String?
   eligibilityStatus String? // "eligible", "rejected"
@@ -253,4 +259,25 @@ model AssessmentStage {
 
   application PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   test        Test?                @relation(fields: [testId], references: [id])
+}
+
+model MockDriveSession {
+  id          String   @id @default(cuid())
+  userId      String
+  company     String   // "TCS" or "Wipro"
+  currentRound Int      @default(1) // 1: Aptitude+Coding, 2: Tech Interview, 3: HR, 4: Completed
+  status      String   @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, ABANDONED
+  
+  // Scores
+  round1Score Float?   // Combined Aptitude + Coding
+  round2Score Float?   // Technical Interview
+  round3Score Float?   // HR Interview
+  
+  // State tracking (Resume capability)
+  lastActiveUrl String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
