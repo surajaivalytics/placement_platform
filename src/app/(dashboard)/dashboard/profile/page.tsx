@@ -409,15 +409,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Go Pro Card */}
-          {user.role !== 'admin' && (
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[24px] p-6 text-white text-center relative overflow-hidden">
-              <div className="relative z-10">
-                <h3 className="text-lg font-bold mb-2">Upgrade to Pro</h3>
-                <p className="text-indigo-100 text-sm mb-4">Get access to premium features and unlimited tests.</p>
-                <Button variant="secondary" className="w-full bg-white text-indigo-700 hover:bg-indigo-50 border-0 font-bold">Go Pro</Button>
-              </div>
-            </div>
-          )}
+
         </div>
 
         {/* Main Form Content */}

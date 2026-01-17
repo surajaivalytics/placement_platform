@@ -2,7 +2,6 @@
 
 import { ApplicationsTable } from "@/components/placements/applications-table";
 import { PlacementFilters } from "@/components/placements/placement-filters";
-import { ProUpgradeCard } from "@/components/dashboard/pro-upgrade-card";
 import { LayoutDashboard, Briefcase, TrendingUp, Clock, Award, Building2, ChevronRight } from "lucide-react";
 
 import Link from "next/link";
@@ -105,10 +104,10 @@ export default function PlacementsPage() {
         variants={container}
         initial="hidden"
         animate="show"
-        className="max-w-[1600px] mx-auto px-6 py-8 grid grid-cols-1 xl:grid-cols-4 gap-8"
+        className="max-w-[1600px] mx-auto px-6 py-8"
       >
-        {/* Main Area - 3 columns */}
-        <motion.div variants={item} className="xl:col-span-3 space-y-8">
+        {/* Main Area - Full Width */}
+        <motion.div variants={item} className="space-y-8">
           {/* Filters Card */}
           <Card className="shadow-sm">
             <CardHeader>
@@ -136,97 +135,7 @@ export default function PlacementsPage() {
           </Card>
         </motion.div>
 
-        {/* Sidebar - 1 column */}
-        <div className="space-y-8">
-          {/* Pro Upgrade Card */}
-          <motion.div variants={item}>
-            <ProUpgradeCard />
-          </motion.div>
 
-          {/* Quick Stats Card */}
-          <motion.div variants={item}>
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <TrendingUp className="w-6 h-6 text-blue-600" />
-                  Placement Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <Avatar>
-                      <AvatarFallback className="bg-blue-100 text-blue-700">
-                        <Briefcase className="w-5 h-5" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm text-gray-600">Total Applications</p>
-                      <p className="text-2xl font-semibold">1,248</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <Avatar>
-                      <AvatarFallback className="bg-green-100 text-green-700">
-                        <Award className="w-5 h-5" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm text-gray-600">Selection Growth</p>
-                      <p className="text-2xl font-semibold text-green-600">+14.2%</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <Avatar>
-                      <AvatarFallback className="bg-amber-100 text-amber-700">
-                        <Clock className="w-5 h-5" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm text-gray-600">Pending Actions</p>
-                      <p className="text-2xl font-semibold text-amber-600">45</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">Profile Completeness</span>
-                    <span className="font-semibold">75%</span>
-                  </div>
-                  <Progress value={75} className="h-3" />
-                  <p className="text-sm text-gray-600 mt-2">Complete your profile to increase visibility</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Urgent Drives Card */}
-          <motion.div variants={item}>
-            <Card className="shadow-sm border-l-4 border-emerald-500">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-100 rounded-lg">
-                    <Building2 className="w-6 h-6 text-emerald-700" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-lg mb-1">Drives Closing Soon</h4>
-                    <p className="text-sm text-gray-600 mb-4">TCS, Wipro, Infosys — assessments in progress</p>
-                    <Button variant="outline" size="sm">
-                      View Drives <ChevronRight className="ml-1 w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
       </motion.main>
     </div>
   );

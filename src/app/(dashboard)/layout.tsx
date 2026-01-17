@@ -33,7 +33,7 @@ export default function DashboardLayout({
 
             {/* Main Content Area */}
             <main className="flex-1 h-screen overflow-y-auto overflow-x-hidden md:ml-0 transition-all duration-300">
-                <div className={`transition-all duration-300 min-h-screen flex flex-col ${!isTestPage ? (collapsed ? 'md:pl-20' : 'md:pl-72') : ''}`}>
+                <div className={`transition-all duration-300 min-h-screen flex flex-col ${!isTestPage ? (collapsed ? 'md:pl-24' : 'md:pl-64') : ''}`}>
                     {/* <DashboardHeader setMobileOpen={setMobileOpen} /> */}
 
                     <div className="flex-1 w-full relative p-4 md:p-6 lg:p-8">

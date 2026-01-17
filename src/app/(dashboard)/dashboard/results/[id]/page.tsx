@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { CheckCircle, XCircle, Loader2, Trophy, Clock, Target, Share2, Award, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import {
+  CheckCircle, XCircle, Loader2, Sparkles,
+  ChevronLeft, Award, Target, BookOpen, Brain
+} from "lucide-react";
 
 interface ResultData {
   id: string;
@@ -23,14 +25,12 @@ interface ResultData {
   };
 }
 
-const getCompanyLogo = (title: string) => {
-  const lower = title.toLowerCase();
-  if (lower.includes('tcs')) return '/logos/tcs-1696999494.jpg';
-  if (lower.includes('wipro')) return '/logos/Wipro_Secondary-Logo_Color_RGB.png';
-  if (lower.includes('ibm')) return '/logos/IBM.png';
-  if (lower.includes('accenture')) return '/logos/acc.png';
-  return null; // Return null if no specific logo found
-};
+interface AIFeedback {
+  summary: string;
+  strengths: string;
+  improvements: string;
+  advice: string;
+}
 
 export default function ResultDetailPage() {
   const params = useParams();
@@ -39,219 +39,221 @@ export default function ResultDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [ailoading, setAiloading] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState<AIFeedback | null>(null);
+
   useEffect(() => {
     const fetchResult = async () => {
       try {
         const resultId = params.id as string;
         const response = await fetch(`/api/results?id=${resultId}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch result');
-        }
-
+        if (!response.ok) throw new Error('Failed to fetch result');
         const data = await response.json();
         setResult(data.result);
       } catch (err) {
-        console.error('Error fetching result:', err);
         setError(err instanceof Error ? err.message : 'Failed to load result');
       } finally {
         setLoading(false);
       }
     };
-
-    if (params.id) {
-      fetchResult();
-    }
+    if (params.id) fetchResult();
   }, [params.id]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
-        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!result) return;
+    const fetchAifeedBack = async () => {
+      setAiloading(true);
+      try {
+        const response = await fetch("/api/ai-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            score: result.score,
+            total: result.total,
+            percentage: result.percentage,
+            testTitle: result.test.title,
+            difficulty: result.test.difficulty,
+          })
+        });
+        const data = await response.json();
+        if (data.success) setAiFeedback(data.feedback);
+      } catch (error) {
+        console.error("AI feedback error:", error);
+      } finally {
+        setAiloading(false);
+      }
+    };
+    fetchAifeedBack();
+  }, [result]);
 
-  if (error || !result) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] text-center p-6">
-        <div className="bg-red-50 p-6 rounded-full mb-4">
-          <XCircle className="h-12 w-12 text-red-500" />
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">Result Not Found</h1>
-        <p className="text-gray-500 mb-8 max-w-md">
-          {error || "We couldn't locate the results for this test. It may have been deleted or never existed."}
-        </p>
-        <Button asChild className="bg-gray-900 text-white rounded-xl shadow-lg hover:bg-black">
-          <Link href="/dashboard">Back to Dashboard</Link>
-        </Button>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+      <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+      <p className="text-slate-500 font-medium">Loading your results...</p>
+    </div>
+  );
 
-  const getScoreColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
-    if (percentage >= 60) return 'text-amber-600 bg-amber-50 border-amber-200';
-    return 'text-red-600 bg-red-50 border-red-200';
-  };
+  if (error || !result) return (
+    <div className="max-w-2xl mx-auto py-20 text-center">
+      <h2 className="text-2xl font-bold mb-4">Oops! Result Not Found</h2>
+      <Button asChild><Link href="/dashboard">Return to Dashboard</Link></Button>
+    </div>
+  );
 
-  const getGradient = (percentage: number) => {
-    if (percentage >= 80) return 'from-emerald-500 to-teal-600 shadow-emerald-200';
-    if (percentage >= 60) return 'from-amber-400 to-orange-500 shadow-amber-200';
-    return 'from-red-500 to-pink-600 shadow-red-200';
-  }
-
-  const getPerformanceLabel = (percentage: number) => {
-    if (percentage >= 90) return { label: 'Outstanding Performance!', icon: Trophy, color: 'text-emerald-600' };
-    if (percentage >= 80) return { label: 'Great Job!', icon: Award, color: 'text-teal-600' };
-    if (percentage >= 60) return { label: 'Good Effort!', icon: Target, color: 'text-amber-600' };
-    return { label: 'Needs Improvement', icon: Clock, color: 'text-red-600' };
-  };
-
-  const performance = getPerformanceLabel(result.percentage);
-  const Logo = getCompanyLogo(result.test.title);
+  const scoreColor = result.percentage >= 80 ? 'text-emerald-600' : result.percentage >= 60 ? 'text-amber-600' : 'text-rose-600';
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-12">
-
-      {/* Header Section */}
+    <div className="max-w-5xl mx-auto space-y-8 pb-12 p-4">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="mb-2 bg-white text-gray-500 border-gray-200">
-            Completed on {new Date(result.createdAt).toLocaleDateString()}
-          </Badge>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Assessment Report</h1>
+          <Button variant="ghost" onClick={() => router.back()} className="mb-2 -ml-2 text-slate-500 hover:text-slate-900">
+            <ChevronLeft className="w-4 h-4 mr-1" /> Back to History
+          </Button>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Report Summary</h1>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => router.back()} className="rounded-xl border-gray-200 text-gray-600">
-            Back
-          </Button>
-          <Button variant="outline" className="rounded-xl border-gray-200 text-gray-600 flex gap-2">
-            <Share2 className="w-4 h-4" /> Share
-          </Button>
+        <div className="flex gap-2">
+          <Badge variant="outline" className="px-3 py-1 bg-white shadow-sm capitalize">
+            {result.test.difficulty} Difficulty
+          </Badge>
+          <Badge className="px-3 py-1 bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-50 shadow-sm">
+            {result.test.type}
+          </Badge>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Hero Score Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-1 border-none bg-slate-900 text-white shadow-2xl overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <Award size={120} />
+          </div>
+          <CardHeader>
+            <CardTitle className="text-slate-400 font-medium uppercase tracking-wider text-xs">Overall Performance</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center py-6 text-center">
+            <div className="relative flex items-center justify-center mb-4">
+              <svg className="w-32 h-32 transform -rotate-90">
+                <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-800" />
+                <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={364} strokeDashoffset={364 - (364 * result.percentage) / 100} className="text-indigo-400 transition-all duration-1000" />
+              </svg>
+              <span className="absolute text-3xl font-bold">{result.percentage}%</span>
+            </div>
+            <h2 className="text-2xl font-bold">{result.score} / {result.total}</h2>
+            <p className="text-slate-400 mt-2 text-sm italic">"{getPerformanceLabel(result.percentage)}"</p>
+          </CardContent>
+        </Card>
 
-        {/* Main Score Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="md:col-span-2"
-        >
-          <Card className="border-0 shadow-xl overflow-hidden rounded-3xl relative h-full bg-white">
-            <div className={`absolute top-0 w-full h-2 bg-gradient-to-r ${getGradient(result.percentage)}`} />
-            <CardContent className="p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-10">
-              <div className="flex-1 text-center md:text-left space-y-2">
-                <div className="flex items-center gap-3 justify-center md:justify-start mb-2">
-                  {Logo ? (
-                    <img src={Logo} alt="Company Logo" className="h-8 object-contain" />
-                  ) : (
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Award className="w-5 h-5 text-gray-500" />
-                    </div>
-                  )}
-                  <span className="font-bold text-gray-400 uppercase tracking-widest text-xs">{result.test.difficulty}</span>
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">{result.test.title}</h2>
-                <div className="flex items-center justify-center md:justify-start gap-2 pt-2">
-                  <performance.icon className={`w-5 h-5 ${performance.color}`} />
-                  <p className={`font-bold ${performance.color}`}>{performance.label}</p>
-                </div>
-              </div>
-
-              <div className="relative">
-                {/* Circular Progress (Visual only for now) */}
-                <div className={`w-40 h-40 rounded-full flex items-center justify-center bg-gradient-to-br ${getGradient(result.percentage)} shadow-lg transform transition-transform hover:scale-105`}>
-                  <div className="w-[150px] h-[150px] bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-                    <span className="text-4xl font-extrabold text-gray-900">{result.percentage}%</span>
-                    <span className="text-xs font-bold text-gray-400 uppercase">Score</span>
-                  </div>
-                </div>
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600"><Target /></div>
+              <div>
+                <p className="text-sm text-slate-500">Total Accuracy</p>
+                <p className="text-xl font-bold">{result.percentage}% Correct</p>
               </div>
             </CardContent>
           </Card>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-rows-2 gap-6">
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="h-full border border-gray-100 shadow-md rounded-2xl bg-white hover:shadow-lg transition-all">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl">
-                  <CheckCircle className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Correct Answers</p>
-                  <h3 className="text-2xl font-bold text-gray-900">{result.score} <span className="text-sm text-gray-400 font-medium">/ {result.total}</span></h3>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="h-full border border-gray-100 shadow-md rounded-2xl bg-white hover:shadow-lg transition-all">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
-                  <Target className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Net Accuracy</p>
-                  <h3 className="text-2xl font-bold text-gray-900">{Math.round((result.score / result.total) * 100)}%</h3>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-3 bg-blue-50 rounded-2xl text-blue-600"><Brain /></div>
+              <div>
+                <p className="text-sm text-slate-500">Topic Title</p>
+                <p className="text-xl font-bold truncate max-w-[150px]">{result.test.title}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-3 bg-purple-50 rounded-2xl text-purple-600"><BookOpen /></div>
+              <div>
+                <p className="text-sm text-slate-500">Attempt Date</p>
+                <p className="text-xl font-bold">{new Date(result.createdAt).toLocaleDateString()}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-3 bg-amber-50 rounded-2xl text-amber-600"><Award /></div>
+              <div>
+                <p className="text-sm text-slate-500">Correct Answers</p>
+                <p className="text-xl font-bold">{result.score} Questions</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
       </div>
 
-      {/* AI Feedback Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <Card className="border border-indigo-100 shadow-xl shadow-indigo-50/50 rounded-3xl overflow-hidden bg-white">
-          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-8 py-4 border-b border-indigo-100 flex items-center gap-3">
-            <div className="bg-white p-2 rounded-lg shadow-sm">
-              <Award className="w-5 h-5 text-indigo-600" />
+      {/* AI Coach Feedback Section */}
+      <Card className="border-none bg-gradient-to-br from-indigo-50 to-white dark:from-slate-900 dark:to-slate-950 shadow-lg overflow-hidden border-l-4 border-l-indigo-500">
+        <CardHeader className="border-b border-white/20">
+          <CardTitle className="flex items-center gap-2 text-indigo-900 dark:text-indigo-300">
+            <Sparkles className="h-5 w-5 animate-pulse" />
+            AI Performance Analysis
+          </CardTitle>
+          <CardDescription>Personalized feedback to accelerate your career growth</CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          {ailoading ? (
+            <div className="flex flex-col items-center py-12 gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <p className="text-indigo-600/70 animate-pulse font-medium">Consulting AI Coach...</p>
             </div>
-            <h3 className="font-bold text-indigo-900 text-lg">AI Performance Analysis</h3>
-          </div>
-          <CardContent className="p-8">
-            {result.aiFeedback ? (
-              <div className="prose prose-indigo max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line text-lg">
-                  {result.aiFeedback}
-                </p>
+          ) : aiFeedback ? (
+            <div className="space-y-8">
+              <div className="bg-white/50 dark:bg-black/20 p-5 rounded-2xl">
+                <h4 className="font-bold text-slate-900 dark:text-white mb-2">Executive Summary</h4>
+                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{aiFeedback.summary}</p>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-400 italic">No AI feedback generated for this test result.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-center gap-4 pt-4">
-        <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 h-12 px-8 rounded-xl font-bold text-lg transition-all transform hover:-translate-y-1">
-          <Link href="/dashboard/my-tests">
-            Take Another Test <ArrowRight className="ml-2 w-5 h-5" />
-          </Link>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <h4 className="flex items-center gap-2 font-bold text-emerald-700">
+                    <CheckCircle className="h-5 w-5" /> Your Strengths
+                  </h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 bg-emerald-50/50 dark:bg-emerald-900/10 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900">
+                    {aiFeedback.strengths}
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="flex items-center gap-2 font-bold text-amber-700">
+                    <XCircle className="h-5 w-5" /> Areas to Improve
+                  </h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 bg-amber-50/50 dark:bg-amber-900/10 p-4 rounded-xl border border-amber-100 dark:border-amber-900">
+                    {aiFeedback.improvements}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-indigo-600 text-white p-6 rounded-2xl shadow-xl shadow-indigo-200 dark:shadow-none relative overflow-hidden">
+                <Brain className="absolute -bottom-4 -right-4 w-24 h-24 opacity-20" />
+                <h4 className="font-bold text-lg mb-2">Coach's Pro-Tip</h4>
+                <p className="text-indigo-50 relative z-10 italic">"{aiFeedback.advice}"</p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-10 text-slate-400">Unable to load AI feedback at this time.</div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Footer Actions */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-4">
+        <Button variant="outline" asChild className="w-full sm:w-auto h-12 px-8">
+          <Link href="/dashboard">Back to Dashboard</Link>
+        </Button>
+        <Button asChild className="w-full sm:w-auto h-12 px-8 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100">
+          <Link href="/dashboard/my-tests">Take Another Assessment</Link>
         </Button>
       </div>
     </div>
   );
+}
+
+function getPerformanceLabel(pct: number) {
+  if (pct >= 90) return 'Top Tier Performance';
+  if (pct >= 80) return 'Highly Proficient';
+  if (pct >= 70) return 'Strong Foundation';
+  if (pct >= 60) return 'Developing Skills';
+  return 'Focus Needed';
 }

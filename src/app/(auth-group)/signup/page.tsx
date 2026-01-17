@@ -144,28 +144,28 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setUserType('school')}
-                className={`h-10 px-6 rounded-full text-sm font-medium border transition-all ${userType === 'school' ? 'border-emerald-500 text-emerald-600 bg-emerald-50' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                className={`h-10 px-6 rounded-full text-sm font-medium border transition-all ${userType === 'school' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
               >
                 School Student
               </button>
               <button
                 type="button"
                 onClick={() => setUserType('college')}
-                className={`h-10 px-6 rounded-full text-sm font-medium border transition-all ${userType === 'college' ? 'border-emerald-500 text-emerald-600 bg-emerald-50' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                className={`h-10 px-6 rounded-full text-sm font-medium border transition-all ${userType === 'college' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
               >
                 College Student
               </button>
               <button
                 type="button"
                 onClick={() => setUserType('fresher')}
-                className={`h-10 px-6 rounded-full text-sm font-medium border transition-all ${userType === 'fresher' ? 'border-emerald-500 text-emerald-600 bg-emerald-50' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                className={`h-10 px-6 rounded-full text-sm font-medium border transition-all ${userType === 'fresher' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
               >
                 Fresher
               </button>
               <button
                 type="button"
                 onClick={() => setUserType('professional')}
-                className={`h-10 px-6 rounded-full text-sm font-medium border transition-all ${userType === 'professional' ? 'border-emerald-500 text-emerald-600 bg-emerald-50' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                className={`h-10 px-6 rounded-full text-sm font-medium border transition-all ${userType === 'professional' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
               >
                 Professional
               </button>
@@ -175,13 +175,13 @@ export default function SignupPage() {
           {/* Checkboxes */}
           <div className="space-y-3 pt-4">
             <div className="flex items-start gap-2">
-              <Checkbox id="terms" className="mt-1 border-gray-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" required />
+              <Checkbox id="terms" className="mt-1 border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600" required />
               <label htmlFor="terms" className="text-xs text-gray-500 leading-tight">
-                All your information is collected, stored and processed as per our data processing guidelines. By signing up on Unstop, you agree to our <a href="#" className="text-emerald-600 hover:underline">Privacy Policy</a> and <a href="#" className="text-emerald-600 hover:underline">Terms of Use</a>
+                All your information is collected, stored and processed as per our data processing guidelines. By signing up on Unstop, you agree to our <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a> and <a href="#" className="text-blue-600 hover:underline">Terms of Use</a>
               </label>
             </div>
             <div className="flex items-center gap-2">
-              <Checkbox id="updates" className="border-gray-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" />
+              <Checkbox id="updates" className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600" />
               <label htmlFor="updates" className="text-xs text-gray-500">
                 Stay in the loop - Get relevant updates curated just for <i>you!</i>
               </label>
@@ -192,12 +192,12 @@ export default function SignupPage() {
 
         <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-4 pt-6">
           <div className="text-sm text-gray-600">
-            Already have an account? <Link href="/login" className="text-emerald-600 font-medium hover:underline">Login</Link>
+            Already have an account? <Link href="/login" className="text-blue-600 font-medium hover:underline">Login</Link>
           </div>
           <Button
             type="submit"
             disabled={loading}
-            className="w-full md:w-auto min-w-[140px] h-11 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-bold shadow-lg shadow-emerald-500/20"
+            className="w-full md:w-auto min-w-[140px] h-11 rounded-full bg-blue-600 text-white hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/20"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue"}
           </Button>

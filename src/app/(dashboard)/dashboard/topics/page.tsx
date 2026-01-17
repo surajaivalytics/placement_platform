@@ -81,7 +81,7 @@ export default function TopicsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
       </div>
     );
   }

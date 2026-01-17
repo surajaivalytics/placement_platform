@@ -172,7 +172,7 @@ export default function EligibilityPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50/50">
-        <Loader2 className="w-10 h-10 animate-spin text-emerald-600" />
+        <Loader2 className="w-32 h-32 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -377,10 +377,10 @@ export default function EligibilityPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={submitting}
                   className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 transition-all hover:scale-[1.02]"
                 >
-                  {loading ? (
+                  {submitting ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       Checking...

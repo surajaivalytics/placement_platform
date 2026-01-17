@@ -1,30 +1,34 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import Leaderboard from "@/components/leaderboard";
 import {
   Calendar,
-  ThumbsUp,
   Clock,
   Zap,
   MoreHorizontal,
-  Phone,
-  Video,
-  MoreVertical,
-  Download,
-  Smile,
-  Send,
-  Paperclip,
   CheckCircle2,
-  Circle,
-  Clock3,
   Search,
-  Building2
+  Building2,
+  Trophy,
+  Target,
+  ArrowUpRight,
+  TrendingUp,
+  BrainCircuit,
+  LayoutDashboard,
+  Clock3,
+  Settings2
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
 import {
   AreaChart,
@@ -36,8 +40,10 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 
+/* ----------------------------------------------------------------------------------
+ *  TYPES
+ * ---------------------------------------------------------------------------------- */
 interface UserStats {
   testsTaken: number;
   avgScore: number;
@@ -54,10 +60,10 @@ interface RecentTest {
   status: 'Done' | 'In progress' | 'On hold';
 }
 
+/* ----------------------------------------------------------------------------------
+ *  COMPONENT: UserDashboard
+ * ---------------------------------------------------------------------------------- */
 export default function UserDashboard() {
-  /* ----------------------------------------------------------------------------------
-   *  STATE: User Profile
-   * ---------------------------------------------------------------------------------- */
   const [profile, setProfile] = useState({
     name: "User",
     image: null as string | null,
@@ -65,25 +71,31 @@ export default function UserDashboard() {
     accountType: "Regular"
   });
 
-  /* ----------------------------------------------------------------------------------
-   *  STATE: Dashboard Stats & Charts
-   * ---------------------------------------------------------------------------------- */
   const [stats, setStats] = useState<UserStats>({
     testsTaken: 0,
     avgScore: 0,
     accuracy: 0,
     strongestTopic: "N/A",
   });
+
   const [recentTests, setRecentTests] = useState<RecentTest[]>([]);
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState<any[]>([]);
 
+  // Visibility State
+  const [visibleSections, setVisibleSections] = useState({
+    stats: true,
+    performance: true,
+    activity: true,
+    profile: true,
+    upcoming: true
+  });
+
   /* ----------------------------------------------------------------------------------
-   *  EFFECT: Fetch Dashboard Data
+   *  DATA FETCHING
    * ---------------------------------------------------------------------------------- */
   const fetchData = useCallback(async () => {
     try {
-      // 1. Fetch Profile Data
       const profileRes = await fetch('/api/user/profile');
       if (profileRes.ok) {
         const profileData = await profileRes.json();
@@ -95,7 +107,6 @@ export default function UserDashboard() {
         });
       }
 
-      // 2. Fetch Results/Stats Data
       const resultsRes = await fetch('/api/results');
       const resultsData = await resultsRes.json();
 
@@ -113,59 +124,31 @@ export default function UserDashboard() {
         }
         const results = resultsData.results;
 
-        // Calculate statistics
+        // Stats Calculation
         const testsTaken = results.length;
-        const totalPercentage = results.reduce((sum: number, r: ApiResult) => {
-          return sum + (r.score / r.total) * 100;
-        }, 0);
+        const totalPercentage = results.reduce((sum: number, r: ApiResult) => sum + (r.score / r.total) * 100, 0);
         const avgScore = Math.round(totalPercentage / testsTaken);
-        const accuracy = avgScore; // Mapping Accuracy to Avg Score for now
 
-        // Find strongest topic
-        const topicScores: Record<string, { total: number; count: number }> = {};
-        results.forEach((r: ApiResult) => {
-          const topic = r.test?.topic || r.test?.company || 'General';
-          const percentage = (r.score / r.total) * 100;
-          if (!topicScores[topic]) {
-            topicScores[topic] = { total: 0, count: 0 };
-          }
-          topicScores[topic].total += percentage;
-          topicScores[topic].count += 1;
-        });
+        setStats({ testsTaken, avgScore, accuracy: avgScore, strongestTopic: "Logic" }); // Mock logic for topic
 
-        let strongestTopic = 'N/A';
-        let highestAvg = 0;
-        Object.entries(topicScores).forEach(([topic, data]) => {
-          const avg = data.total / data.count;
-          if (avg > highestAvg) {
-            highestAvg = avg;
-            strongestTopic = topic;
-          }
-        });
-
-        setStats({ testsTaken, avgScore, accuracy, strongestTopic });
-
-        // Format recent tests for List
-        const recent = results.slice(0, 5).map((r: ApiResult) => ({
+        // Recent Tests
+        setRecentTests(results.slice(0, 5).map((r: ApiResult) => ({
           id: r.id,
-          name: r.test?.title || 'Test Application',
+          name: r.test?.title || 'Assessment',
           score: r.score,
           percentage: Math.round((r.score / r.total) * 100),
-          date: new Date(r.createdAt).toLocaleDateString(),
-          status: 'Done' as const // Assuming all results are completed tests
-        }));
-        setRecentTests(recent);
+          date: new Date(r.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          status: 'Done'
+        })));
 
-        // Format Chart Data (Reverse chronological order for chart)
-        const chartDataFormatted = results.slice(0, 7).reverse().map((r: ApiResult, i: number) => ({
+        // Chart Data
+        setChartData(results.slice(0, 7).reverse().map((r: ApiResult, i: number) => ({
           name: `Test ${i + 1}`,
           score: Math.round((r.score / r.total) * 100),
-          avg: avgScore // Baseline
-        }));
-        setChartData(chartDataFormatted);
+        })));
       }
     } catch (error) {
-      console.error('Failed to fetch user data:', error);
+      console.error('Failed load dashboard', error);
     } finally {
       setLoading(false);
     }
@@ -175,252 +158,329 @@ export default function UserDashboard() {
     fetchData();
   }, [fetchData]);
 
-  const currentDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  /* ----------------------------------------------------------------------------------
+   *  ANIMATIONS
+   * ---------------------------------------------------------------------------------- */
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100, damping: 15 } }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 md:p-8 font-sans">
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+    <div className="min-h-screen bg-[#F8F9FC] p-6 lg:p-10 font-sans text-slate-900">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="max-w-7xl mx-auto space-y-8"
+      >
 
-        {/* LEFT COLUMN (Main Content) - 8/12 */}
-        <div className="xl:col-span-8 flex flex-col gap-8">
-
-          {/* Top Bar: Search & Date */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                placeholder="Search..."
-                className="pl-12 pr-4 h-14 rounded-2xl border-none bg-white shadow-sm focus-visible:ring-0 text-gray-600 placeholder:text-gray-400 font-medium"
-              />
-            </div>
-
-            <div className="hidden md:flex items-center gap-2 text-sm font-medium text-gray-500 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm h-14">
-              <span>{currentDate}</span>
-              <Calendar className="w-4 h-4 text-gray-400" />
-            </div>
-          </div>
-
-          {/* Greeting Section */}
+        {/* HEADER SECTION */}
+        <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-end gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Hello, {profile.name}</h1>
-            <p className="text-gray-500 mt-1">Track your placement progress here. You almost reach a goal!</p>
+            <div className="flex items-center gap-2 text-slate-500 font-medium mb-1">
+              <Calendar className="w-4 h-4" />
+              {currentDate}
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
+              Welcome back, {profile.name.split(' ')[0]} 👋
+            </h1>
+            <p className="text-slate-500 mt-2 max-w-xl">
+              Here's what's happening with your job applications and assessments today.
+            </p>
           </div>
 
-          {/* Stats Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Stat 1: Finished */}
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-                  <ThumbsUp className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{stats.testsTaken} <span className="text-sm font-normal text-green-500 ml-1">▼ +8 tasks</span></h3>
-                  <p className="text-gray-500 text-sm font-medium">Finished</p>
-                </div>
-              </div>
-            </div>
 
-            {/* Stat 2: Tracked (Score) */}
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{stats.avgScore}% <span className="text-sm font-normal text-red-500 ml-1">▲ -6 hours</span></h3>
-                  <p className="text-gray-500 text-sm font-medium">Average Score</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Stat 3: Efficiency */}
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-800 group-hover:scale-110 transition-transform">
-                  <Zap className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{stats.accuracy}% <span className="text-sm font-normal text-green-500 ml-1">▼ +12%</span></h3>
-                  <p className="text-gray-500 text-sm font-medium">Efficiency</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Performance Chart */}
-          <div className="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100 min-h-[450px]">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-bold text-gray-900">Performance</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 cursor-pointer">01-07 May ▼</span>
-              </div>
-            </div>
-            <div className="h-[300px] w-full min-h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData.length > 0 ? chartData : [{ name: "01", score: 40 }, { name: "02", score: 60 }, { name: "03", score: 55 }, { name: "04", score: 80 }, { name: "05", score: 70 }]}>
-                  <defs>
-                    <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorAvg" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} dx={-10} />
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f3f4f6" />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Area type="monotone" dataKey="score" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Skills Mastery Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {['Aptitude', 'Verbal', 'Reasoning', 'Technical'].map((skill, idx) => (
-              <div key={skill} className="bg-white p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-4 group hover:shadow-md transition-all">
-                <div className="relative w-20 h-20 flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-gray-100" />
-                    <circle cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray={200} strokeDashoffset={200 - (200 * [75, 45, 90, 60][idx]) / 100} className={`text-${['blue', 'orange', 'green', 'purple'][idx]}-500 transition-all duration-1000 ease-out`} />
-                  </svg>
-                  <span className="absolute text-lg font-bold text-gray-700">{[75, 45, 90, 60][idx]}%</span>
-                </div>
-                <h4 className="font-bold text-gray-900">{skill}</h4>
-              </div>
-            ))}
-          </div>
-
-          {/* Upcoming Drives Section */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-[32px] p-8 text-white shadow-lg overflow-hidden relative">
-            <div className="flex justify-between items-center mb-6 relative z-10">
-              <h3 className="text-xl font-bold">Upcoming Drives</h3>
-              <Button variant="secondary" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-0 backdrop-blur-md">View Calendar</Button>
-            </div>
-
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide relative z-10">
-              {[
-                { company: 'Google', role: 'SDE Intern', date: '12th Aug' },
-                { company: 'Microsoft', role: 'Full Stack', date: '15th Aug' },
-                { company: 'Amazon', role: 'Data Analyst', date: '20th Aug' },
-                { company: 'TCS', role: 'System Eng.', date: '25th Aug' },
-              ].map((drive, i) => (
-                <div key={i} className="min-w-[200px] bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 flex flex-col justify-between hover:bg-white/20 transition-all cursor-pointer">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mb-4">
-                    <Building2 className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg">{drive.company}</h4>
-                    <p className="text-sm text-indigo-100">{drive.role}</p>
-                  </div>
-                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold bg-white/20 w-fit px-2 py-1 rounded-lg">
-                    <Calendar className="w-3 h-3" /> {drive.date}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Decorative Background Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-          </div>
-
-          {/* Current Tasks List */}
-          <div className="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-6">
-                <h3 className="text-xl font-bold text-gray-900">Current Tasks</h3>
-                <span className="text-sm font-semibold text-gray-400">Done 30%</span>
-              </div>
-              <span className="text-sm font-medium text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 cursor-pointer">Week ▼</span>
-            </div>
-
-            <div className="space-y-6">
-              {recentTests.length > 0 ? recentTests.map((test, i) => (
-                <div key={i} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                      <Zap className="w-5 h-5" />
-                    </div>
-                    <span className="font-semibold text-gray-900">{test.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${test.status === 'Done' ? 'bg-green-500' : 'bg-orange-500'}`} />
-                    <span className="text-sm font-medium text-gray-600">{test.status}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <Clock3 className="w-4 h-4" />
-                    <span className="text-sm font-medium">{test.score}%</span>
-                  </div>
-                  <MoreHorizontal className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
-                </div>
-              )) : (
-                <div className="text-center py-8 text-gray-400">No active tasks</div>
-              )}
-            </div>
-          </div>
-
-        </div>
-
-        {/* RIGHT COLUMN (Profile & Activity) - 4/12 */}
-        <div className="xl:col-span-4 flex flex-col gap-8">
-
-          {/* Profile Card */}
-          <div className="bg-white rounded-[32px] p-8 flex flex-col items-center text-center shadow-sm border border-gray-100">
-            <div className="relative mb-4">
-              <Avatar className="w-24 h-24 border-4 border-white shadow-xl">
-                <AvatarImage src={profile.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`} />
-                <AvatarFallback>{profile.name ? profile.name[0] : 'U'}</AvatarFallback>
-              </Avatar>
-              <span className="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></span>
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">{profile.name}</h2>
-            <p className="text-gray-500 text-sm">@{profile.name.toLowerCase().replace(/\s+/g, '_')}</p>
-            <div className="mt-4 flex gap-2">
-              <Badge variant="secondary" className="px-3 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 capitalize">{profile.role}</Badge>
-              <Badge variant="secondary" className="px-3 py-1 bg-orange-50 text-orange-700 hover:bg-orange-100">{profile.accountType === 'Premium' ? 'Pro Member' : 'Basic Member'}</Badge>
-            </div>
-          </div>
-
-          {/* Leaderboard & Start Test Section */}
-          <div className="flex flex-col gap-6">
-            <div className="flex justify-between items-center px-2">
-              <h3 className="text-lg font-bold text-gray-900">Leaderboard</h3>
-              <Link href="/dashboard/leaderboard" className="text-sm text-blue-600 font-medium hover:underline">View All</Link>
-            </div>
-
-            <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
-              <Leaderboard limit={5} />
-            </div>
-
-            {/* Start Test CTA */}
-            <div className="bg-gray-900 rounded-[24px] p-6 text-white text-center relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm group-hover:scale-110 transition-transform">
-                  <Zap className="w-6 h-6 text-yellow-400 fill-yellow-400" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Ready to compete?</h3>
-                <p className="text-gray-400 text-sm mb-6">Take a new test to boost your rank on the leaderboard!</p>
-
-                <Button asChild className="w-full bg-white text-gray-900 hover:bg-gray-100 font-bold h-12 rounded-xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]">
-                  <Link href="/dashboard/topics">
-                    Start New Test
-                  </Link>
+          <div className="flex gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-11 px-6 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold shadow-sm">
+                  <Settings2 className="w-4 h-4 mr-2" />
+                  Customize
                 </Button>
-              </div>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end">
+                <DropdownMenuLabel>Dashboard Content</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={visibleSections.stats}
+                  onCheckedChange={(checked) => setVisibleSections(prev => ({ ...prev, stats: checked }))}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  Stats Overview
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleSections.performance}
+                  onCheckedChange={(checked) => setVisibleSections(prev => ({ ...prev, performance: checked }))}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  Performance Chart
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleSections.activity}
+                  onCheckedChange={(checked) => setVisibleSections(prev => ({ ...prev, activity: checked }))}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  Recent Activity
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleSections.profile}
+                  onCheckedChange={(checked) => setVisibleSections(prev => ({ ...prev, profile: checked }))}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  Profile Card
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleSections.upcoming}
+                  onCheckedChange={(checked) => setVisibleSections(prev => ({ ...prev, upcoming: checked }))}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  Upcoming Events
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button className="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-lg shadow-indigo-600/20">
+              Start Assessment
+            </Button>
           </div>
+        </motion.div>
+
+        {/* STATS OVERVIEW CARDS */}
+        {visibleSections.stats && (
+          <motion.div
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          >
+            <StatCard
+              icon={<Target className="w-6 h-6 text-indigo-600" />}
+              label="Tests Completed"
+              value={stats.testsTaken}
+              trend="+12% this week"
+              color="indigo"
+            />
+            <StatCard
+              icon={<Trophy className="w-6 h-6 text-emerald-600" />}
+              label="Average Score"
+              value={`${stats.avgScore}%`}
+              trend="Top 15% of class"
+              color="emerald"
+            />
+            <StatCard
+              icon={<BrainCircuit className="w-6 h-6 text-purple-600" />}
+              label="Strongest Skill"
+              value={stats.strongestTopic || "Logic"}
+              trend="92% accuracy"
+              color="purple"
+            />
+            <StatCard
+              icon={<Clock className="w-6 h-6 text-orange-600" />}
+              label="Learning Time"
+              value="12h 4m"
+              trend="+2.5h vs last week"
+              color="orange"
+            />
+          </motion.div>
+        )}
+
+        {/* MAIN CONTENT GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* LEFT COLUMN (Chart & Activity) */}
+          <motion.div variants={itemVariants} className="lg:col-span-2 space-y-8">
+
+            {/* Performance Chart */}
+            {visibleSections.performance && (
+              <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-center mb-8">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Performance Trend</h3>
+                    <p className="text-sm text-slate-500">Your score progression over the last 7 tests</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-slate-400">
+                    <MoreHorizontal className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData.length ? chartData : [{ name: 'T1', score: 0 }]} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1} />
+                          <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="score"
+                        stroke="#4f46e5"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#colorScore)"
+                        activeDot={{ r: 6, strokeWidth: 0, fill: '#4f46e5' }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Recent Activity List */}
+            {visibleSections.activity && (
+              <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-slate-900">Recent Assessments</h3>
+                  <Link href="/dashboard/history" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">View All</Link>
+                </div>
+
+                <div className="space-y-1">
+                  {recentTests.length > 0 ? (
+                    recentTests.map((test, i) => (
+                      <div key={i} className="group flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 cursor-pointer">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${test.score >= 80 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-600'}`}>
+                            {test.score >= 80 ? <Trophy className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">{test.name}</h4>
+                            <p className="text-sm text-slate-500">{test.date} &bull; {test.status}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-slate-900">{test.score}%</div>
+                          {test.score >= 70 ? (
+                            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">PASSED</span>
+                          ) : (
+                            <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full">AVG</span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12 text-slate-400">No recent activity found.</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+          </motion.div>
+
+          {/* RIGHT COLUMN (Profile & Upcoming) */}
+          <motion.div variants={itemVariants} className="space-y-8">
+
+            {/* Profile Card */}
+            {visibleSections.profile && (
+              <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
+                <div className="absolute top-0 w-full h-32 bg-gradient-to-b from-slate-50 to-transparent"></div>
+                <div className="relative z-10 -mt-2">
+                  <div className="relative inline-block">
+                    <Avatar className="w-28 h-28 border-4 border-white shadow-xl">
+                      <AvatarImage src={profile.image || undefined} />
+                      <AvatarFallback className="bg-slate-900 text-white text-3xl font-bold">{profile.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute bottom-1 right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full"></div>
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900 mt-4">{profile.name}</h2>
+                  <p className="text-slate-500 font-medium">{profile.role}</p>
+
+                  <div className="mt-6 flex gap-2 w-full">
+                    <div className="flex-1 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Rank</div>
+                      <div className="text-xl font-black text-slate-900">#42</div>
+                    </div>
+                    <div className="flex-1 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Plan</div>
+                      <div className="text-xl font-black text-indigo-600">{profile.accountType}</div>
+                    </div>
+                  </div>
+
+                  <Link href="/dashboard/settings" className="w-full mt-6 block">
+                    <Button className="w-full rounded-xl bg-slate-900 text-white hover:bg-slate-800 h-12 font-semibold">
+                      Edit Profile
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* Upcoming Event Card */}
+            {visibleSections.upcoming && (
+              <div className="bg-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden group">
+                {/* Decorative Circles */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-30 transition-opacity"></div>
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-600 rounded-full blur-3xl opacity-20 translate-y-1/2 -translate-x-1/2"></div>
+
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="bg-white/10 backdrop-blur-md p-3 rounded-xl">
+                      <Building2 className="w-6 h-6 text-indigo-300" />
+                    </div>
+                    <Badge className="bg-indigo-500 text-white border-0">Upcoming</Badge>
+                  </div>
+
+                  <h3 className="text-2xl font-bold mb-2">Google SDE Assessment</h3>
+                  <div className="flex items-center gap-2 text-slate-300 mb-6 font-medium">
+                    <Clock3 className="w-4 h-4" />
+                    Aug 15 &bull; 2:00 PM
+                  </div>
+
+                  <Button className="w-full bg-white text-black hover:bg-slate-100 font-bold h-12 rounded-xl">
+                    Register Now
+                  </Button>
+                </div>
+              </div>
+            )}
+
+          </motion.div>
 
         </div>
+      </motion.div>
+    </div>
+  );
+}
 
+/* ----------------------------------------------------------------------------------
+ *  HELPER COMPONENTS
+ * ---------------------------------------------------------------------------------- */
+function StatCard({ icon, label, value, trend, color }: any) {
+  const colorStyles = {
+    indigo: "bg-indigo-50 text-indigo-600",
+    emerald: "bg-emerald-50 text-emerald-600",
+    purple: "bg-purple-50 text-purple-600",
+    orange: "bg-orange-50 text-orange-600",
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-4">
+        <div className={`p-3 rounded-2xl ${colorStyles[color as keyof typeof colorStyles]}`}>
+          {icon}
+        </div>
+        {trend && (
+          <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+            <TrendingUp className="w-3 h-3" />
+            {trend.includes('%') ? trend.split(' ')[0] : 'Up'}
+          </div>
+        )}
+      </div>
+      <div>
+        <h3 className="text-3xl font-medium text-slate-900 tracking-tight">{value}</h3>
+        <p className="text-sm font-semibold text-slate-500 mt-1">{label}</p>
       </div>
     </div>
   );

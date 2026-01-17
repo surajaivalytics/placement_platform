@@ -123,7 +123,7 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
   const handleViolationDetected = useCallback((violation: ViolationLog) => {
     // Don't show warnings if we're already submitting
     if (isSubmittingRef.current || isSubmitting) return;
-    
+
     setCurrentViolationType(violation.type);
     setViolationLogs(prev => [...prev, violation]);
     setShowWarningModal(true);
@@ -281,7 +281,7 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
     if (isSubmittingRef.current || isSubmitting) return;
     isSubmittingRef.current = true;
     setIsSubmitting(true);
-    
+
     // Close any open warning modals
     setShowWarningModal(false);
 
@@ -536,7 +536,19 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            onClick={() => {
+              if (window.confirm("Are you sure you want to finish the test early? This will submit your current answers.")) {
+                submitTestRef.current();
+              }
+            }}
+            variant="destructive"
+            className="flex bg-red-100 text-red-600 hover:bg-red-200 border border-red-200 shadow-sm"
+          >
+            Finish Test
+          </Button>
+
           <div className={`flex items-center gap-3 px-6 py-2.5 rounded-xl font-mono font-bold text-xl tracking-wider shadow-inner transition-colors duration-500 border
               ${timeLeft < 300 ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' : 'bg-gray-50 text-gray-700 border-gray-200'}`}>
             <Clock className={`w-5 h-5 ${timeLeft < 300 ? 'text-red-500' : 'text-gray-400'}`} />

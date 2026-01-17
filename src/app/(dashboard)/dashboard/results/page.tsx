@@ -1,31 +1,44 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { Trophy, Calendar, Target, Award, ArrowUpRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
-// Mock Data
-const RESULTS = [
-  { id: 1, test: "Time & Work", type: "Topic", score: 80, accuracy: 85, date: "2023-11-20" },
-  { id: 2, test: "TCS NQT Mock", type: "Company", score: 72, accuracy: 78, date: "2023-11-18" },
-  { id: 3, test: "Percentage", type: "Topic", score: 90, accuracy: 95, date: "2023-11-15" },
-  { id: 4, test: "Wipro NTH", type: "Company", score: 65, accuracy: 70, date: "2023-11-10" },
-  { id: 5, test: "Ratio & Proportions", type: "Topic", score: 88, accuracy: 92, date: "2023-11-05" },
-];
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/dashboard/page-header";
+
+import {
+  Trophy,
+  Calendar,
+  Target,
+  Award,
+  ArrowUpRight,
+  AlertTriangle
+} from "lucide-react";
+import { getMonitoringEvents } from "@/app/actions/monitoring";
+
+/* ---------------- animations ---------------- */
 
 const container = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
 const item = {
@@ -33,7 +46,55 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
+/* ---------------- types ---------------- */
+
+interface ResultData {
+  id: string;
+  score: number;
+  total: number;
+  percentage: number;
+  createdAt: string;
+  test: {
+    title: string;
+    type: string;
+    difficulty: string;
+  };
+}
+
+/* ---------------- page ---------------- */
+
 export default function ResultsHistoryPage() {
+  const router = useRouter();
+  const [results, setResults] = useState<ResultData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+
+  const [violations, setViolations] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [res, events] = await Promise.all([
+          fetch("/api/results"),
+          getMonitoringEvents()
+        ]);
+
+        if (res.ok) {
+          const data = await res.json();
+          setResults(data.results || []);
+        }
+        setViolations(events);
+
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <motion.div
       variants={container}
@@ -41,110 +102,167 @@ export default function ResultsHistoryPage() {
       animate="show"
       className="space-y-8 pb-8"
     >
+      {/* ---------- Header ---------- */}
       <motion.div variants={item}>
         <PageHeader
           title="My Results"
           description="Track your performance and test history"
         >
-          <Button variant="outline" className="gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800">
-            <ArrowUpRight className="w-4 h-4" /> Export Report
+          <Button
+            variant="outline"
+            className="gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+          >
+            <ArrowUpRight className="w-4 h-4" />
+            Export Report
           </Button>
         </PageHeader>
       </motion.div>
 
-      <motion.div variants={item} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border border-emerald-100 shadow-sm bg-emerald-50/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Average Score</CardTitle>
-            <Trophy className="h-4 w-4 text-emerald-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-700">79%</div>
-            <p className="text-xs text-emerald-600 font-medium">
-              +2.5% from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border border-teal-100 shadow-sm bg-teal-50/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Tests Taken</CardTitle>
-            <Target className="h-4 w-4 text-teal-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-teal-700">12</div>
-            <p className="text-xs text-teal-600 font-medium">
-              4 this week
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border border-cyan-100 shadow-sm bg-cyan-50/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Accuracy</CardTitle>
-            <Target className="h-4 w-4 text-cyan-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-cyan-700">84%</div>
-            <p className="text-xs text-cyan-600 font-medium">
-              Consistent performance
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
-
+      {/* ---------- Table ---------- */}
       <motion.div variants={item}>
-        <Card className="rounded-2xl shadow-sm border border-gray-100 overflow-hidden bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-white/50 border-b border-gray-100 pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold text-gray-900">Recent Performance</CardTitle>
-                <CardDescription className="text-gray-500">View detailed analysis of your recent attempts</CardDescription>
-              </div>
-            </div>
+        <Card className="rounded-2xl border border-gray-100 overflow-hidden">
+          <CardHeader className="border-b">
+            <CardTitle>Recent Performance</CardTitle>
+            <CardDescription>
+              Click any row to view AI analysis
+            </CardDescription>
           </CardHeader>
+
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                  <TableHead className="w-[300px] font-semibold text-gray-700">Test Name</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Type</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Date</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Score</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Accuracy</TableHead>
-                  <TableHead className="text-right font-semibold text-gray-700">Status</TableHead>
+                <TableRow>
+                  <TableHead>Test</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Score</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
-                {RESULTS.map((result) => (
-                  <TableRow key={result.id} className="group hover:bg-emerald-50/30 transition-colors border-b border-gray-100">
-                    <TableCell className="font-medium">
+                {results.map((result) => (
+                  <TableRow
+                    key={result.id}
+                    onClick={() =>
+                      router.push(`/dashboard/results/${result.id}`)
+                    }
+                    className="cursor-pointer hover:bg-emerald-50/40"
+                  >
+                    <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <div className="p-2 rounded-lg bg-emerald-100 text-emerald-600">
                           <Award className="w-4 h-4" />
                         </div>
-                        <span className="text-gray-900">{result.test}</span>
+                        {result.test.title}
                       </div>
                     </TableCell>
+
                     <TableCell>
-                      <Badge variant="outline" className="font-medium bg-white text-gray-600 border-gray-200">{result.type}</Badge>
+                      <Badge variant="outline">
+                        {result.test.type}
+                      </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-500 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {result.date}
-                      </div>
+
+                    <TableCell className="text-sm text-gray-500">
+                      <Calendar className="inline w-4 h-4 mr-1" />
+                      {new Date(result.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="font-bold text-gray-900">{result.score}%</TableCell>
-                    <TableCell className="text-gray-700">{result.accuracy}%</TableCell>
+
+                    <TableCell className="font-semibold">
+                      {result.score}/3
+                    </TableCell>
+
                     <TableCell className="text-right">
                       <Badge
-                        variant={result.score >= 75 ? "outline" : result.score >= 50 ? "secondary" : "destructive"}
-                        className={result.score >= 75 ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200" : ""}
+                        className={
+                          result.percentage >= 75
+                            ? "bg-emerald-100 text-emerald-700"
+                            : result.percentage >= 50
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                        }
                       >
-                        {result.score >= 75 ? "Excellent" : result.score >= 50 ? "Average" : "Needs Improvement"}
+                        {result.percentage >= 75
+                          ? "Excellent"
+                          : result.percentage >= 50
+                            ? "Average"
+                            : "Needs Improvement"}
                       </Badge>
                     </TableCell>
                   </TableRow>
                 ))}
+
+                {!loading && results.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center text-muted-foreground py-6"
+                    >
+                      No results found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* ---------- Violations Table ---------- */}
+      <motion.div variants={item}>
+        <Card className="rounded-2xl border border-red-100 overflow-hidden shadow-sm">
+          <CardHeader className="border-b bg-red-50/50">
+            <CardTitle className="flex items-center gap-2 text-red-900">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              Proctoring Violations
+            </CardTitle>
+            <CardDescription>
+              Security incidents recorded during your assessments.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Test / Company</TableHead>
+                  <TableHead>Violation Type</TableHead>
+                  <TableHead>Details</TableHead>
+                  <TableHead className="text-right">Time</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {violations.map((v) => (
+                  <TableRow key={v.id} className="hover:bg-red-50/20">
+                    <TableCell className="font-medium text-gray-900">{v.testType}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="border-red-200 text-red-700 bg-red-50">
+                        {v.violationType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-gray-600 truncate max-w-xs" title={v.details}>
+                      {v.details}
+                    </TableCell>
+                    <TableCell className="text-right text-gray-400 text-sm">
+                      {new Date(v.timestamp).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                {!loading && violations.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                          <Award className="w-5 h-5" />
+                        </div>
+                        <p>Clean Record! No violations detected.</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

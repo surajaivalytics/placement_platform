@@ -20,28 +20,31 @@ export default function ResultPage() {
   const [feedback, setFeedback] = useState<string>('');
   const [loadingFeedback, setLoadingFeedback] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('lastTestResult');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setResult(parsed);
-      
-      // Fetch AI Feedback
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLoadingFeedback(true);
-      // Mocking the API call for client-side demo
-      // In real app: fetch('/api/feedback', { method: 'POST', body: JSON.stringify(parsed) })
-      setTimeout(() => {
-          setFeedback(`
-**Strengths**: You showed good understanding of basic concepts.
-**Weaknesses**: Speed was a bit slow on complex problems.
-**Action Plan**: Practice more "Time & Work" problems to improve speed.
-          `);
-          setLoadingFeedback(false);
-      }, 1500);
+ useEffect(() => {
+    const fetchResult = async () => {
+      try {
+        const resultId = params.id as string;
+        const response = await fetch(`/api/results?id=${resultId}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch result');
+        }
+
+        const data = await response.json();
+        setResult(data.result);
+      } catch (err) {
+        console.error('Error fetching result:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load result');
+      } finally {
+
+        setLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchResult();
     }
-  }, []);
+  }, [params.id]);
 
   if (!result) return <div>Loading results...</div>;
 
