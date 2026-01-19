@@ -227,3 +227,44 @@ model VoiceAssessment {
   
   application       PlacementApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
+
+
+model Problem{
+  id                Int                    @id @default(autoincrement())
+  slug              String                 @unique
+  title             String                 
+  description       String                 @db.Text
+  difficulty        String
+
+
+
+  starterTemplate   Json
+  testCases         Json
+
+  createdAt          DateTime @default(now())
+
+  updatedAt          DateTime  @updatedAt
+
+  submissions        Submissions[]
+
+
+}
+
+model Submissions{
+  id                String              @id @default(cuid())
+  problemId         Int
+  userId            String
+  code              String              @db.Text
+  language          String
+  status            String
+
+
+  problem           Problem              @relation(fields:[problemId],references:[id])
+
+  user              User                 @relation(fields:[userId],references:[id])
+
+  createdAt         DateTime              @default(now())
+  
+
+
+}
