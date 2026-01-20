@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Account {
@@ -69,6 +68,8 @@ model User {
   interviewSessions     InterviewSession[]
   monitoringEvents      MonitoringEvent[]
   mockDrives            MockDriveSession[]
+  subtopicProgress      UserSubtopicProgress[]
+  submissions           Submissions[]
 }
 
 model VerificationToken {
@@ -95,11 +96,13 @@ model Test {
   results          Result[]
   assignments      TestAssignment[]
   assessmentStages AssessmentStage[]
+  subtopics        Subtopic[]
 }
 
 model Question {
   id         String  @id @default(cuid())
   testId     String
+  subtopicId String?
   text       String
   type       String  @default("multiple-choice") // multiple-choice, true-false, coding, essay
   category   String? // numerical, verbal, reasoning, logical, quant
@@ -110,6 +113,22 @@ model Question {
   options Option[]
 
   test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+  subtopic Subtopic? @relation(fields: [subtopicId], references: [id])
+}
+
+model Subtopic {
+  id             String   @id @default(cuid())
+  testId         String
+  name           String
+  description    String?
+  totalQuestions Int      @default(0)
+  order          Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  test      Test                  @relation(fields: [testId], references: [id], onDelete: Cascade)
+  questions Question[]
+  progress  UserSubtopicProgress[]
 }
 
 model Option {
