@@ -1,0 +1,482 @@
+"use client";
+
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { WebcamMonitor } from "@/components/proctoring/webcam-monitor";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { ChevronRight, ChevronLeft, Save, Flag, Clock, AlertTriangle, ListFilter, Terminal, Play, Send, CheckCircle2, UserCheck, Briefcase, Award } from "lucide-react";
+import Link from 'next/link';
+import { useRouter, useParams } from 'next/navigation';
+import { useProctoring } from "@/hooks/use-proctoring";
+import { logMonitoringEvent } from "@/app/actions/monitoring";
+import { updateMockDriveProgress } from "@/app/actions/mock-drive";
+import { toast } from "sonner";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader } from "@/components/ui/loader";
+import { AIInterviewRunner } from "@/components/interview/ai-interview-runner";
+
+
+const LANGUAGES = [
+    { id: "python", name: "Python", version: "3.10.0", fileExt: "py" },
+    { id: "java", name: "Java", version: "15.0.2", fileExt: "java" },
+    { id: "c++", name: "C++", version: "10.2.0", fileExt: "cpp" },
+    { id: "c", name: "C", version: "10.2.0", fileExt: "c" },
+    { id: "javascript", name: "JavaScript", version: "18.15.0", fileExt: "js" },
+];
+
+const DEFAULT_CODE: Record<string, string> = {
+    python: `def solve():\n    # Write your code here\n    pass\n\nif __name__ == "__main__":\n    solve()`,
+    java: `import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        // Write your code here\n    }\n}`,
+    "c++": `#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your code here\n    return 0;\n}`,
+    c: `#include <stdio.h>\n\nint main() {\n    // Write your code here\n    return 0;\n}`,
+    javascript: `// Write your code here\nconsole.log("Hello World");`
+};
+
+export default function TestRunnerClient({ test, session }: { test: any, session: any }) {
+    const router = useRouter();
+    // No need for params.id if we have test object passed in, but can use if needed.
+    const testId = test.id;
+
+    const [loading, setLoading] = useState(false); // Data is passed in now
+    const [allQuestions] = useState<any[]>(test.questions || []);
+
+    // Flow State
+    // Initial round index calculation
+    // calculatedRounds will be used to determine mapping
+
+    // --- Round Grouping Logic ---
+    const rounds = useMemo(() => {
+        if (!test?.subtopics || test.subtopics.length === 0) {
+            return [{ title: "Assessment", type: "assessment", sections: [{ id: 'general', name: 'General', questions: allQuestions }] }];
+        }
+
+        const groups = new Map<string, any>();
+
+        // Sort subtopics by order first
+        const sortedSubtopics = [...test.subtopics].sort((a: any, b: any) => a.order - b.order);
+
+        sortedSubtopics.forEach((sub: any) => {
+            const title = sub.roundTitle || "General Assessment";
+            const type = sub.type || 'assessment';
+
+            if (!groups.has(title)) {
+                groups.set(title, {
+                    title,
+                    type,
+                    sections: [],
+                    minOrder: sub.order
+                });
+            }
+            // Add questions to subtopic
+            const subQuestions = allQuestions.filter((q: any) => q.subtopicId === sub.id);
+            if (subQuestions.length > 0 || type === 'interview') { // Include interviews even if no questions (might be just timer/instruction)
+                groups.get(title).sections.push({ ...sub, questions: subQuestions });
+            }
+        });
+
+        const roundsList = Array.from(groups.values()).sort((a, b) => {
+            const minOrderA = a.minOrder || 999;
+            const minOrderB = b.minOrder || 999;
+
+            // Use same priority logic as Dashboard
+            if (minOrderA === minOrderB) {
+                const getPriority = (t: string, title: string) => {
+                    t = (t || '').toLowerCase(); title = (title || '').toLowerCase();
+                    if (t === 'assessment') return 1;
+                    if (t === 'coding') return 2;
+                    if (title.includes('technical') || t.includes('technical')) return 3;
+                    if (title.includes('hr') || t.includes('hr')) return 4;
+                    return 5;
+                };
+                return getPriority(a.type, a.title) - getPriority(b.type, b.title);
+            }
+            return minOrderA - minOrderB;
+        });
+
+        return roundsList;
+    }, [test, allQuestions]);
+
+
+    // Determine initial activeRoundIndex based on session
+    const [activeRoundIndex, setActiveRoundIndex] = useState(() => {
+        if (session && session.currentRound) {
+            // session.currentRound is 1-based index usually, but let's check mapping.
+            // In Dashboard we assumed direct mapping.
+            // If session.currentRound = 1 -> Index 0
+            // If session.currentRound = 2 -> Index 1
+            const index = (session.currentRound || 1) - 1;
+            return Math.min(Math.max(0, index), rounds.length - 1);
+        }
+        return 0;
+    });
+
+    const [activeSectionIndex, setActiveSectionIndex] = useState(0);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+    const [answers, setAnswers] = useState<Record<string, string>>({});
+    const [markedForReview, setMarkedForReview] = useState<string[]>([]);
+    const [timeLeft, setTimeLeft] = useState(0);
+
+    // Evaluation State
+    const [roundVerdict, setRoundVerdict] = useState<"Pending" | "Cleared" | "Failed">("Pending");
+    const [showRoundTransition, setShowRoundTransition] = useState(false);
+
+    // Coding state
+    const [code, setCode] = useState(DEFAULT_CODE['python']);
+    const [language, setLanguage] = useState("python");
+    const [output, setOutput] = useState("");
+    const [isRunning, setIsRunning] = useState(false);
+    const [verdict, setVerdict] = useState<"Passed" | "Failed" | null>(null);
+
+    const currentRound = rounds[activeRoundIndex];
+    const currentSection = currentRound?.sections[activeSectionIndex];
+    const activeQuestions = currentSection?.questions || [];
+    const currentQuestion = activeQuestions[currentQuestionIndex];
+
+    const isInterview = currentRound?.type === 'interview';
+    const isCoding = !isInterview && (currentQuestion?.type === 'coding' || currentQuestion?.type === 'code');
+
+
+    // --- Timer Management ---
+    useEffect(() => {
+        if (!currentRound) return;
+
+        // Reset timer when switching rounds
+        if (isInterview) {
+            setTimeLeft(30 * 60); // 30 mins for interview
+        } else if (activeRoundIndex === 0 && timeLeft === 0) {
+            // Only set initial time if it's 0 (first load)
+            // Ideally we should subtract time elapsed if we resume.
+            setTimeLeft((test?.duration || 60) * 60);
+        }
+    }, [activeRoundIndex, isInterview, test]);
+
+
+    // Timer Tick
+    useEffect(() => {
+        if (!timeLeft || showRoundTransition || loading) return;
+
+        const interval = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    handleTimeUp();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [timeLeft, showRoundTransition, loading]);
+
+    const handleTimeUp = () => {
+        toast.warning("Time's up for this round!");
+        handleNextRound();
+    };
+
+    // --- Submission & Navigation ---
+
+    const submitTest = async (status: string) => {
+        toast.info("Submitting Test Result...");
+        try {
+            if (session?.id) {
+                await updateMockDriveProgress(session.id, undefined, undefined, undefined, "COMPLETED");
+            }
+            router.push(`/exam/${testId}/result?status=${status}`);
+        } catch (e) { console.error(e) }
+    };
+
+    // Evaluate Round (Mock Logic)
+    const evaluateAssessment = () => {
+        const answeredCount = Object.keys(answers).length;
+        return answeredCount > 0; // Simple check
+    };
+
+    const handleNextRound = async () => {
+        // If Assessment -> Check if cleared
+        if (currentRound.type === 'assessment' || currentRound.type === 'coding') {
+            const cleared = evaluateAssessment();
+            // Assuming cleared for prototype unless implemented otherwise
+            setRoundVerdict("Cleared");
+            setShowRoundTransition(true);
+        } else {
+            // Interview finished
+            setRoundVerdict("Cleared");
+            setShowRoundTransition(true);
+        }
+    };
+
+
+    const proceedToNextRound = async () => {
+        if (activeRoundIndex < rounds.length - 1) {
+            const nextRoundIndex = activeRoundIndex + 1;
+            setActiveRoundIndex(nextRoundIndex);
+            setActiveSectionIndex(0);
+            setCurrentQuestionIndex(0);
+            setShowRoundTransition(false);
+
+            // Update Session on Backend
+            if (session?.id) {
+                // Next round 1-based index = nextRoundIndex + 1
+                await updateMockDriveProgress(session.id, nextRoundIndex + 1);
+            }
+            toast.success("Progress saved");
+        } else {
+            // All done
+            submitTest("Completed");
+        }
+    };
+
+    const handleNextSection = () => {
+        if (activeSectionIndex < currentRound.sections.length - 1) {
+            setActiveSectionIndex(prev => prev + 1);
+            setCurrentQuestionIndex(0);
+            toast.info(`Starting next section: ${currentRound.sections[activeSectionIndex + 1].name}`);
+        } else {
+            handleNextRound();
+        }
+    };
+
+    const handleOptionSelect = (val: string) => {
+        if (!currentQuestion) return;
+        setAnswers(prev => ({ ...prev, [currentQuestion.id]: val }));
+    };
+
+    const toggleMarkReview = () => {
+        if (!currentQuestion) return;
+        setMarkedForReview(prev =>
+            prev.includes(currentQuestion.id)
+                ? prev.filter(id => id !== currentQuestion.id)
+                : [...prev, currentQuestion.id]
+        );
+    };
+
+    const handleLanguageChange = (val: string) => {
+        setLanguage(val);
+        if (!currentQuestion) return;
+        if (!answers[currentQuestion.id]) {
+            setCode(DEFAULT_CODE[val] || "");
+        }
+    };
+
+    // Sync code
+    useEffect(() => {
+        if (currentQuestion?.type === 'coding' || currentQuestion?.type === 'code') {
+            const savedCode = answers[currentQuestion.id];
+            if (savedCode) setCode(savedCode);
+            else setCode(DEFAULT_CODE[language] || "");
+        }
+    }, [currentQuestion, answers, language]);
+
+    const getCodingMetadata = (q: any) => {
+        if (q?.type !== 'coding' || !q?.metadata) return null;
+        try { return JSON.parse(q.metadata); } catch (e) { return {}; }
+    };
+
+    const runCode = async () => {
+        const metadata = getCodingMetadata(currentQuestion);
+        if (!metadata?.testCases?.length) { toast.error("No test cases."); return; }
+        setIsRunning(true);
+        setOutput("Compiling...");
+        setVerdict(null);
+        try {
+            const langConfig = LANGUAGES.find(l => l.id === language);
+            const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    language: langConfig?.id, version: langConfig?.version,
+                    files: [{ content: code }], stdin: metadata.testCases[0].input
+                })
+            });
+            const data = await res.json();
+            if (data.run) {
+                const rawOutput = data.run.output?.trim();
+                setOutput(rawOutput || (data.run.stderr ? `Error:\n${data.run.stderr}` : "No Output"));
+                if (rawOutput == metadata.testCases[0].output?.trim()) {
+                    setVerdict("Passed"); toast.success("Passed!");
+                } else {
+                    setVerdict("Failed"); toast.error("Failed");
+                }
+            } else setOutput("Error");
+        } catch (e) { setOutput("Connection Failed"); }
+        finally { setIsRunning(false); }
+    };
+
+    const saveCodingAnswer = () => {
+        if (!currentQuestion) return;
+        setAnswers(prev => ({ ...prev, [currentQuestion.id]: code }));
+        toast.success("Saved");
+    };
+
+
+    const formatTime = (seconds: number) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
+    // --- RENDER ---
+
+    if (loading) return <div className="flex h-screen items-center justify-center"><Loader /></div>;
+
+    // Transition Screen
+    if (showRoundTransition) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-gray-50 p-4">
+                <Card className="max-w-md w-full p-8 text-center space-y-6 shadow-xl">
+                    <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle2 className="w-8 h-8 text-green-600" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900">{currentRound.title} Completed</h2>
+                        <p className="text-gray-500 mt-2">
+                            You have completed this round.
+                            {activeRoundIndex < rounds.length - 1 ? " Proceed to the next stage." : " All rounds completed."}
+                        </p>
+                    </div>
+                    {activeRoundIndex < rounds.length - 1 ? (
+                        <Button onClick={proceedToNextRound} className="w-full bg-[#181C2E] text-white py-6 text-lg">
+                            Start {rounds[activeRoundIndex + 1].title}
+                        </Button>
+                    ) : (
+                        <Button onClick={() => submitTest("Completed")} className="w-full bg-green-600 text-white">
+                            View Final Result
+                        </Button>
+                    )}
+                </Card>
+            </div>
+        );
+    }
+
+    // Empty Fallback
+    if (!currentRound) return <div>No rounds loaded.</div>;
+
+    return (
+        <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden select-none bg-gray-50">
+            {/* Header */}
+            <div className="bg-white border-b border-gray-200 px-6 py-2 flex justify-between items-center shadow-sm z-10 shrink-0 h-16">
+                <div className="flex items-center gap-4">
+                    <div className="flex flex-col">
+                        <h2 className="font-bold text-[#181C2E] flex items-center gap-2">
+                            {currentRound.title}
+                            {isInterview && <Badge variant="outline" className="ml-2 bg-purple-50 text-purple-700 border-purple-200">Interview Mode</Badge>}
+                        </h2>
+                        <span className="text-xs text-gray-500">{currentSection?.name} ({currentQuestionIndex + 1}/{activeQuestions.length || 1})</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className={`flex items-center gap-2 font-mono font-bold text-lg px-3 py-1 rounded border ${isInterview ? 'bg-purple-100 text-purple-800 border-purple-300' : 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+                        <Clock className="w-5 h-5" />
+                        {formatTime(timeLeft)}
+                    </div>
+                    <Button variant="default" className="bg-[#181C2E] hover:bg-gray-800" size="sm" onClick={handleNextSection}>
+                        {activeSectionIndex === currentRound.sections.length - 1 ? 'Finish Round' : 'Next Section'}
+                    </Button>
+                </div>
+            </div>
+
+            <div className="flex flex-1 overflow-hidden">
+                <div className={`flex-1 flex ${isCoding ? 'bg-white' : 'p-6 md:p-10 overflow-y-auto'}`}>
+
+                    {/* INTERVIEW UI */}
+                    {isInterview ? (
+                        <div className="w-full h-full p-4 flex flex-col">
+                            <AIInterviewRunner
+                                interviewType={currentRound.title.toLowerCase().includes('technical') ? 'Technical' : 'HR'}
+                                companyName={session?.company || 'TCS'}
+                                onFinish={handleNextRound}
+                            />
+                        </div>
+                    ) : isCoding ? (
+
+                        (() => {
+                            const metadata = getCodingMetadata(currentQuestion);
+                            return (
+                                <div className="flex w-full h-full">
+                                    <div className="w-1/3 bg-white border-r p-6 overflow-y-auto">
+                                        <h1 className="text-xl font-bold mb-4">{currentQuestion?.text}</h1>
+                                        {metadata && <div className="space-y-4 text-sm"><p><strong>Input:</strong> {metadata.inputFormat}</p><p><strong>Output:</strong> {metadata.outputFormat}</p></div>}
+                                    </div>
+                                    <div className="flex-1 flex flex-col bg-[#1e1e1e]">
+                                        <div className="bg-[#2d2d2d] p-2 flex justify-between">
+                                            <Select value={language} onValueChange={handleLanguageChange}>
+                                                <SelectTrigger className="w-32 bg-[#333] border-0 text-white"><SelectValue /></SelectTrigger>
+                                                <SelectContent>{LANGUAGES.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                            <div className="flex gap-2">
+                                                <Button size="sm" className="bg-green-600" onClick={runCode}>{isRunning ? '...' : 'Run'}</Button>
+                                                <Button size="sm" className="bg-blue-600" onClick={saveCodingAnswer}>Save</Button>
+                                            </div>
+                                        </div>
+                                        <textarea className="flex-1 bg-[#1e1e1e] text-gray-300 p-4 font-mono" value={code} onChange={e => setCode(e.target.value)} />
+                                        <div className="h-32 bg-black text-gray-400 p-2 font-mono text-sm border-t border-gray-700">{output}</div>
+                                    </div>
+                                </div>
+                            )
+                        })()
+                    ) : (
+                        // Standard MCQ UI
+                        <div className="max-w-4xl mx-auto w-full">
+                            <Card className="min-h-[400px] border-0 shadow-md p-8">
+                                <span className="text-gray-500 font-medium">Question {currentQuestionIndex + 1}</span>
+                                <p className="text-xl font-medium text-gray-900 mt-4 mb-8">{currentQuestion?.text}</p>
+                                <div className="space-y-3">
+                                    {currentQuestion?.options?.map((opt: any) => (
+                                        <div key={opt.id} onClick={() => handleOptionSelect(opt.id)}
+                                            className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-gray-50 ${answers[currentQuestion.id] === opt.id ? 'border-blue-600 bg-blue-50 ring-1' : 'border-gray-200'}`}>
+                                            <div className={`w-4 h-4 rounded-full border ${answers[currentQuestion.id] === opt.id ? 'bg-blue-600 border-blue-600' : 'border-gray-400'}`} />
+                                            <span className="flex-1">{opt.text}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                            <div className="flex justify-between mt-8">
+                                <Button variant="outline" onClick={() => setCurrentQuestionIndex(c => Math.max(0, c - 1))} disabled={currentQuestionIndex === 0}>Previous</Button>
+                                <div className="flex gap-2">
+                                    <Button variant="outline" className="text-amber-600" onClick={toggleMarkReview}>Mark Review</Button>
+                                    <Button className="bg-green-600 hover:bg-green-700" onClick={() => {
+                                        if (currentQuestionIndex < activeQuestions.length - 1) setCurrentQuestionIndex(c => c + 1);
+                                        else handleNextSection();
+                                    }}>Save & Next</Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+                {/* Sidebar (Palette) - Keep simple */}
+                {!isCoding && !isInterview && (
+                    <div className="w-72 bg-white border-l p-4 hidden md:block overflow-y-auto">
+                        <h3 className="font-bold mb-4">Questions</h3>
+                        <div className="grid grid-cols-4 gap-2">
+                            {activeQuestions.map((q: any, i: number) => (
+                                <button key={q.id} onClick={() => setCurrentQuestionIndex(i)}
+                                    className={`h-8 w-8 rounded flex items-center justify-center text-sm font-medium ${currentQuestionIndex === i ? 'ring-2 ring-blue-600' : ''} ${answers[q.id] ? 'bg-green-500 text-white' : 'bg-gray-100'}`}>
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {/* <WebcamMonitor /> logic handled inside components or only show if not interview to avoid duplicate cams */}
+                {!isInterview && <WebcamMonitor />}
+            </div>
+        </div>
+    );
+}
+
+// Helper component for badge
+function Badge({ children, variant, className }: any) {
+    return <span className={`text-xs px-2 py-0.5 rounded ${className}`}>{children}</span>
+}

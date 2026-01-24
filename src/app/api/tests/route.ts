@@ -33,9 +33,19 @@ export async function GET(req: Request) {
         } else {
             // Get all tests (optionally filtered by type)
             const type = searchParams.get('type');
+            const excludeType = searchParams.get('exclude_type');
+
+            const whereClause: any = {};
+            if (type) {
+                whereClause.type = type;
+            } else if (excludeType) {
+                whereClause.type = {
+                    not: excludeType
+                };
+            }
 
             const tests = await prisma.test.findMany({
-                where: type ? { type: type } : undefined,
+                where: whereClause,
                 include: {
                     _count: {
                         select: {
@@ -72,7 +82,9 @@ export async function POST(req: Request) {
             );
         }
 
-        const { title, description, duration, difficulty, questions, type, company, topic } = await req.json();
+        const body = await req.json();
+        console.log("Create Test Request Body:", JSON.stringify(body, null, 2));
+        const { title, description, duration, difficulty, questions, type, company, topic } = body;
 
         if (!title || !duration || !difficulty) {
             return NextResponse.json(
@@ -81,29 +93,39 @@ export async function POST(req: Request) {
             );
         }
 
+        // Create test payload
+        const testData: any = {
+            title,
+            description,
+            duration: parseInt(duration),
+            difficulty,
+            type: type || 'topic',
+            company,
+            topic,
+        };
+
+        // Only add questions if they exist and are not empty
+        if (questions && Array.isArray(questions) && questions.length > 0) {
+            testData.questions = {
+                create: questions.map((q: { text: string; type?: string; category?: string; difficulty?: string; metadata?: any; options: Array<{ text: string; isCorrect: boolean }> }) => ({
+                    text: q.text,
+                    type: q.type || 'multiple-choice',
+                    category: q.category,
+                    difficulty: q.difficulty,
+                    metadata: q.metadata ? JSON.stringify(q.metadata) : undefined,
+                    options: {
+                        create: q.options?.map((opt: { text: string; isCorrect: boolean }) => ({
+                            text: opt.text,
+                            isCorrect: opt.isCorrect || false,
+                        })),
+                    },
+                })),
+            };
+        }
+
         // Create test with questions
         const test = await prisma.test.create({
-            data: {
-                title,
-                description,
-                duration: parseInt(duration),
-                difficulty,
-                type: type || 'topic',
-                company,
-                topic,
-                questions: {
-                    create: questions?.map((q: { text: string; type?: string; options: Array<{ text: string; isCorrect: boolean }> }) => ({
-                        text: q.text,
-                        type: q.type || 'multiple-choice',
-                        options: {
-                            create: q.options?.map((opt: { text: string; isCorrect: boolean }) => ({
-                                text: opt.text,
-                                isCorrect: opt.isCorrect || false,
-                            })),
-                        },
-                    })),
-                },
-            },
+            data: testData,
             include: {
                 questions: {
                     include: {
@@ -112,6 +134,7 @@ export async function POST(req: Request) {
                 },
             },
         });
+        console.log("Test Created in DB:", test.id);
 
         return NextResponse.json(
             { message: 'Test created successfully', test },
@@ -166,7 +189,11 @@ export async function DELETE(req: Request) {
     } catch (error) {
         console.error('Test deletion error:', error);
         return NextResponse.json(
-            { error: 'Internal server error' },
+            {
+                error: 'Failed to delete test',
+                details: error instanceof Error ? error.message : 'Unknown error',
+                prismaCode: (error as any).code
+            },
             { status: 500 }
         );
     }

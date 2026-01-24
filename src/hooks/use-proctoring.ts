@@ -1,7 +1,7 @@
 "use strict";
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner"; // Assuming sonner is used, or us basic alert
 import { useRouter } from "next/navigation";
 
@@ -11,6 +11,7 @@ interface ProctoringConfig {
     preventCopyPaste?: boolean;
     forceFullScreen?: boolean;
     onViolation?: (type: string, message: string) => void;
+    onExitFullScreen?: () => void;
 }
 
 export function useProctoring(config: ProctoringConfig = {}) {
@@ -18,13 +19,11 @@ export function useProctoring(config: ProctoringConfig = {}) {
     const [warnings, setWarnings] = useState<number>(0);
     const [isFullScreen, setIsFullScreen] = useState<boolean>(true);
 
+    const hasEnteredFullScreen = useRef(false);
+
     const logViolation = useCallback((type: string, message: string) => {
         setWarnings((prev) => prev + 1);
         config.onViolation?.(type, message);
-
-        // Immediate Feedback
-        // Using native alert for "strict" feel if toast isn't enough, but toast is better UX
-        // alert(`VIOLATION DETECTED: ${message}`); 
     }, [config]);
 
     // Tab Switching / Visibility Change
@@ -38,7 +37,8 @@ export function useProctoring(config: ProctoringConfig = {}) {
         };
 
         const handleBlur = () => {
-            logViolation("WINDOW_BLUR", "Focus lost from the test window.");
+            // Optional: strict focus check
+            // logViolation("WINDOW_BLUR", "Focus lost from the test window.");
         };
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -75,6 +75,8 @@ export function useProctoring(config: ProctoringConfig = {}) {
         // Prevent selection
         const handleSelectStart = (e: Event) => {
             e.preventDefault();
+            // Optional: Silent block or warn
+            // logViolation("SELECTION", "Text selection is disabled.");
         }
 
         document.addEventListener("copy", handleCopyPaste);
@@ -97,11 +99,18 @@ export function useProctoring(config: ProctoringConfig = {}) {
         const checkFullScreen = () => {
             if (!document.fullscreenElement) {
                 setIsFullScreen(false);
-                // Only log if we expect it to be full screen (e.g. after it was true?). 
-                // For now, simple logging is fine, but maybe redundant on load.
-                // logViolation("FULLSCREEN_EXIT", "Exited full-screen mode."); // Optional: Don't spam log on load
+
+                // ONLY trigger violation if we have previously successfully entered fullscreen AND prevent violations on initial load
+                if (hasEnteredFullScreen.current) {
+                    if (config.onExitFullScreen) {
+                        config.onExitFullScreen();
+                    } else {
+                        logViolation("FULLSCREEN_EXIT", "Exited full-screen mode.");
+                    }
+                }
             } else {
                 setIsFullScreen(true);
+                hasEnteredFullScreen.current = true;
             }
         };
 
@@ -111,7 +120,7 @@ export function useProctoring(config: ProctoringConfig = {}) {
         checkFullScreen();
 
         return () => document.removeEventListener("fullscreenchange", checkFullScreen);
-    }, [config.forceFullScreen, logViolation]);
+    }, [config.forceFullScreen, logViolation, config.onExitFullScreen]);
 
     const enterFullScreen = async () => {
         try {

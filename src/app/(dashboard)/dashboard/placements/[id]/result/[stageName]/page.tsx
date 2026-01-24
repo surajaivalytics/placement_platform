@@ -27,7 +27,7 @@ export default function StageResultPage() {
       const res = await fetch(`/api/placements/${applicationId}`);
       if (res.ok) {
         const data = await res.json();
-        
+
         // Find the stage result
         const stage = data.assessmentStages?.find(
           (s: { stageName: string; isPassed: boolean; score?: number; total?: number; percentage?: number; timeSpent?: number }) => s.stageName === stageName
@@ -51,9 +51,9 @@ export default function StageResultPage() {
             setResultData({
               stageName: 'voice',
               isPassed: voiceAssessment.isPassed,
-              score: Math.round(voiceAssessment.overallScore),
+              score: Math.round(voiceAssessment.totalScore || 0),
               total: 100,
-              percentage: voiceAssessment.overallScore,
+              percentage: voiceAssessment.totalScore || 0,
               nextStage: data.status,
               track: data.finalTrack,
               feedback: voiceAssessment.feedback,

@@ -12,6 +12,8 @@ import Link from 'next/link';
 interface Question {
   id: string;
   text: string;
+  type: 'mcq' | 'coding';
+  metadata?: string; // JSON string for coding questions
   options: Array<{
     id: string;
     text: string;
@@ -41,8 +43,14 @@ export default function ManageTestQuestionsPage() {
   // Form state for adding a new question
   const [newQuestion, setNewQuestion] = useState({
     text: '',
+    type: 'mcq' as 'mcq' | 'coding',
     options: ['', '', '', ''],
     correctOptionIndex: 0,
+    codingMetadata: {
+      inputFormat: '',
+      outputFormat: '',
+      testCases: [{ input: '', output: '' }]
+    }
   });
 
   useEffect(() => {
@@ -68,18 +76,27 @@ export default function ManageTestQuestionsPage() {
     e.preventDefault();
 
     try {
+      const payload: any = {
+        text: newQuestion.text,
+        type: newQuestion.type,
+      };
+
+      if (newQuestion.type === 'mcq') {
+        payload.options = newQuestion.options.map((text, index) => ({
+          text,
+          isCorrect: index === newQuestion.correctOptionIndex,
+        }));
+      } else {
+        payload.options = [];
+        payload.metadata = JSON.stringify(newQuestion.codingMetadata);
+      }
+
       const response = await fetch(`/api/tests/${testId}/questions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          text: newQuestion.text,
-          options: newQuestion.options.map((text, index) => ({
-            text,
-            isCorrect: index === newQuestion.correctOptionIndex,
-          })),
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -87,8 +104,14 @@ export default function ManageTestQuestionsPage() {
         setQuestions([...questions, data.question]);
         setNewQuestion({
           text: '',
+          type: 'mcq',
           options: ['', '', '', ''],
           correctOptionIndex: 0,
+          codingMetadata: {
+            inputFormat: '',
+            outputFormat: '',
+            testCases: [{ input: '', output: '' }]
+          }
         });
         setShowAddForm(false);
         alert('Question added successfully');
@@ -126,6 +149,37 @@ export default function ManageTestQuestionsPage() {
     }
   };
 
+  // ... (keep downloadCsvTemplate and parseCodingMetadata as is) ...
+  const downloadCsvTemplate = () => {
+    const headers = ["Question Text", "Type (mcq/coding)", "Option A", "Option B", "Option C", "Option D", "Correct Option (A/B/C/D)", "Input Format (Coding)", "Output Format (Coding)", "Sample Input", "Sample Output"];
+    const rows = [
+      ["What is 2+2?", "mcq", "3", "4", "5", "6", "B", "", "", "", ""],
+      ["Write a function to add two numbers", "coding", "", "", "", "", "", "Two integers a and b", "Sum of a and b", "2 3", "5"]
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + headers.join(",") + "\n"
+      + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "question_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const parseCodingMetadata = (json?: string) => {
+    if (!json) return null;
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      return null;
+    }
+  }
+
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -147,7 +201,7 @@ export default function ManageTestQuestionsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
-            <Link href="/admin/tests">
+            <Link href="/admin/mock-tests">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
@@ -158,10 +212,20 @@ export default function ManageTestQuestionsPage() {
             </p>
           </div>
         </div>
-        <Button onClick={() => setShowAddForm(!showAddForm)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Question
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={downloadCsvTemplate}>
+            Download CSV Template
+          </Button>
+          <Button variant="secondary" asChild>
+            <Link href={`/admin/tests/${testId}/import`}>
+              Bulk Upload (CSV/PDF/Doc)
+            </Link>
+          </Button>
+          <Button onClick={() => setShowAddForm(!showAddForm)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Manual
+          </Button>
+        </div>
       </div>
 
       {showAddForm && (
@@ -171,6 +235,30 @@ export default function ManageTestQuestionsPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddQuestion} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Question Type</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 border p-3 rounded cursor-pointer hover:bg-slate-50">
+                    <input
+                      type="radio"
+                      name="qType"
+                      checked={newQuestion.type === 'mcq'}
+                      onChange={() => setNewQuestion({ ...newQuestion, type: 'mcq' })}
+                    />
+                    <span className="font-medium">Multiple Choice</span>
+                  </label>
+                  <label className="flex items-center gap-2 border p-3 rounded cursor-pointer hover:bg-slate-50">
+                    <input
+                      type="radio"
+                      name="qType"
+                      checked={newQuestion.type === 'coding'}
+                      onChange={() => setNewQuestion({ ...newQuestion, type: 'coding' })}
+                    />
+                    <span className="font-medium">Coding Problem</span>
+                  </label>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="questionText">Question Text</Label>
                 <textarea
@@ -183,31 +271,85 @@ export default function ManageTestQuestionsPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Options</Label>
-                {newQuestion.options.map((option, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <Input
-                      placeholder={`Option ${index + 1}`}
-                      value={option}
-                      onChange={(e) => {
-                        const newOptions = [...newQuestion.options];
-                        newOptions[index] = e.target.value;
-                        setNewQuestion({ ...newQuestion, options: newOptions });
-                      }}
-                      required
-                    />
-                    <input
-                      type="radio"
-                      name="correctOption"
-                      checked={newQuestion.correctOptionIndex === index}
-                      onChange={() => setNewQuestion({ ...newQuestion, correctOptionIndex: index })}
-                      className="w-4 h-4"
-                    />
-                    <Label className="text-sm">Correct</Label>
+              {newQuestion.type === 'mcq' ? (
+                <div className="space-y-2">
+                  <Label>Options</Label>
+                  {newQuestion.options.map((option, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <Input
+                        placeholder={`Option ${index + 1}`}
+                        value={option}
+                        onChange={(e) => {
+                          const newOptions = [...newQuestion.options];
+                          newOptions[index] = e.target.value;
+                          setNewQuestion({ ...newQuestion, options: newOptions });
+                        }}
+                        required
+                      />
+                      <input
+                        type="radio"
+                        name="correctOption"
+                        checked={newQuestion.correctOptionIndex === index}
+                        onChange={() => setNewQuestion({ ...newQuestion, correctOptionIndex: index })}
+                        className="w-4 h-4"
+                      />
+                      <Label className="text-sm">Correct</Label>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4 bg-slate-50 p-4 rounded-md border">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Input Format</Label>
+                      <Input
+                        placeholder="e.g. Two integers"
+                        value={newQuestion.codingMetadata.inputFormat}
+                        onChange={(e) => setNewQuestion({
+                          ...newQuestion,
+                          codingMetadata: { ...newQuestion.codingMetadata, inputFormat: e.target.value }
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Output Format</Label>
+                      <Input
+                        placeholder="e.g. Their sum"
+                        value={newQuestion.codingMetadata.outputFormat}
+                        onChange={(e) => setNewQuestion({
+                          ...newQuestion,
+                          codingMetadata: { ...newQuestion.codingMetadata, outputFormat: e.target.value }
+                        })}
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <Label>Sample Test Case</Label>
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <textarea
+                        className="w-full text-xs p-2 border rounded font-mono"
+                        placeholder="Input"
+                        value={newQuestion.codingMetadata.testCases[0].input}
+                        onChange={(e) => {
+                          const newTC = [...newQuestion.codingMetadata.testCases];
+                          newTC[0].input = e.target.value;
+                          setNewQuestion({ ...newQuestion, codingMetadata: { ...newQuestion.codingMetadata, testCases: newTC } });
+                        }}
+                      />
+                      <textarea
+                        className="w-full text-xs p-2 border rounded font-mono"
+                        placeholder="Output"
+                        value={newQuestion.codingMetadata.testCases[0].output}
+                        onChange={(e) => {
+                          const newTC = [...newQuestion.codingMetadata.testCases];
+                          newTC[0].output = e.target.value;
+                          setNewQuestion({ ...newQuestion, codingMetadata: { ...newQuestion.codingMetadata, testCases: newTC } });
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <Button type="submit">Add Question</Button>
@@ -229,51 +371,83 @@ export default function ManageTestQuestionsPage() {
             </CardContent>
           </Card>
         ) : (
-          questions.map((question, index) => (
-            <Card key={question.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg font-medium">
-                      {index + 1}. {question.text}
-                    </CardTitle>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteQuestion(question.id)}
-                    disabled={deletingId === question.id}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {question.options.map((option, optIndex) => (
-                    <div
-                      key={option.id}
-                      className={`p-2 rounded border ${
-                        option.isCorrect
-                          ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800'
-                          : 'bg-gray-50 border-gray-200 dark:bg-gray-900 dark:border-gray-800'
-                      }`}
+          questions.map((question, index) => {
+            const isCoding = question.type === 'coding';
+            const metadata = isCoding ? parseCodingMetadata(question.metadata) : null;
+
+            return (
+              <Card key={question.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${isCoding ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                          {question.type || 'MCQ'}
+                        </span>
+                      </div>
+                      <CardTitle className="text-lg font-medium">
+                        {index + 1}. {question.text}
+                      </CardTitle>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteQuestion(question.id)}
+                      disabled={deletingId === question.id}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{String.fromCharCode(65 + optIndex)}.</span>
-                        <span>{option.text}</span>
-                        {option.isCorrect && (
-                          <span className="ml-auto text-xs text-green-600 dark:text-green-400 font-medium">
-                            ✓ Correct
-                          </span>
-                        )}
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {isCoding && metadata ? (
+                    <div className="space-y-4 bg-slate-50 p-4 rounded-md text-sm">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="font-semibold block text-gray-500 text-xs uppercase">Input Format</span>
+                          <p>{metadata.inputFormat || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="font-semibold block text-gray-500 text-xs uppercase">Output Format</span>
+                          <p>{metadata.outputFormat || 'N/A'}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-semibold block text-gray-500 text-xs uppercase mb-1">Sample Test Case</span>
+                        <div className="bg-white border rounded p-2 font-mono text-xs">
+                          <div><strong>Input:</strong> {metadata.testCases?.[0]?.input}</div>
+                          <div><strong>Output:</strong> {metadata.testCases?.[0]?.output}</div>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                  ) : (
+                    <div className="space-y-2">
+                      {question.options?.map((option, optIndex) => (
+                        <div
+                          key={option.id}
+                          className={`p-2 rounded border ${option.isCorrect
+                            ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800'
+                            : 'bg-gray-50 border-gray-200 dark:bg-gray-900 dark:border-gray-800'
+                            }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{String.fromCharCode(65 + optIndex)}.</span>
+                            <span>{option.text}</span>
+                            {option.isCorrect && (
+                              <span className="ml-auto text-xs text-green-600 dark:text-green-400 font-medium">
+                                ✓ Correct
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                </CardContent>
+              </Card>
+            )
+          })
         )}
       </div>
     </div>

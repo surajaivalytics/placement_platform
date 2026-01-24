@@ -89,7 +89,7 @@ export async function POST(
             );
         }
 
-        const { name, description, order } = await req.json();
+        const { name, description, order, roundTitle, type } = await req.json();
 
         if (!name) {
             return NextResponse.json(
@@ -100,10 +100,14 @@ export async function POST(
 
         const subtopic = await prisma.subtopic.create({
             data: {
-                testId,
+                test: {
+                    connect: { id: testId }
+                },
                 name,
                 description,
                 order,
+                roundTitle,
+                type,
             },
         });
 

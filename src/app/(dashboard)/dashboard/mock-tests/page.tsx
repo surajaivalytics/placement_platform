@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldAlert, Eye, Maximize, MousePointerClick, CheckCircle2, AlertTriangle, MonitorPlay, Lock } from "lucide-react";
+import { ShieldAlert, Eye, Maximize, MousePointerClick, CheckCircle2, AlertTriangle, MonitorPlay, Lock, ArrowRight } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -27,49 +27,32 @@ const itemVariants = {
 };
 
 export default function MockTestsPage() {
-    const [selectedTest, setSelectedTest] = useState<string | null>(null);
+    const [tests, setTests] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const companies = [
-        {
-            id: "tcs",
-            name: "TCS NQT 2026",
-            logo: "/logos/tcs-1696999494.jpg",
-            portalUrl: "/tcs-portal",
-            color: "bg-blue-600",
-            textColor: "text-blue-600",
-            description: "National Qualifier Test for freshers. Focuses on NQT Cognitive, Attitudinal, and Psychometric tests.",
-            eligibility: "B.E/B.Tech (2025/2026 Batch)",
-            duration: "90 Mins",
-            type: "Adaptive",
-            status: "Live"
-        },
-        {
-            id: "wipro",
-            name: "Wipro NLTH 2026",
-            logo: "/logos/Wipro_Secondary-Logo_Color_RGB.png",
-            portalUrl: "/wipro-portal",
-            color: "bg-purple-600",
-            textColor: "text-purple-600",
-            description: "National Level Talent Hunt. Includes Aptitude, Coding, and Written Communication Test.",
-            eligibility: "B.E/B.Tech/M.Tech",
-            duration: "120 Mins",
-            type: "Standard",
-            status: "Live"
-        },
-        {
-            id: "ibm",
-            name: "IBM CodeKnack",
-            logo: "/logos/IBM.png",
-            portalUrl: "#",
-            color: "bg-gray-800",
-            textColor: "text-gray-800",
-            description: "Coding assessment focusing on Data Structures and Algorithms with cognitive ability games.",
-            eligibility: "All Streams",
-            duration: "60 Mins",
-            type: "Gamified",
-            status: "Upcoming"
-        }
-    ];
+    React.useEffect(() => {
+        const fetchTests = async () => {
+            try {
+                const res = await fetch('/api/tests?type=mock');
+                const data = await res.json();
+                setTests(data.tests || []);
+            } catch (error) {
+                console.error("Failed to fetch mock tests", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTests();
+    }, []);
+
+    // Helper to get styling based on company name (fallback for dynamic tests)
+    const getCompanyStyle = (companyName: string) => {
+        const name = companyName?.toLowerCase() || '';
+        if (name.includes('tcs')) return { color: 'bg-blue-600', borderColor: '#1d4ed8', textColor: 'text-blue-600', logo: '/logos/tcs-1696999494.jpg' };
+        if (name.includes('wipro')) return { color: 'bg-purple-600', borderColor: '#9333ea', textColor: 'text-purple-600', logo: '/logos/Wipro_Secondary-Logo_Color_RGB.png' };
+        if (name.includes('ibm')) return { color: 'bg-indigo-800', borderColor: '#3730a3', textColor: 'text-indigo-800', logo: '/logos/IBM.png' };
+        return { color: 'bg-gray-800', borderColor: '#1f2937', textColor: 'text-gray-800', logo: '/logos/default-company.png' };
+    };
 
     return (
         <div className="p-8 space-y-8 min-h-screen bg-gray-50/50">
@@ -111,70 +94,77 @@ export default function MockTestsPage() {
             </motion.div>
 
             {/* Tests Grid */}
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-            >
-                {companies.map((company) => (
-                    <motion.div key={company.id} variants={itemVariants}>
-                        <Card className="h-full flex flex-col border-t-4 hover:shadow-2xl transition-all duration-300 group overflow-hidden" style={{ borderTopColor: company.id === 'tcs' ? '#1d4ed8' : company.id === 'wipro' ? '#9333ea' : '#1f2937' }}>
-                            <CardHeader>
-                                <div className="flex justify-between items-start">
-                                    <div className="w-24 h-12 relative grayscale group-hover:grayscale-0 transition-all duration-500">
-                                        <Image
-                                            src={company.logo}
-                                            alt={company.name}
-                                            fill
-                                            className="object-contain object-left"
-                                        />
-                                    </div>
-                                    <Badge variant={company.status === 'Live' ? 'default' : 'secondary'} className={company.status === 'Live' ? 'bg-green-600' : ''}>
-                                        {company.status}
-                                    </Badge>
-                                </div>
-                                <CardTitle className="mt-4 text-xl">{company.name}</CardTitle>
-                                <CardDescription className="line-clamp-2 min-h-[2.5rem]">{company.description}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div className="bg-gray-50 p-2 rounded border border-gray-100">
-                                        <span className="text-gray-500 block text-xs uppercase">Eligibility</span>
-                                        <span className="font-medium text-gray-900">{company.eligibility}</span>
-                                    </div>
-                                    <div className="bg-gray-50 p-2 rounded border border-gray-100">
-                                        <span className="text-gray-500 block text-xs uppercase">Duration</span>
-                                        <span className="font-medium text-gray-900">{company.duration}</span>
-                                    </div>
-                                </div>
+            {loading ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3].map(i => (
+                        <Card key={i} className="h-64 animate-pulse bg-gray-100" />
+                    ))}
+                </div>
+            ) : (
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                >
+                    {tests.map((test) => {
+                        const style = getCompanyStyle(test.company);
+                        return (
+                            <motion.div key={test.id} variants={itemVariants}>
+                                <Card className="h-full flex flex-col border-t-4 hover:shadow-2xl transition-all duration-300 group overflow-hidden"
+                                    style={{ borderTopColor: style.borderColor }}>
+                                    <CardHeader>
+                                        <div className="flex justify-between items-start">
+                                            <div className="h-12 w-24 relative flex items-center">
+                                                {/* Fallback to text if logo logic is too specific */}
+                                                <span className={`font-bold text-lg ${style.textColor}`}>{test.company || "MOCK TEST"}</span>
+                                            </div>
+                                            <Badge variant="default" className="bg-green-600">
+                                                Live
+                                            </Badge>
+                                        </div>
+                                        <CardTitle className="mt-4 text-xl">{test.title}</CardTitle>
+                                        <CardDescription className="line-clamp-2 min-h-[2.5rem]">{test.description || "No description provided."}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                                                <span className="text-gray-500 block text-xs uppercase">Difficulty</span>
+                                                <span className="font-medium text-gray-900">{test.difficulty}</span>
+                                            </div>
+                                            <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                                                <span className="text-gray-500 block text-xs uppercase">Duration</span>
+                                                <span className="font-medium text-gray-900">{test.duration} Mins</span>
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-2 pt-2">
-                                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                                        <Eye className="w-4 h-4 text-gray-400" /> Full Screen Mode Required
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                                        <MousePointerClick className="w-4 h-4 text-gray-400" /> No Right Click Allowed
-                                    </div>
-                                </div>
-                            </CardContent>
-                            <CardFooter className="mt-auto">
-                                {company.status === 'Live' ? (
-                                    <Link href={company.portalUrl} className="w-full">
-                                        <Button className={`w-full font-bold shadow-lg ${company.color} hover:opacity-90`}>
-                                            Enter Exam Hall <MonitorPlay className="ml-2 w-4 h-4" />
-                                        </Button>
-                                    </Link>
-                                ) : (
-                                    <Button variant="outline" className="w-full" disabled>
-                                        <Lock className="mr-2 w-4 h-4" /> Coming Soon
-                                    </Button>
-                                )}
-                            </CardFooter>
-                        </Card>
-                    </motion.div>
-                ))}
-            </motion.div>
+                                        <div className="space-y-2 pt-2">
+                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                <Eye className="w-4 h-4 text-gray-400" /> {test._count?.questions || 0} Questions
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                <MousePointerClick className="w-4 h-4 text-gray-400" /> Proctored Mode
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="mt-auto">
+                                        <Link href={`/exam/${test.id}/dashboard`} className="w-full">
+                                            <Button className={`w-full font-bold shadow-lg ${style.color} hover:opacity-90`}>
+                                                View Drive Details <ArrowRight className="ml-2 w-4 h-4" />
+                                            </Button>
+                                        </Link>
+                                    </CardFooter>
+                                </Card>
+                            </motion.div>
+                        );
+                    })}
+                    {tests.length === 0 && (
+                        <div className="col-span-3 text-center py-12 text-gray-500">
+                            No active mock tests available at the moment.
+                        </div>
+                    )}
+                </motion.div>
+            )}
 
             {/* Rules Section */}
             <motion.div

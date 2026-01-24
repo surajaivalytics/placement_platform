@@ -1,4 +1,5 @@
-'use client';
+
+"use client";
 
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Plus, GraduationCap, Trash2, FileEdit, BookOpen } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import { Loader } from "@/components/ui/loader";
 
 interface Test {
   id: string;
@@ -32,7 +34,7 @@ export default function TestsPage() {
 
   const fetchTests = async () => {
     try {
-      const response = await fetch('/api/tests');
+      const response = await fetch('/api/tests?exclude_type=mock');
       if (response.ok) {
         const data = await response.json();
         setTests(data.tests || []);
@@ -45,7 +47,7 @@ export default function TestsPage() {
   };
 
   const handleDelete = async (testId: string, testTitle: string) => {
-    if (!confirm(`Are you sure you want to delete &quot;${testTitle}&quot;? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete "${testTitle}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -71,11 +73,13 @@ export default function TestsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-6 md:p-10">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Tests</h1>
         </div>
-        <p className="text-muted-foreground">Loading tests...</p>
+        <div className="flex items-center justify-center p-20">
+          <Loader size="lg" text="Fetching tests..." />
+        </div>
       </div>
     );
   }
@@ -120,26 +124,16 @@ export default function TestsPage() {
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
+                    {/* "Manage" button removed for regular tests as per segregtion plan */}
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 flex"
                       asChild
                     >
                       <Link href={`/admin/tests/${test.id}/questions`}>
                         <FileEdit className="mr-2 h-4 w-4" />
                         Questions
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      asChild
-                    >
-                      <Link href={`/admin/tests/${test.id}/subtopics`}>
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        Subtopics
                       </Link>
                     </Button>
                   </div>

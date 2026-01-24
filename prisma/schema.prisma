@@ -3,11 +3,13 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Account {
@@ -69,6 +71,8 @@ model User {
   interviewSessions     InterviewSession[]
   monitoringEvents      MonitoringEvent[]
   mockDrives            MockDriveSession[]
+  userSubtopicProgress  UserSubtopicProgress[]
+  testEligibilityRecords TestEligibility[]
 }
 
 model VerificationToken {
@@ -90,16 +94,50 @@ model Test {
   topic       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  eligibilityCriteria Json? // { tenthPercentage: 60, twelfthPercentage: 60, graduationCGPA: 6.0, backlogs: 0 }
 
   questions        Question[]
   results          Result[]
   assignments      TestAssignment[]
   assessmentStages AssessmentStage[]
+  subtopics        Subtopic[]
+  eligibilityRecords TestEligibility[]
+}
+
+model TestEligibility {
+  id        String   @id @default(cuid())
+  userId    String
+  testId    String
+  isEligible Boolean @default(false)
+  criteria  Json?    // Store what criteria was met/checked
+  checkedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, testId])
+}
+
+model Subtopic {
+  id          String   @id @default(cuid())
+  name        String?
+  description String?
+  order       Int?
+  totalQuestions Int? @default(0) // Added field
+  roundTitle  String?  // Grouping title (e.g., "Online Assessment")
+  type        String?  @default("assessment") // assessment, coding, interview
+  
+  testId      String?
+  test        Test?    @relation(fields: [testId], references: [id], onDelete: Cascade)
+  
+  questions   Question[]
+  userProgress UserSubtopicProgress[]
 }
 
 model Question {
   id         String  @id @default(cuid())
   testId     String
+  subtopicId String?
   text       String
   type       String  @default("multiple-choice") // multiple-choice, true-false, coding, essay
   category   String? // numerical, verbal, reasoning, logical, quant
@@ -109,7 +147,8 @@ model Question {
 
   options Option[]
 
-  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+  test     Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  subtopic Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
 }
 
 model Option {
@@ -174,7 +213,8 @@ model MonitoringEvent {
   id            String   @id @default(cuid())
   userId        String
   testType      String?
-  violationType String
+  eventType     String // Added field
+  violationType String? // Made optional if eventType supercedes it
   details       String?
   timestamp     DateTime @default(now())
 
@@ -213,7 +253,8 @@ model VoiceAssessment {
   pronunciationScore Float?
   paceScore          Float?
   clarityScore       Float?
-  totalScore         Float? // Renamed/Aliased from overallScore for consistency
+  totalScore         Float? // Renamed to match code usage
+ 
 
   // Meta
   confidenceScore Float?
@@ -281,7 +322,7 @@ model AssessmentStage {
   createdAt     DateTime  @default(now())
 
   application PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  test        Test?                @relation(fields: [testId], references: [id])
+  test        Test?                @relation(fields: [testId], references: [id], onDelete: SetNull)
 }
 
 model MockDriveSession {

@@ -60,7 +60,7 @@ export async function POST(
         // Generate AI feedback
         let aiFeedback = null;
         try {
-            const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
             const prompt = `You are an educational AI assistant. A student just completed a test titled "${test.title}" with the following results:
 - Score: ${score}/${total} (${percentage}%)

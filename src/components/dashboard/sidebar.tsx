@@ -6,23 +6,18 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
-  FileQuestion,
   GraduationCap,
   Users,
   BarChart3,
-  Briefcase,
   Settings,
   LogOut,
-  Building2,
   BookOpen,
-  ClipboardList,
   Mic,
   Menu,
   X,
   ChevronLeft,
   ChevronRight,
   Zap,
-  HelpCircle,
   MonitorPlay,
   AudioLines
 } from "lucide-react";
@@ -93,20 +88,18 @@ const SidebarContent = ({
 }: SidebarContentProps) => {
   const userLinks = [
     { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-    { href: "/dashboard/placements", label: "Placements", icon: Briefcase },
-    { href: "/dashboard/my-tests", label: "My Tests", icon: ClipboardList },
     { href: "/dashboard/interview-suite", label: "AI Interview Suite", icon: Mic },
     { href: "/dashboard/voice-assessment", label: "Voice Assessment", icon: AudioLines },
     { href: "/dashboard/topics", label: "Topics", icon: BookOpen },
-    { href: "/dashboard/companies", label: "Companies", icon: Building2 },
     { href: "/dashboard/mock-tests", label: "Mock Tests", icon: MonitorPlay },
     { href: "/dashboard/results", label: "Results", icon: BarChart3 },
-    { href: "/dashboard/profile", label: "Settings", icon: Settings },
+    { href: "/dashboard/profile", label: "Profile", icon: Settings },
   ];
 
   const adminLinks = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard },
     { href: "/admin/tests", label: "Tests", icon: GraduationCap },
+    { href: "/admin/mock-tests", label: "Manage Mock Tests", icon: MonitorPlay },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   ];

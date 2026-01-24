@@ -22,7 +22,7 @@ export async function POST(
             pronunciationScore,
             paceScore,
             clarityScore,
-            overallScore,
+            totalScore,
             isPassed,
         } = body;
 
@@ -64,7 +64,7 @@ export async function POST(
                 pronunciationScore,
                 paceScore,
                 clarityScore,
-                overallScore,
+                totalScore, // Updated field name
                 isPassed,
                 assessedAt: new Date(),
                 feedback: generateVoiceFeedback(fluencyScore, pronunciationScore, paceScore, clarityScore),
@@ -75,7 +75,7 @@ export async function POST(
                 pronunciationScore,
                 paceScore,
                 clarityScore,
-                overallScore,
+                totalScore, // Updated field name
                 isPassed,
                 assessedAt: new Date(),
                 feedback: generateVoiceFeedback(fluencyScore, pronunciationScore, paceScore, clarityScore),
@@ -102,7 +102,7 @@ export async function POST(
                 pronunciation: pronunciationScore,
                 pace: paceScore,
                 clarity: clarityScore,
-                overall: overallScore,
+                overall: totalScore, // Mapping back to response format if expected by client
             },
         });
     } catch (error) {
