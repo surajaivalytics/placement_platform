@@ -143,6 +143,21 @@ export default function TestRunnerClient({ test, session }: { test: any, session
 
     const isInterview = currentRound?.type === 'interview';
     const isCoding = !isInterview && (currentQuestion?.type === 'coding' || currentQuestion?.type === 'code');
+    const isStrictProctored = !isInterview; // Strict for Assessment and Coding
+
+    const { isFullScreen, enterFullScreen, warnings } = useProctoring({
+        forceFullScreen: isStrictProctored,
+        preventTabSwitch: isStrictProctored,
+        preventContextMenu: isStrictProctored,
+        preventCopyPaste: isStrictProctored,
+        onViolation: (type, msg) => {
+            toast.warning(`Warning ${warnings + 1}: ${msg}`);
+            // Optional: Auto-submit if too many warnings
+            if (warnings > 3) {
+                // submitTest("Terminated");
+            }
+        }
+    });
 
 
     // --- Timer Management ---
@@ -327,6 +342,27 @@ export default function TestRunnerClient({ test, session }: { test: any, session
     };
 
     // --- RENDER ---
+
+    // Strict Proctoring Overlay
+    if (isStrictProctored && !isFullScreen && !loading && !showRoundTransition) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-gray-950 text-white flex-col gap-6 z-50 fixed inset-0 font-sans">
+                <div className="p-8 bg-gray-900 rounded-2xl border border-red-500/30 shadow-2xl flex flex-col items-center text-center max-w-lg">
+                    <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+                        <AlertTriangle className="w-10 h-10 text-red-500 animate-pulse" />
+                    </div>
+                    <h2 className="text-3xl font-bold mb-2 text-white">Proctoring Alert</h2>
+                    <p className="text-gray-400 mb-8 leading-relaxed">
+                        Full-screen mode is mandatory for this assessment.
+                        Exiting full-screen is recorded as a violation.
+                    </p>
+                    <Button onClick={enterFullScreen} className="w-full bg-red-600 hover:bg-red-700 h-14 text-lg font-medium rounded-xl transition-all">
+                        Return to Full Screen
+                    </Button>
+                </div>
+            </div>
+        )
+    }
 
     if (loading) return <div className="flex h-screen items-center justify-center"><Loader /></div>;
 
