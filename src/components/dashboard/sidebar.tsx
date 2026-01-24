@@ -21,7 +21,11 @@ import {
   Zap,
   HelpCircle,
   MonitorPlay,
-  AudioLines
+  AudioLines,
+  Brain, // Added
+  Briefcase, // Added
+  Building2, // Added
+  ClipboardList // Added
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -100,9 +104,14 @@ const SidebarContent = ({
 
   const adminLinks = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard },
+    { href: "/admin/mcq-generator", label: "MCQ Generator", icon: Brain },
+    { href: "/admin/placements", label: "Placements", icon: Briefcase },
+    { href: "/admin/placement-questions", label: "Questions", icon: FileQuestion },
     { href: "/admin/tests", label: "Tests", icon: GraduationCap },
+    { href: "/admin/company-tests", label: "Company Tests", icon: Building2 },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/dashboard/profile", label: "Settings", icon: Settings },
   ];
 
   const links = role === "admin" ? adminLinks : userLinks;
