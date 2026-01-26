@@ -88,6 +88,42 @@ export default function MCQGeneratorPage() {
         toast.success("Copied JSON to clipboard");
     };
 
+    const downloadCSV = () => {
+        if (!results) return;
+
+        // CSV Header
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Topic,Question,Option A,Option B,Option C,Option D,Correct Answer,Difficulty,Bloom's Level,Reference\n";
+
+        // CSV Rows
+        results.forEach(group => {
+            group.questions.forEach((q: any) => {
+                const row = [
+                    `"${group.keyword.replace(/"/g, '""')}"`,
+                    `"${q.question.replace(/"/g, '""')}"`,
+                    `"${q.options.find((o: any) => o.label === 'A')?.text.replace(/"/g, '""') || ''}"`,
+                    `"${q.options.find((o: any) => o.label === 'B')?.text.replace(/"/g, '""') || ''}"`,
+                    `"${q.options.find((o: any) => o.label === 'C')?.text.replace(/"/g, '""') || ''}"`,
+                    `"${q.options.find((o: any) => o.label === 'D')?.text.replace(/"/g, '""') || ''}"`,
+                    `"${q.correct_answer.replace(/"/g, '""')}"`,
+                    `"${q.difficulty}"`,
+                    `"${q.blooms_level}"`,
+                    `"${(q.reference_excerpt || '').replace(/"/g, '""')}"`
+                ].join(",");
+                csvContent += row + "\n";
+            });
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "generated_mcqs.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Downloaded CSV");
+    };
+
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto">
             <div className="flex flex-col gap-2">
@@ -112,8 +148,8 @@ export default function MCQGeneratorPage() {
                         <button
                             onClick={() => setActiveTab("text")}
                             className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === "text"
-                                    ? "bg-background shadow text-foreground"
-                                    : "text-muted-foreground hover:bg-background/50"
+                                ? "bg-background shadow text-foreground"
+                                : "text-muted-foreground hover:bg-background/50"
                                 }`}
                         >
                             Paste Text
@@ -121,8 +157,8 @@ export default function MCQGeneratorPage() {
                         <button
                             onClick={() => setActiveTab("file")}
                             className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === "file"
-                                    ? "bg-background shadow text-foreground"
-                                    : "text-muted-foreground hover:bg-background/50"
+                                ? "bg-background shadow text-foreground"
+                                : "text-muted-foreground hover:bg-background/50"
                                 }`}
                         >
                             Upload File
@@ -267,10 +303,16 @@ export default function MCQGeneratorPage() {
                     {results && (
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Generated Results</h2>
-                            <Button variant="outline" size="sm" onClick={copyToClipboard} className="gap-2">
-                                <Copy className="w-4 h-4" />
-                                Copy JSON
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button variant="outline" size="sm" onClick={downloadCSV} className="gap-2">
+                                    <Download className="w-4 h-4" />
+                                    Download CSV
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={copyToClipboard} className="gap-2">
+                                    <Copy className="w-4 h-4" />
+                                    Copy JSON
+                                </Button>
+                            </div>
                         </div>
                     )}
 
@@ -326,13 +368,13 @@ export default function MCQGeneratorPage() {
                                                 <div
                                                     key={oIdx}
                                                     className={`p-3 rounded-lg border flex items-start gap-3 transition-colors ${opt.text === q.correct_answer
-                                                            ? "bg-green-50 border-green-200"
-                                                            : "bg-white hover:bg-gray-50 border-gray-100"
+                                                        ? "bg-green-50 border-green-200"
+                                                        : "bg-white hover:bg-gray-50 border-gray-100"
                                                         }`}
                                                 >
                                                     <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${opt.text === q.correct_answer
-                                                            ? "bg-green-200 text-green-800"
-                                                            : "bg-gray-100 text-gray-600"
+                                                        ? "bg-green-200 text-green-800"
+                                                        : "bg-gray-100 text-gray-600"
                                                         }`}>
                                                         {opt.label}
                                                     </span>

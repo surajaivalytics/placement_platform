@@ -1,0 +1,10 @@
+[dotenv@17.2.3] injecting env (6) from .env -- tip: ≡ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+Loaded DATABASE_URL: postgresql://postgres.swexktlzarqksjdxzsiu:****@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+--- Pool Config Check ---
+User: undefined
+Host: undefined
+Port: undefined
+Database: undefined
+-------------------------
+Connection FAILED: password authentication failed for user "postgres"
+Code: 28P01
