@@ -1,0 +1,4 @@
+[dotenv@17.2.3] injecting env (6) from .env -- tip: ≡ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+Loaded DATABASE_URL: postgresql://postgres.swexktlzarqksjdxzsiu:****@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+Connection FAILED: password authentication failed for user "postgres"
+Code: 28P01
