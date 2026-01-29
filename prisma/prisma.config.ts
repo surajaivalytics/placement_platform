@@ -6,7 +6,8 @@ export default defineConfig({
     },
     datasource: {
         // DATABASE_URL is used for pooled connections (runtime queries)
-        // DIRECT_URL is used in src/lib/prisma.ts via the adapter
         url: process.env.DATABASE_URL,
+        // DIRECT_URL is used for migrations (direct connection, not pooled)
+        shadowDatabaseUrl: process.env.DIRECT_URL,
     },
 });
