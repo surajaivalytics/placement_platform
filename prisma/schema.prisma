@@ -142,6 +142,7 @@ model Question {
   type       String  @default("multiple-choice") // multiple-choice, true-false, coding, essay
   category   String? // numerical, verbal, reasoning, logical, quant
   difficulty String? // Easy, Medium, Hard
+  marks      Int     @default(1) // Marks for this question
   metadata   String? @db.Text // JSON for coding problems, essay prompts, etc.
   order      Int? // Sequence order for maintaining upload sequence
 
@@ -167,6 +168,7 @@ model Result {
   score            Int
   total            Int
   aiFeedback       String?           @db.Text // AI-generated feedback from Gemini
+  details          Json?             // Detailed question-wise analysis
   monitoringEvents MonitoringEvent[]
   createdAt        DateTime          @default(now())
 

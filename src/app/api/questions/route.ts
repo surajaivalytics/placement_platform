@@ -12,7 +12,7 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { testId, text, type, category, difficulty, metadata, options } = body;
+        const { testId, text, type, category, difficulty, marks, metadata, options } = body;
 
         if (!testId || !text) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -25,6 +25,7 @@ export async function POST(req: Request) {
                 type: type || 'multiple-choice',
                 category,
                 difficulty,
+                marks: marks ? parseInt(marks) : 1, // Default to 1 if not provided
                 metadata: metadata ? JSON.stringify(metadata) : undefined,
                 options: {
                     create: options?.map((opt: any) => ({
@@ -82,7 +83,7 @@ export async function PUT(req: Request) {
         }
 
         const body = await req.json();
-        const { id, text, type, category, difficulty, metadata, options } = body;
+        const { id, text, type, category, difficulty, marks, metadata, options } = body;
 
         if (!id || !text) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -98,6 +99,7 @@ export async function PUT(req: Request) {
                     type,
                     category,
                     difficulty,
+                    marks: marks ? parseInt(marks) : 1, // Default to 1
                     metadata: metadata ? JSON.stringify(metadata) : undefined, // Handle empty string/null
                 },
             });

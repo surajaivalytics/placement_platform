@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { WebcamMonitor } from "@/components/proctoring/webcam-monitor";
 import { Button } from "@/components/ui/button";
+import { AudioMonitor } from "@/components/proctoring/audio-monitor";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { ChevronRight, ChevronLeft, Save, Flag, Clock, AlertTriangle, ListFilter, Terminal, Play, Send, CheckCircle2, UserCheck, Briefcase, Award } from "lucide-react";
@@ -202,12 +203,40 @@ export default function TestRunnerClient({ test, session }: { test: any, session
 
     const submitTest = async (status: string) => {
         toast.info("Submitting Test Result...");
+        setLoading(true);
         try {
+            // Submit to API for marking
+            const response = await fetch('/api/submit-test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    testId,
+                    answers,
+                    language
+                })
+            });
+
+            if (!response.ok) throw new Error("Submission failed");
+
+            const result = await response.json();
+
             if (session?.id) {
-                await updateMockDriveProgress(session.id, undefined, undefined, undefined, "COMPLETED");
+                // Ensure session status matches API verdict
+                await updateMockDriveProgress(
+                    session.id,
+                    result.nextRound,
+                    result.score,
+                    undefined,
+                    result.verdict === 'Passed' && result.nextRound > rounds.length ? "COMPLETED" : "IN_PROGRESS"
+                );
             }
-            router.push(`/exam/${testId}/result?status=${status}`);
-        } catch (e) { console.error(e) }
+
+            router.push(`/exam/${testId}/result?score=${result.score}&total=${result.total}&verdict=${result.verdict}&type=${currentRound.type || 'assessment'}`);
+        } catch (e) {
+            console.error(e);
+            toast.error("Failed to submit. Please try again.");
+            setLoading(false);
+        }
     };
 
     // Evaluate Round (Mock Logic)
@@ -401,33 +430,33 @@ export default function TestRunnerClient({ test, session }: { test: any, session
     return (
         <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden select-none bg-gray-50">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 px-6 py-2 flex justify-between items-center shadow-sm z-10 shrink-0 h-16">
-                <div className="flex items-center gap-4">
-                    <div className="flex flex-col">
-                        <h2 className="font-bold text-[#181C2E] flex items-center gap-2">
+            <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-2 flex justify-between items-center shadow-sm z-10 shrink-0 h-16">
+                <div className="flex items-center gap-4 overflow-hidden">
+                    <div className="flex flex-col overflow-hidden">
+                        <h2 className="font-bold text-[#181C2E] flex items-center gap-2 text-sm md:text-base truncate">
                             {currentRound.title}
-                            {isInterview && <Badge variant="outline" className="ml-2 bg-purple-50 text-purple-700 border-purple-200">Interview Mode</Badge>}
+                            {isInterview && <Badge variant="outline" className="ml-2 bg-purple-50 text-purple-700 border-purple-200 hidden md:inline-flex">Interview Mode</Badge>}
                         </h2>
-                        <span className="text-xs text-gray-500">{currentSection?.name} ({currentQuestionIndex + 1}/{activeQuestions.length || 1})</span>
+                        <span className="text-xs text-gray-500 truncate">{currentSection?.name} ({currentQuestionIndex + 1}/{activeQuestions.length || 1})</span>
                     </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className={`flex items-center gap-2 font-mono font-bold text-lg px-3 py-1 rounded border ${isInterview ? 'bg-purple-100 text-purple-800 border-purple-300' : 'bg-gray-100 text-gray-800 border-gray-300'}`}>
-                        <Clock className="w-5 h-5" />
+                <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                    <div className={`flex items-center gap-2 font-mono font-bold text-sm md:text-lg px-2 md:px-3 py-1 rounded border ${isInterview ? 'bg-purple-100 text-purple-800 border-purple-300' : 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+                        <Clock className="w-4 h-4 md:w-5 md:h-5" />
                         {formatTime(timeLeft)}
                     </div>
-                    <Button variant="default" className="bg-[#181C2E] hover:bg-gray-800" size="sm" onClick={handleNextSection}>
-                        {activeSectionIndex === currentRound.sections.length - 1 ? 'Finish Round' : 'Next Section'}
+                    <Button variant="default" className="bg-[#181C2E] hover:bg-gray-800 h-8 md:h-10 text-xs md:text-sm px-2 md:px-4" size="sm" onClick={handleNextSection}>
+                        {activeSectionIndex === currentRound.sections.length - 1 ? 'Finish' : 'Next'}
                     </Button>
                 </div>
             </div>
 
-            <div className="flex flex-1 overflow-hidden">
-                <div className={`flex-1 flex ${isCoding ? 'bg-white' : 'p-6 md:p-10 overflow-y-auto'}`}>
+            <div className="flex flex-1 overflow-hidden relative">
+                <div className={`flex-1 flex ${isCoding ? 'bg-white' : 'p-4 md:p-10 overflow-y-auto'}`}>
 
                     {/* INTERVIEW UI */}
                     {isInterview ? (
-                        <div className="w-full h-full p-4 flex flex-col">
+                        <div className="w-full h-full p-0 md:p-4 flex flex-col">
                             <AIInterviewRunner
                                 interviewType={currentRound.title.toLowerCase().includes('technical') ? 'Technical' : 'HR'}
                                 companyName={session?.company || 'TCS'}
@@ -439,48 +468,48 @@ export default function TestRunnerClient({ test, session }: { test: any, session
                         (() => {
                             const metadata = getCodingMetadata(currentQuestion);
                             return (
-                                <div className="flex w-full h-full">
-                                    <div className="w-1/3 bg-white border-r p-6 overflow-y-auto">
-                                        <h1 className="text-xl font-bold mb-4">{currentQuestion?.text}</h1>
-                                        {metadata && <div className="space-y-4 text-sm"><p><strong>Input:</strong> {metadata.inputFormat}</p><p><strong>Output:</strong> {metadata.outputFormat}</p></div>}
+                                <div className="flex flex-col md:flex-row w-full h-full">
+                                    <div className="w-full md:w-1/3 h-[30%] md:h-full bg-white border-b md:border-b-0 md:border-r p-4 md:p-6 overflow-y-auto shrink-0">
+                                        <h1 className="text-lg md:text-xl font-bold mb-4">{currentQuestion?.text}</h1>
+                                        {metadata && <div className="space-y-4 text-xs md:text-sm"><p><strong>Input:</strong> {metadata.inputFormat}</p><p><strong>Output:</strong> {metadata.outputFormat}</p></div>}
                                     </div>
-                                    <div className="flex-1 flex flex-col bg-[#1e1e1e]">
-                                        <div className="bg-[#2d2d2d] p-2 flex justify-between">
+                                    <div className="flex-1 flex flex-col bg-[#1e1e1e] h-[70%] md:h-full">
+                                        <div className="bg-[#2d2d2d] p-2 flex justify-between items-center bg-zinc-800 border-b border-zinc-700">
                                             <Select value={language} onValueChange={handleLanguageChange}>
-                                                <SelectTrigger className="w-32 bg-[#333] border-0 text-white"><SelectValue /></SelectTrigger>
+                                                <SelectTrigger className="w-28 md:w-32 bg-[#333] border-0 text-white h-8 text-xs"><SelectValue /></SelectTrigger>
                                                 <SelectContent>{LANGUAGES.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent>
                                             </Select>
                                             <div className="flex gap-2">
-                                                <Button size="sm" className="bg-green-600" onClick={runCode}>{isRunning ? '...' : 'Run'}</Button>
-                                                <Button size="sm" className="bg-blue-600" onClick={saveCodingAnswer}>Save</Button>
+                                                <Button size="sm" className="bg-green-600 h-8 text-xs" onClick={runCode}>{isRunning ? '...' : 'Run'}</Button>
+                                                <Button size="sm" className="bg-blue-600 h-8 text-xs" onClick={saveCodingAnswer}>Save</Button>
                                             </div>
                                         </div>
-                                        <textarea className="flex-1 bg-[#1e1e1e] text-gray-300 p-4 font-mono" value={code} onChange={e => setCode(e.target.value)} />
-                                        <div className="h-32 bg-black text-gray-400 p-2 font-mono text-sm border-t border-gray-700">{output}</div>
+                                        <textarea className="flex-1 bg-[#1e1e1e] text-gray-300 p-4 font-mono text-sm resize-none focus:outline-none" value={code} onChange={e => setCode(e.target.value)} spellCheck={false} />
+                                        <div className="h-24 md:h-32 bg-black text-gray-400 p-2 font-mono text-xs md:text-sm border-t border-gray-700 overflow-y-auto">{output}</div>
                                     </div>
                                 </div>
                             )
                         })()
                     ) : (
                         // Standard MCQ UI
-                        <div className="max-w-4xl mx-auto w-full">
-                            <Card className="min-h-[400px] border-0 shadow-md p-8">
-                                <span className="text-gray-500 font-medium">Question {currentQuestionIndex + 1}</span>
-                                <p className="text-xl font-medium text-gray-900 mt-4 mb-8">{currentQuestion?.text}</p>
+                        <div className="max-w-4xl mx-auto w-full pb-10">
+                            <Card className="min-h-[400px] border-0 shadow-md p-4 md:p-8">
+                                <span className="text-gray-500 font-medium text-sm">Question {currentQuestionIndex + 1}</span>
+                                <p className="text-base md:text-xl font-medium text-gray-900 mt-4 mb-8 leading-relaxed">{currentQuestion?.text}</p>
                                 <div className="space-y-3">
                                     {currentQuestion?.options?.map((opt: any) => (
                                         <div key={opt.id} onClick={() => handleOptionSelect(opt.id)}
-                                            className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-gray-50 ${answers[currentQuestion.id] === opt.id ? 'border-blue-600 bg-blue-50 ring-1' : 'border-gray-200'}`}>
-                                            <div className={`w-4 h-4 rounded-full border ${answers[currentQuestion.id] === opt.id ? 'bg-blue-600 border-blue-600' : 'border-gray-400'}`} />
-                                            <span className="flex-1">{opt.text}</span>
+                                            className={`flex items-start md:items-center space-x-3 border rounded-lg p-3 md:p-4 cursor-pointer hover:bg-gray-50 transition-colors ${answers[currentQuestion.id] === opt.id ? 'border-blue-600 bg-blue-50 ring-1' : 'border-gray-200'}`}>
+                                            <div className={`w-4 h-4 rounded-full border mt-1 md:mt-0 shrink-0 ${answers[currentQuestion.id] === opt.id ? 'bg-blue-600 border-blue-600' : 'border-gray-400'}`} />
+                                            <span className="flex-1 text-sm md:text-base">{opt.text}</span>
                                         </div>
                                     ))}
                                 </div>
                             </Card>
-                            <div className="flex justify-between mt-8">
+                            <div className="flex justify-between mt-8 mb-8 md:mb-0">
                                 <Button variant="outline" onClick={() => setCurrentQuestionIndex(c => Math.max(0, c - 1))} disabled={currentQuestionIndex === 0}>Previous</Button>
                                 <div className="flex gap-2">
-                                    <Button variant="outline" className="text-amber-600" onClick={toggleMarkReview}>Mark Review</Button>
+                                    <Button variant="outline" className="text-amber-600 hidden md:flex" onClick={toggleMarkReview}>Mark Review</Button>
                                     <Button className="bg-green-600 hover:bg-green-700" onClick={() => {
                                         if (currentQuestionIndex < activeQuestions.length - 1) setCurrentQuestionIndex(c => c + 1);
                                         else handleNextSection();
@@ -493,7 +522,7 @@ export default function TestRunnerClient({ test, session }: { test: any, session
                 </div>
                 {/* Sidebar (Palette) - Keep simple */}
                 {!isCoding && !isInterview && (
-                    <div className="w-72 bg-white border-l p-4 hidden md:block overflow-y-auto">
+                    <div className="w-72 bg-white border-l p-4 hidden lg:block overflow-y-auto">
                         <h3 className="font-bold mb-4">Questions</h3>
                         <div className="grid grid-cols-4 gap-2">
                             {activeQuestions.map((q: any, i: number) => (
@@ -505,8 +534,24 @@ export default function TestRunnerClient({ test, session }: { test: any, session
                         </div>
                     </div>
                 )}
+                {/* Disclaimer Watermark */}
+                <div className="fixed bottom-1 left-1/2 -translate-x-1/2 z-40 text-[8px] md:text-[10px] text-gray-300 pointer-events-none select-none opacity-50 whitespace-nowrap">
+                    SkillSprint Mock Evaluation • Educational Purpose Only • Not Affiliated with Official Brand
+                </div>
+
                 {/* <WebcamMonitor /> logic handled inside components or only show if not interview to avoid duplicate cams */}
                 {!isInterview && <WebcamMonitor />}
+                {!isInterview && (
+                    <AudioMonitor
+                        testId={testId}
+                        isActive={isStrictProctored && !loading && !showRoundTransition}
+                        intervalSeconds={30}
+                        onViolation={(msg) => {
+                            toast.warning(msg);
+                            // Only 5 warnings allowed? Logic can be merged with generic warnings if passed up
+                        }}
+                    />
+                )}
             </div>
         </div>
     );
