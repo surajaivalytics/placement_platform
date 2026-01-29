@@ -134,7 +134,7 @@ export default function TCSFoundationTestPage() {
               <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 mb-2">No Questions Available</h2>
               <p className="text-gray-600">
-                Questions for this test have not been uploaded yet. Please contact the administrator.
+                Questions for this test have not been uploaded yet. Please contact the istrator.
               </p>
             </div>
           </CardContent>

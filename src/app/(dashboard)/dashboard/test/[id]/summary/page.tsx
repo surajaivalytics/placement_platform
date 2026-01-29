@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Trophy, TrendingUp, TrendingDown, ArrowLeft, RotateCcw, CheckCircle2 } from "lucide-react";
-import { motion } from "framer-motion";
+import {
+  Loader2, Trophy, TrendingUp, TrendingDown,
+  ArrowLeft, RotateCcw, Sparkles, BrainCircuit, ChevronRight
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SubtopicProgress {
   id: string;
@@ -19,269 +22,214 @@ interface SubtopicProgress {
   } | null;
 }
 
+interface AiFeedbackData {
+  summary: string;
+  strengths: string;
+  improvements: string;
+  advice: string;
+}
+
 export default function TopicSummaryPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [testId, setTestId] = useState<string>('');
   const [testTitle, setTestTitle] = useState<string>('');
   const [subtopics, setSubtopics] = useState<SubtopicProgress[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aiFeedback, setAiFeedback] = useState<AiFeedbackData | null>(null);
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
 
   useEffect(() => {
     params.then(({ id }) => {
       setTestId(id);
-
-      // Fetch test details
-      fetch(`/api/tests?id=${id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.test) {
-            setTestTitle(data.test.title);
-          }
-        })
-        .catch(err => console.error('Failed to fetch test:', err));
-
-      // Fetch subtopics with progress
-      fetch(`/api/tests/${id}/subtopics`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.subtopics) {
-            setSubtopics(data.subtopics.filter((s: SubtopicProgress) => s.progress?.completed));
-          }
-        })
-        .catch(err => console.error('Failed to fetch subtopics:', err))
-        .finally(() => setLoading(false));
+      fetch(`/api/tests?id=${id}`).then(res => res.json()).then(data => data.test && setTestTitle(data.test.title));
+      fetch(`/api/tests/${id}/subtopics`).then(res => res.json()).then(data => {
+        if (data.subtopics) setSubtopics(data.subtopics.filter((s: any) => s.progress?.completed));
+      }).finally(() => setLoading(false));
     });
   }, [params]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-      </div>
-    );
-  }
-
-  // Calculate overall statistics
-  const totalScore = subtopics.reduce((sum, s) => sum + (s.progress?.score || 0), 0);
-  const totalQuestions = subtopics.reduce((sum, s) => sum + (s.progress?.total || 0), 0);
+  const totalScore = useMemo(() => subtopics.reduce((sum, s) => sum + (s.progress?.score || 0), 0), [subtopics]);
+  const totalQuestions = useMemo(() => subtopics.reduce((sum, s) => sum + (s.progress?.total || 0), 0), [subtopics]);
   const overallPercentage = totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : 0;
-  
-  // Find strongest and weakest areas
-  const sortedByPerformance = [...subtopics].sort((a, b) => 
-    (b.progress?.percentage || 0) - (a.progress?.percentage || 0)
+
+  useEffect(() => {
+    if (subtopics.length === 0 || aiFeedback || loading) return;
+    const fetchAifeedBack = async () => {
+      setAiLoading(true);
+      try {
+        const res = await fetch("/api/ai-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ score: totalScore, total: totalQuestions, percentage: overallPercentage, testTitle,subtopics: subtopics  })
+        });
+        const data = await res.json();
+        if (data.success) setAiFeedback(data.feedback);
+      } finally { setAiLoading(false); }
+    };
+    fetchAifeedBack();
+  }, [subtopics.length, aiFeedback, loading, totalScore, totalQuestions, overallPercentage, testTitle]);
+
+  if (loading) return (
+    <div className="flex flex-col justify-center items-center h-screen bg-white">
+      <div className="relative flex items-center justify-center">
+        <div className="absolute h-16 w-16 border-4 border-indigo-100 rounded-full" />
+        <Loader2 className="h-16 w-16 animate-spin text-indigo-600 relative z-10" />
+      </div>
+      <p className="mt-4 text-slate-400 font-medium tracking-wide italic">Analyzing your growth...</p>
+    </div>
   );
-  const strongestArea = sortedByPerformance[0];
-  const weakestArea = sortedByPerformance[sortedByPerformance.length - 1];
 
-  const getGrade = (percentage: number) => {
-    if (percentage >= 90) return { grade: 'A+', color: 'text-green-600', bg: 'bg-green-50' };
-    if (percentage >= 80) return { grade: 'A', color: 'text-green-600', bg: 'bg-green-50' };
-    if (percentage >= 70) return { grade: 'B', color: 'text-blue-600', bg: 'bg-blue-50' };
-    if (percentage >= 60) return { grade: 'C', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-    return { grade: 'F', color: 'text-red-600', bg: 'bg-red-50' };
-  };
-
-  const gradeInfo = getGrade(overallPercentage);
+  const sorted = [...subtopics].sort((a, b) => (b.progress?.percentage || 0) - (a.progress?.percentage || 0));
+  const strongest = sorted[0];
+  const weakest = sorted[sorted.length - 1];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <Button
-            variant="ghost"
-            onClick={() => router.push('/dashboard/topics')}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Topics
-          </Button>
-          <div className="flex items-center gap-4 mb-2">
-            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <Trophy className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">{testTitle}</h1>
-              <p className="text-gray-600 text-lg">Topic Summary Report</p>
-            </div>
+    <div className="min-h-screen bg-[#FAFBFF] pb-20">
+      {/* Dynamic Header Background */}
+      <div className="h-64 w-full bg-slate-900 absolute top-0 left-0 z-0 rounded-b-[3rem]" />
+
+      <div className="max-w-4xl mx-auto px-6 relative z-10 pt-12">
+        {/* Navigation */}
+        <nav className="flex items-center justify-between mb-8">
+          <button onClick={() => router.push('/dashboard/topics')} className="flex items-center text-slate-300 hover:text-white transition-colors group">
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Exit Report</span>
+          </button>
+          <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10">
+            <Trophy className="w-6 h-6 text-yellow-400" />
           </div>
-        </motion.div>
+        </nav>
 
-        {/* Overall Score Card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden mb-8">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                <CheckCircle2 className="w-8 h-8" />
-                Overall Performance
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                  <div className="text-5xl font-bold mb-2">{totalScore}</div>
-                  <div className="text-sm opacity-90">Correct Answers</div>
+        {/* Hero Section */}
+        <section className="text-white mb-10">
+          <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-5xl font-black tracking-tight">{testTitle}</motion.h1>
+          <p className="text-slate-400 mt-2 text-lg font-medium italic opacity-80">Summary of your learning journey</p>
+        </section>
+
+        {/* Main Score & AI Feedback */}
+        <div className="grid gap-6">
+          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+            <Card className="border-0 shadow-2xl shadow-indigo-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+              <div className="p-10 flex flex-col md:flex-row items-center gap-10">
+                <div className="relative flex items-center justify-center w-40 h-40">
+                  <svg className="w-full h-full -rotate-90">
+                    <circle cx="80" cy="80" r="70" fill="transparent" stroke="#F1F5F9" strokeWidth="12" />
+                    <motion.circle 
+                      cx="80" cy="80" r="70" fill="transparent" stroke="url(#scoreGradient)" strokeWidth="12" strokeLinecap="round"
+                      initial={{ strokeDasharray: "0 1000" }} animate={{ strokeDasharray: `${(overallPercentage / 100) * 440} 1000` }} transition={{ duration: 1.5, ease: "easeOut" }}
+                    />
+                    <defs>
+                      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#4F46E5" />
+                        <stop offset="100%" stopColor="#9333EA" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-black text-slate-900">{Math.round(overallPercentage)}%</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Score</span>
+                  </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                  <div className="text-5xl font-bold mb-2">{totalQuestions}</div>
-                  <div className="text-sm opacity-90">Total Questions</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                  <div className="text-5xl font-bold mb-2">{Math.round(overallPercentage)}%</div>
-                  <div className="text-sm opacity-90">Accuracy</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                  <div className="text-5xl font-bold mb-2">{gradeInfo.grade}</div>
-                  <div className="text-sm opacity-90">Grade</div>
+
+                <div className="flex-1 grid grid-cols-2 gap-8 w-full border-l border-slate-100 pl-0 md:pl-10">
+                  <div>
+                    <p className="text-slate-400 text-xs font-bold uppercase mb-1">Total Accuracy</p>
+                    <p className="text-2xl font-black text-slate-800">{totalScore} <span className="text-slate-300 font-medium">/ {totalQuestions}</span></p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-xs font-bold uppercase mb-1">Subtopics</p>
+                    <p className="text-2xl font-black text-slate-800">{subtopics.length}</p>
+                  </div>
+                  <div className="col-span-2">
+                     <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-50 border-none px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">
+                       Status: {overallPercentage >= 70 ? 'Mastered' : 'Growing'}
+                     </Badge>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
-        </motion.div>
 
-        {/* Insights */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* Strongest Area */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg rounded-2xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-700">
-                  <TrendingUp className="w-5 h-5" />
-                  Strongest Area
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{strongestArea?.name}</h3>
-                <div className="flex items-center gap-4">
-                  <div className="text-4xl font-bold text-green-600">
-                    {Math.round(strongestArea?.progress?.percentage || 0)}%
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {strongestArea?.progress?.score}/{strongestArea?.progress?.total} correct
-                  </div>
+              {/* Seamless AI Integration */}
+              <div className="bg-slate-50 p-8 border-t border-slate-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <BrainCircuit className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-sm font-black uppercase tracking-tighter text-slate-700">AI Tutor Analysis</h3>
                 </div>
-              </CardContent>
+                {aiLoading ? (
+                  <div className="flex gap-2 items-center"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs text-slate-400">Processing insights...</span></div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <p className="text-sm text-slate-600 leading-relaxed italic md:col-span-2">"{aiFeedback?.summary}"</p>
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100">
+                      <p className="text-[10px] font-black text-indigo-400 uppercase mb-1">Key Insight</p>
+                      <p className="text-xs text-slate-700 font-medium">{aiFeedback?.advice}</p>
+                    </div>
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100">
+                      <p className="text-[10px] font-black text-rose-400 uppercase mb-1">Focus On</p>
+                      <p className="text-xs text-slate-700 font-medium">{aiFeedback?.improvements}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </Card>
           </motion.div>
 
-          {/* Weakest Area */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-red-50 shadow-lg rounded-2xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-orange-700">
-                  <TrendingDown className="w-5 h-5" />
-                  Needs Improvement
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{weakestArea?.name}</h3>
-                <div className="flex items-center gap-4">
-                  <div className="text-4xl font-bold text-orange-600">
-                    {Math.round(weakestArea?.progress?.percentage || 0)}%
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {weakestArea?.progress?.score}/{weakestArea?.progress?.total} correct
-                  </div>
-                </div>
-                <Button
-                  onClick={() => router.push(`/dashboard/test/${testId}/subtopic/${weakestArea?.id}`)}
-                  className="mt-4 bg-orange-600 hover:bg-orange-700 text-white"
-                  size="sm"
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Practice Again
-                </Button>
-              </CardContent>
+          {/* Strongest/Weakest Quick Cards */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="border-0 shadow-lg rounded-[2rem] bg-emerald-50/50 p-6 flex items-center justify-between">
+              <div>
+                <TrendingUp className="text-emerald-600 mb-2" size={20} />
+                <h4 className="text-slate-900 font-bold">{strongest?.name}</h4>
+                <p className="text-emerald-700/60 text-xs font-bold">Mastered</p>
+              </div>
+              <div className="text-2xl font-black text-emerald-600">{Math.round(strongest?.progress?.percentage || 0)}%</div>
             </Card>
-          </motion.div>
+
+            <Card className="border-0 shadow-lg rounded-[2rem] bg-rose-50/50 p-6 flex items-center justify-between">
+              <div>
+                <TrendingDown className="text-rose-600 mb-2" size={20} />
+                <h4 className="text-slate-900 font-bold">{weakest?.name}</h4>
+                <button onClick={() => router.push(`/dashboard/test/${testId}/subtopic/${weakest?.id}`)} className="text-rose-700/60 text-xs font-bold flex items-center gap-1 hover:text-rose-700 transition-colors">
+                  Fix this spot <RotateCcw size={10} />
+                </button>
+              </div>
+              <div className="text-2xl font-black text-rose-600">{Math.round(weakest?.progress?.percentage || 0)}%</div>
+            </Card>
+          </div>
+
+          {/* Topic List */}
+          <div className="mt-6">
+             <h2 className="text-slate-900 font-black text-xl mb-6 flex items-center gap-2 px-2">
+               <Sparkles className="w-5 h-5 text-indigo-500" />
+               Detailed Breakdown
+             </h2>
+             <div className="space-y-3">
+               {subtopics.map((s, i) => (
+                 <motion.div key={s.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
+                   <div className="bg-white hover:bg-slate-50 transition-colors p-5 rounded-3xl border border-slate-100 flex items-center group cursor-default">
+                     <div className="flex-1">
+                       <h5 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{s.name}</h5>
+                       <div className="flex gap-4 mt-1">
+                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{s.progress?.score} / {s.progress?.total} Correct</p>
+                       </div>
+                     </div>
+                     <div className="text-right flex items-center gap-4">
+                        <span className="text-sm font-black text-slate-900">{Math.round(s.progress?.percentage || 0)}%</span>
+                        <ChevronRight className="w-4 h-4 text-slate-200" />
+                     </div>
+                   </div>
+                 </motion.div>
+               ))}
+             </div>
+          </div>
+
+          {/* Primary Actions */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+            <Button onClick={() => router.push('/dashboard/topics')} className="h-14 px-10 rounded-full bg-slate-900 text-white font-bold hover:scale-105 transition-transform shadow-xl shadow-slate-200">
+              Continue Learning
+            </Button>
+            
+          </div>
         </div>
-
-        {/* Subtopic Breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="border-0 shadow-xl rounded-3xl">
-            <CardHeader>
-              <CardTitle className="text-2xl">Subtopic-wise Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {subtopics.map((subtopic, index) => {
-                  const percentage = subtopic.progress?.percentage || 0;
-                  const grade = getGrade(percentage);
-                  
-                  return (
-                    <motion.div
-                      key={subtopic.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4 + index * 0.1 }}
-                      className="p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex-1">
-                          <h4 className="font-bold text-lg text-gray-900">{subtopic.name}</h4>
-                          <p className="text-sm text-gray-600">
-                            {subtopic.progress?.score}/{subtopic.progress?.total} correct
-                          </p>
-                        </div>
-                        <Badge className={`${grade.bg} ${grade.color} text-lg px-4 py-2 font-bold`}>
-                          {Math.round(percentage)}%
-                        </Badge>
-                      </div>
-                      <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 flex justify-center gap-4"
-        >
-          <Button
-            onClick={() => router.push(`/dashboard/test/${testId}/subtopics`)}
-            size="lg"
-            variant="outline"
-            className="h-14 px-8 rounded-xl font-semibold border-2"
-          >
-            View All Subtopics
-          </Button>
-          <Button
-            onClick={() => router.push('/dashboard/topics')}
-            size="lg"
-            className="h-14 px-8 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
-          >
-            Explore More Topics
-          </Button>
-        </motion.div>
       </div>
     </div>
   );
