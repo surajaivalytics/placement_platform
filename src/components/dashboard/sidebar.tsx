@@ -22,6 +22,7 @@ import {
   HelpCircle,
   MonitorPlay,
   AudioLines,
+  FileText, // Resume Simulator icon
   Brain, // Added
   Briefcase, // Added
   Building2, // Added
@@ -96,6 +97,7 @@ const SidebarContent = ({
     { href: "/dashboard", label: "Home", icon: LayoutDashboard },
     { href: "/dashboard/interview-suite", label: "AI Interview Suite", icon: Mic },
     { href: "/dashboard/voice-assessment", label: "Voice Assessment", icon: AudioLines },
+    { href: "/dashboard/resume-simulator", label: "Resume Simulator", icon: FileText },
     { href: "/dashboard/topics", label: "Topics", icon: BookOpen },
     { href: "/dashboard/mock-tests", label: "Mock Tests", icon: MonitorPlay },
     { href: "/dashboard/results", label: "Results", icon: BarChart3 },
