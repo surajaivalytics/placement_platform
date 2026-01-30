@@ -15,7 +15,7 @@ if (!process.env.DATABASE_URL) {
 
 // Create a connection pool with error handling
 const pool = globalForPrisma.pool ?? new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL, // runtime pooler (correct)
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,

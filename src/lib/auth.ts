@@ -51,7 +51,24 @@ export const authOptions: NextAuthOptions = {
                         role: user.role as "admin" | "user",
                     };
                 } catch (error) {
-                    console.error('❌ Authorization error:', error);
+                    const errorDetails = {
+                        message: (error as Error).message,
+                        stack: (error as Error).stack,
+                        error,
+                        timestamp: new Date().toISOString()
+                    };
+                    console.error('❌ Authorization error details:', errorDetails);
+
+                    // Direct file logging
+                    try {
+                        const fs = require('fs');
+                        const path = require('path');
+                        const logFile = path.join(process.cwd(), 'auth_debug.log');
+                        fs.appendFileSync(logFile, JSON.stringify(errorDetails, null, 2) + '\n');
+                    } catch (fsError) {
+                        console.error('Failed to write to log file', fsError);
+                    }
+
                     // Return null to trigger CredentialsSignin error
                     return null;
                 }

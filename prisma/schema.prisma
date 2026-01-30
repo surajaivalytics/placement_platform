@@ -1,5 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -7,10 +5,6 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
 
 model Account {
   id                String  @id @default(cuid())
@@ -18,15 +12,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -40,39 +33,35 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  role          String    @default("user") // "admin" or "user"
-  password      String? // For credentials auth
-
-  // Profile Data
-  bio         String?
-  phone       String?
-  address     String?
-  coverImage  String?
-  accountType String? @default("Regular") // "Regular", "Pro", etc.
-  autoPayout  Boolean @default(false)
-
-  // Academic Details for Placement
-  tenthPercentage   Float?
-  twelfthPercentage Float?
-  graduationCGPA    Float?
-  backlogs          Int?     @default(0)
-  gapYears          Int?     @default(0)
-  gapDuringGrad     Boolean? @default(false)
-
+  id                    String                 @id @default(cuid())
+  name                  String?
+  email                 String?                @unique
+  emailVerified         DateTime?
+  image                 String?
+  role                  String                 @default("user")
+  password              String?
+  bio                   String?
+  phone                 String?
+  address               String?
+  backlogs              Int?                   @default(0)
+  gapDuringGrad         Boolean?               @default(false)
+  gapYears              Int?                   @default(0)
+  graduationCGPA        Float?
+  tenthPercentage       Float?
+  twelfthPercentage     Float?
+  accountType           String?                @default("Regular")
+  autoPayout            Boolean                @default(false)
+  coverImage            String?
   accounts              Account[]
-  sessions              Session[]
-  results               Result[]
-  placementApplications PlacementApplication[]
   interviewSessions     InterviewSession[]
-  monitoringEvents      MonitoringEvent[]
   mockDrives            MockDriveSession[]
-  userSubtopicProgress  UserSubtopicProgress[]
-  testEligibilityRecords TestEligibility[]
+  monitoringEvents      MonitoringEvent[]
+  placementApplications PlacementApplication[]
+  results               Result[]
+  sessions              Session[]
+  testEligibilities     TestEligibility[]     @relation("userTestEligibilities")
+  subtopicProgress      UserSubtopicProgress[]
+  submissions           Submissions[]         @relation("userSubmissions")
 }
 
 model VerificationToken {
@@ -135,30 +124,41 @@ model Subtopic {
 }
 
 model Question {
-  id         String  @id @default(cuid())
+  id         String    @id @default(cuid())
   testId     String
   subtopicId String?
   text       String
-  type       String  @default("multiple-choice") // multiple-choice, true-false, coding, essay
-  category   String? // numerical, verbal, reasoning, logical, quant
-  difficulty String? // Easy, Medium, Hard
-  marks      Int     @default(1) // Marks for this question
-  metadata   String? @db.Text // JSON for coding problems, essay prompts, etc.
-  order      Int? // Sequence order for maintaining upload sequence
+  type       String    @default("multiple-choice")
+  category   String?
+  difficulty String?
+  metadata   String?
+  order      Int?
+  subtopicId String?
+  options    Option[]
+  subtopic   Subtopic? @relation(fields: [subtopicId], references: [id])
+  test       Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+}
 
-  options Option[]
-
-  test     Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
-  subtopic Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
+model Subtopic {
+  id             String                 @id @default(cuid())
+  testId         String?
+  name           String?
+  description    String?
+  totalQuestions Int?                   @default(0)
+  order          Int?
+  roundTitle     String?
+  type           String?                @default("assessment")
+  questions      Question[]
+  test           Test?                  @relation(fields: [testId], references: [id], onDelete: Cascade)
+  progress       UserSubtopicProgress[]
 }
 
 model Option {
-  id         String  @id @default(cuid())
+  id         String   @id @default(cuid())
   questionId String
   text       String
-  isCorrect  Boolean @default(false)
-
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  isCorrect  Boolean  @default(false)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 model Result {
@@ -169,30 +169,28 @@ model Result {
   total            Int
   aiFeedback       String?           @db.Text // AI-generated feedback from Gemini
   details          Json?             // Detailed question-wise analysis
-  monitoringEvents MonitoringEvent[]
   createdAt        DateTime          @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+  monitoringEvents MonitoringEvent[]
+  test             Test              @relation(fields: [testId], references: [id], onDelete: Cascade)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserSubtopicProgress {
-  id                String              @id @default(cuid())
-  userId            String
-  subtopicId        String
-  score             Int?
-  total             Int?
-  percentage        Float?
-  attempted         Boolean             @default(false)
-  completed         Boolean             @default(false)
-  answers           String?             @db.Text // JSON of user answers
-  timeSpent         Int?                // in seconds
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  
-  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subtopic          Subtopic            @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  userId     String
+  subtopicId String
+  score      Int?
+  total      Int?
+  percentage Float?
+  attempted  Boolean  @default(false)
+  completed  Boolean  @default(false)
+  answers    String?
+  timeSpent  Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  subtopic   Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, subtopicId])
   @@index([userId])
   @@index([subtopicId])
@@ -202,11 +200,10 @@ model TestAssignment {
   id         String   @id @default(cuid())
   testId     String
   userId     String
-  assignedBy String // Admin who assigned it
-  isPublic   Boolean  @default(false) // If true, available to all users
+  assignedBy String
+  isPublic   Boolean  @default(false)
   createdAt  DateTime @default(now())
-
-  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+  test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
 
   @@unique([testId, userId])
 }
@@ -219,84 +216,80 @@ model MonitoringEvent {
   violationType String? // Made optional if eventType supercedes it
   details       String?
   timestamp     DateTime @default(now())
-
-  resultId String?
-  result   Result? @relation(fields: [resultId], references: [id], onDelete: Cascade)
-  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  details       String?
+  testType      String?
+  userId        String
+  violationType String?
+  eventType     String
+  result        Result?  @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Interview & Assessment Models
 model InterviewSession {
   id             String    @id @default(cuid())
   userId         String
-  interviewType  String // "technical", "managerial", "hr", "business_discussion"
-  companyType    String // "TCS", "Wipro", etc.
+  interviewType  String
+  companyType    String
   startedAt      DateTime  @default(now())
   endedAt        DateTime?
-  scores         Json? // { technicalKnowledge: number, communication: number, ... }
-  feedback       String?   @db.Text
-  overallVerdict String? // "Hire", "Maybe", "Needs Improvement"
+  scores         Json?
+  feedback       String?
+  overallVerdict String?
   recordingUrl   String?
-  transcript     String?   @db.Text
+  transcript     String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VoiceAssessment {
-  id            String  @id @default(cuid())
-  applicationId String  @unique
-  audioUrl      String?
-  transcript    String? @db.Text
-
-  // Scoring
+  id                 String               @id @default(cuid())
+  applicationId      String               @unique
+  audioUrl           String?
+  transcript         String?
   fluencyScore       Float?
   pronunciationScore Float?
   paceScore          Float?
   clarityScore       Float?
   totalScore         Float? // Renamed to match code usage
- 
-
   // Meta
   confidenceScore Float?
   status          String? @default("PENDING") // Using String for flexibility: PASSED, FAILED, HUMAN_REVIEW_PENDING
   reviewType      String? @default("AI_ONLY") // AI_ONLY, HUMAN_VERIFIED
-
-  isPassed   Boolean @default(false)
-  feedback   String? @db.Text // Legacy summary
-  aiFeedback Json? // Detailed breakdown
-
-  assessedAt DateTime?
-  createdAt  DateTime  @default(now())
-
-  application PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  isPassed           Boolean              @default(false)
+  feedback           String?
+  assessedAt         DateTime?
+  createdAt          DateTime             @default(now())
+  aiFeedback         Json?
+  confidenceScore    Float?
+  reviewType         String?              @default("AI_ONLY")
+  status             String?              @default("PENDING")
+  totalScore         Float?
+  application        PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
-// Placement Flow Models
 model PlacementApplication {
-  id                String    @id @default(cuid())
+  id                String            @id @default(cuid())
   userId            String
-  company           String // "TCS" or "Wipro"
-  candidateId       String?   @unique // Generated ID like DT2026...
-  status            String // "eligibility_check", "foundation", "advanced", "coding", "essay", "voice", "interview", "completed", "rejected", "withdrawn"
+  company           String
+  status            String
   currentStage      String?
-  eligibilityStatus String? // "eligible", "rejected"
-  finalTrack        String? // "Digital", "Ninja", "Turbo", "Elite"
-  finalDecision     String? // "selected", "rejected", "withdrawn"
+  eligibilityStatus String?
+  finalTrack        String?
+  finalDecision     String?
   withdrawnAt       DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eligibilityCheck EligibilityCheck?
-  assessmentStages AssessmentStage[]
-  voiceAssessment  VoiceAssessment?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  candidateId       String?           @unique
+  assessmentStages  AssessmentStage[]
+  eligibilityCheck  EligibilityCheck?
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voiceAssessment   VoiceAssessment?
 }
 
 model EligibilityCheck {
-  id                String   @id @default(cuid())
-  applicationId     String   @unique
+  id                String               @id @default(cuid())
+  applicationId     String               @unique
   tenthPercentage   Float
   twelfthPercentage Float
   graduationCGPA    Float
@@ -304,46 +297,77 @@ model EligibilityCheck {
   gapYears          Int
   gapDuringGrad     Boolean
   isEligible        Boolean
-  rejectionReasons  String?  @db.Text
-  checkedAt         DateTime @default(now())
-
-  application PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  rejectionReasons  String?
+  checkedAt         DateTime             @default(now())
+  application       PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model AssessmentStage {
-  id            String    @id @default(cuid())
+  id            String               @id @default(cuid())
   applicationId String
-  stageName     String // "foundation", "advanced", "coding", "aptitude", "essay"
+  stageName     String
   testId        String?
   score         Int?
   total         Int?
   percentage    Float?
-  isPassed      Boolean   @default(false)
-  timeSpent     Int? // in seconds
+  isPassed      Boolean              @default(false)
+  timeSpent     Int?
   submittedAt   DateTime?
-  createdAt     DateTime  @default(now())
-
-  application PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  test        Test?                @relation(fields: [testId], references: [id], onDelete: SetNull)
+  createdAt     DateTime             @default(now())
+  application   PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  test          Test?                @relation(fields: [testId], references: [id])
 }
 
 model MockDriveSession {
-  id          String   @id @default(cuid())
-  userId      String
-  company     String   // "TCS" or "Wipro"
-  currentRound Int      @default(1) // 1: Aptitude+Coding, 2: Tech Interview, 3: HR, 4: Completed
-  status      String   @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, ABANDONED
-  
-  // Scores
-  round1Score Float?   // Combined Aptitude + Coding
-  round2Score Float?   // Technical Interview
-  round3Score Float?   // HR Interview
-  
-  // State tracking (Resume capability)
+  id            String   @id @default(cuid())
+  userId        String
+  company       String
+  currentRound  Int      @default(1)
+  status        String   @default("IN_PROGRESS")
+  round1Score   Float?
+  round2Score   Float?
+  round3Score   Float?
   lastActiveUrl String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Problem {
+  id              Int           @id @default(autoincrement())
+  slug            String        @unique
+  title           String
+  description     String
+  difficulty      String
+  starterTemplate Json
+  testCases       Json
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  driverCode      Json?
+  submissions     Submissions[]
+}
+
+model Submissions {
+  id        String   @id @default(cuid())
+  problemId Int
+  userId    String
+  code      String   @db.Text
+  language  String
+  status    String
+  problem   Problem  @relation(fields:[problemId],references:[id])
+  user      User     @relation("userSubmissions", fields:[userId],references:[id])
+  createdAt DateTime @default(now())
+}
+
+model TestEligibility {
+  id         String   @id
+  userId     String
+  testId     String
+  isEligible Boolean  @default(false)
+  criteria   Json?
+  checkedAt  DateTime @default(now())
+  Test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  user       User     @relation("userTestEligibilities", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, testId])
 }

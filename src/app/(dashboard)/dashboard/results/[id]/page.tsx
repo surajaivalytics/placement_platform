@@ -64,13 +64,14 @@ export default function ResultDetailPage() {
     const fetchAifeedBack = async () => {
       setAiloading(true);
       try {
+        const percentage = typeof result.percentage === 'number' && !isNaN(result.percentage) ? result.percentage : 0;
         const response = await fetch("/api/ai-feedback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             score: result.score,
             total: result.total,
-            percentage: result.percentage,
+            percentage: percentage,
             testTitle: result.test.title,
             difficulty: result.test.difficulty,
           })
@@ -100,7 +101,9 @@ export default function ResultDetailPage() {
     </div>
   );
 
-  const scoreColor = result.percentage >= 80 ? 'text-emerald-600' : result.percentage >= 60 ? 'text-amber-600' : 'text-rose-600';
+  // Ensure percentage is always a valid number to prevent NaN errors
+  const safePercentage = typeof result.percentage === 'number' && !isNaN(result.percentage) ? result.percentage : 0;
+  const scoreColor = safePercentage >= 80 ? 'text-emerald-600' : safePercentage >= 60 ? 'text-amber-600' : 'text-rose-600';
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12 p-4">
@@ -135,12 +138,12 @@ export default function ResultDetailPage() {
             <div className="relative flex items-center justify-center mb-4">
               <svg className="w-32 h-32 transform -rotate-90">
                 <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-800" />
-                <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={364} strokeDashoffset={364 - (364 * result.percentage) / 100} className="text-indigo-400 transition-all duration-1000" />
+                <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={364} strokeDashoffset={364 - (364 * safePercentage) / 100} className="text-indigo-400 transition-all duration-1000" />
               </svg>
-              <span className="absolute text-3xl font-bold">{result.percentage}%</span>
+              <span className="absolute text-3xl font-bold">{safePercentage}%</span>
             </div>
             <h2 className="text-2xl font-bold">{result.score} / {result.total}</h2>
-            <p className="text-slate-400 mt-2 text-sm italic">"{getPerformanceLabel(result.percentage)}"</p>
+            <p className="text-slate-400 mt-2 text-sm italic">"{getPerformanceLabel(safePercentage)}"</p>
           </CardContent>
         </Card>
 
@@ -150,7 +153,7 @@ export default function ResultDetailPage() {
               <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600"><Target /></div>
               <div>
                 <p className="text-sm text-slate-500">Total Accuracy</p>
-                <p className="text-xl font-bold">{result.percentage}% Correct</p>
+                <p className="text-xl font-bold">{safePercentage}% Correct</p>
               </div>
             </CardContent>
           </Card>

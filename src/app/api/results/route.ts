@@ -48,7 +48,15 @@ export async function GET(req: Request) {
                 );
             }
 
-            return NextResponse.json({ result });
+            // Calculate percentage (not stored in DB)
+            const percentage = result.total > 0 ? Math.round((result.score / result.total) * 100) : 0;
+
+            return NextResponse.json({
+                result: {
+                    ...result,
+                    percentage
+                }
+            });
         } else {
             // Get all results for the user
             const results = await prisma.result.findMany({
@@ -63,7 +71,13 @@ export async function GET(req: Request) {
                 },
             });
 
-            return NextResponse.json({ results });
+            // Add percentage to each result
+            const resultsWithPercentage = results.map(result => ({
+                ...result,
+                percentage: result.total > 0 ? Math.round((result.score / result.total) * 100) : 0
+            }));
+
+            return NextResponse.json({ results: resultsWithPercentage });
         }
     } catch (error) {
         console.error('Results fetch error:', error);

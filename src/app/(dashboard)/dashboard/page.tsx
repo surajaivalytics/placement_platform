@@ -169,7 +169,7 @@ export default function UserDashboard() {
   };
   const itemVariants: any = {
     hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100, damping: 15 } }
+    visible: { y: 0, opacity: 1 }
   };
 
   return (
@@ -310,7 +310,8 @@ export default function UserDashboard() {
                   </Button>
                 </div>
 
-                <div className="h-[300px] w-full">
+                <div className="h-[300px] w-full" style={{ minHeight: '300px', minWidth: '100px' }}>
+                  {chartData.length > 0 && (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData.length ? chartData : [{ name: 'T1', score: 0 }]} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                       <defs>
@@ -336,6 +337,7 @@ export default function UserDashboard() {
                       />
                     </AreaChart>
                   </ResponsiveContainer>
+                  )}
                 </div>
               </div>
             )}
