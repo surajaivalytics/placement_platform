@@ -24,7 +24,7 @@ export async function GET(_req: Request) {
 
         let avgScore = 0;
         if (results.length > 0) {
-            const totalPercentage = results.reduce((sum, result) => {
+            const totalPercentage = results.reduce((sum: number, result: any) => {
                 return sum + (result.score / result.total) * 100;
             }, 0);
             avgScore = Math.round(totalPercentage / results.length);
