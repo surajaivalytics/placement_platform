@@ -22,10 +22,11 @@ import {
   HelpCircle,
   MonitorPlay,
   AudioLines,
-  Brain, // Added
-  Briefcase, // Added
-  Building2, // Added
-  ClipboardList // Added
+  FileText,
+  Code,
+  Brain,
+  Building2,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -94,12 +95,14 @@ const SidebarContent = ({
 }: SidebarContentProps) => {
   const userLinks = [
     { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-    { href: "/dashboard/interview-suite", label: "AI Interview Suite", icon: Mic },
-    { href: "/dashboard/voice-assessment", label: "Voice Assessment", icon: AudioLines },
     { href: "/dashboard/topics", label: "Topics", icon: BookOpen },
     { href: "/dashboard/mock-tests", label: "Mock Tests", icon: MonitorPlay },
+    { href: "/dashboard/interview-suite", label: "AI Interview", icon: Mic },
+    { href: "/dashboard/voice-assessment", label: "Voice", icon: AudioLines },
+    { href: "/dashboard/programming", label: "Programming", icon: Code },
+    { href: "/dashboard/resume-simulator", label: "Resume Simulator", icon: FileText },
     { href: "/dashboard/results", label: "Results", icon: BarChart3 },
-    { href: "/dashboard/profile", label: "Settings", icon: Settings },
+    { href: "/dashboard/profile", label: "Profile", icon: User },
   ];
 
   const adminLinks = [

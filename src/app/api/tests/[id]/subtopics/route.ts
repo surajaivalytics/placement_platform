@@ -34,7 +34,7 @@ export async function GET(
                         questions: true,
                     },
                 },
-                userSubtopicProgress: {
+                progress: {
                     where: {
                         userId: session.user.id,
                     },
@@ -44,7 +44,7 @@ export async function GET(
 
         // Transform the data to match the frontend interface
         const transformedSubtopics = subtopics.map((subtopic) => {
-            const userProgress = subtopic.userSubtopicProgress[0] || null;
+            const userProgress = subtopic.progress[0] || null;
 
             return {
                 id: subtopic.id,
