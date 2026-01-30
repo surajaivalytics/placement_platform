@@ -53,7 +53,7 @@ export const getQuestions = async (filter?: { topic?: string; company?: string; 
             })
             .all();
 
-        return records.map(record => ({
+        return records.map((record: any) => ({
             id: record.id,
             text: record.get('question_text'),
             options: JSON.parse((record.get('options') as string) || '[]'),

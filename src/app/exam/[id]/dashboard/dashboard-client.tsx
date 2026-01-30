@@ -32,8 +32,8 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
         // Sort Priority: Assessment < Coding < Technical < HR
         // We can try to infer type or use order.
         // Let's rely on the 'minOrder' of the group.
-        const minOrderA = Math.min(...groupedRounds[a].map(s => s.order || 999));
-        const minOrderB = Math.min(...groupedRounds[b].map(s => s.order || 999));
+        const minOrderA = Math.min(...groupedRounds[a].map((s: any) => s.order || 999));
+        const minOrderB = Math.min(...groupedRounds[b].map((s: any) => s.order || 999));
 
         // Tie-breaker: Type priority
         if (minOrderA === minOrderB) {
@@ -179,13 +179,13 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
                             { label: "Tech Interview", icon: Terminal, step: 4 },
                             { label: "HR Interview", icon: Play, step: 5 }
                         ]
-                            .filter(s => {
+                            .filter((s: any) => {
                                 if (test.type !== 'company') {
                                     return s.step <= 3;
                                 }
                                 return true;
                             })
-                            .map((s, idx) => {
+                            .map((s: any, idx: number) => {
                                 const isActive = activeStep >= s.step;
                                 const isCurrent = activeStep === s.step;
                                 return (
@@ -212,7 +212,7 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
                             </CardHeader>
                             <CardContent className="p-0">
                                 <div className="divide-y divide-gray-100">
-                                    {sortedRoundTitles.map((title, roundIdx) => {
+                                    {sortedRoundTitles.map((title: string, roundIdx: number) => {
                                         const subtopics = groupedRounds[title];
                                         const isInterview = title.toLowerCase().includes('interview') ||
                                             title.toLowerCase() === 'hr' ||

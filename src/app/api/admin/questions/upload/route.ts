@@ -19,14 +19,14 @@ export async function POST(request: NextRequest) {
         }
 
         const text = await file.text();
-        const lines = text.split('\n').filter(line => line.trim());
+        const lines = text.split('\n').filter((line: string) => line.trim());
 
         if (lines.length < 2) {
             return NextResponse.json({ error: 'CSV file is empty' }, { status: 400 });
         }
 
         // Parse header
-        const rawHeaders = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const rawHeaders = lines[0].split(',').map((h: string) => h.trim().toLowerCase());
         const headerMapping: Record<string, string> = {
             'id': 'id',
             'question': 'question',
@@ -47,9 +47,9 @@ export async function POST(request: NextRequest) {
             'category': 'category'
         };
 
-        const headers = rawHeaders.map(h => headerMapping[h] || h);
+        const headers = rawHeaders.map((h: string) => headerMapping[h] || h);
         const requiredHeaders = ['question', 'option_1', 'option_2', 'option_3', 'option_4', 'correct_option'];
-        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+        const missingHeaders = requiredHeaders.filter((h: string) => !headers.includes(h));
 
         if (missingHeaders.length > 0) {
             return NextResponse.json({ error: `Missing required headers: ${missingHeaders.join(', ')}` }, { status: 400 });
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
                 if (values.length === 0) continue;
 
                 const row: Record<string, string> = {};
-                headers.forEach((header, index) => {
+                headers.forEach((header: string, index: number) => {
                     row[header] = values[index]?.trim() || '';
                 });
 
@@ -145,5 +145,5 @@ function parseCSVLine(line: string): string[] {
         }
     }
     result.push(current);
-    return result.map(v => v.trim().replace(/^"|"$/g, ''));
+    return result.map((v: string) => v.trim().replace(/^"|"$/g, ''));
 }

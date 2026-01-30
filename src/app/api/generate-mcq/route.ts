@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
             console.log(">>> Params:", { difficulty, bloomsLevel, count, hasFile: !!file, hasText: !!text });
 
             if (keywordsStr) {
-                keywords = keywordsStr.split(",").map(k => k.trim()).filter(k => k);
+                keywords = keywordsStr.split(",").map((k: string) => k.trim()).filter((k: string) => k);
             }
 
             if (file) {
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
 
             const mockData = [{
                 keyword: keywords[0] || "Mock Keyword",
-                questions: Array(count).fill(0).map((_, i) => ({
+                questions: Array(count).fill(0).map((_: any, i: number) => ({
                     question: `[MOCK] This is a generated question #${i + 1} about ${keywords[0] || "the topic"} (AI Quota Bypassed)`,
                     options: [
                         { label: "A", text: "Correct Answer" },

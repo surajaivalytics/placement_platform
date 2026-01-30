@@ -67,7 +67,7 @@ export async function importQuestionsFromContext(formData: FormData) {
                             { text: row['Option B'] || row['B'] || '', isCorrect: (row['Correct Option (A/B/C/D)'] === 'B' || row['Answer'] === 'B' || row['Answer'] === row['Option B']) },
                             { text: row['Option C'] || row['C'] || '', isCorrect: (row['Correct Option (A/B/C/D)'] === 'C' || row['Answer'] === 'C' || row['Answer'] === row['Option C']) },
                             { text: row['Option D'] || row['D'] || '', isCorrect: (row['Correct Option (A/B/C/D)'] === 'D' || row['Answer'] === 'D' || row['Answer'] === row['Option D']) },
-                        ].filter(o => o.text && o.text.trim() !== ''),
+                        ].filter((o: any) => o.text && o.text.trim() !== ''),
                         difficulty: row['Difficulty'] || 'Medium',
                         category: row['Category'] || 'General'
                     };

@@ -38,7 +38,7 @@ export async function POST(
 
         // Check if stage already completed
         const existingStage = application.assessmentStages.find(
-            (stage) => stage.stageName === stageName
+            (stage: any) => stage.stageName === stageName
         );
 
         if (existingStage && existingStage.submittedAt) {
@@ -81,9 +81,9 @@ export async function POST(
                 calculatedTotal = test.questions.length;
                 calculatedScore = 0;
 
-                test.questions.forEach((q) => {
-                    const userAnswerText = answers[q.id];
-                    const correctOption = q.options.find((o) => o.isCorrect);
+                test.questions.forEach((q: any) => {
+                    const userAnswerText = (answers as any)[q.id];
+                    const correctOption = q.options.find((o: any) => o.isCorrect);
 
                     if (userAnswerText && correctOption && userAnswerText === correctOption.text) {
                         calculatedScore++;
@@ -240,7 +240,7 @@ async function assignTrack(
     if (company === 'TCS') {
         // Digital track: Coding score >= 2.5/3 (83%+)
         // Ninja track: Coding score >= 2/3 (67%+)
-        const codingStage = stages.find((s) => s.stageName === 'coding');
+        const codingStage = stages.find((s: any) => s.stageName === 'coding');
         if (codingStage) {
             const codingPercentage = codingStage.percentage || 0;
             if (codingPercentage >= 83) return 'Digital';
@@ -250,7 +250,7 @@ async function assignTrack(
     } else if (company === 'Wipro') {
         // Turbo track: Overall average >= 80%
         // Elite track: Overall average >= 70%
-        const totalPercentage = stages.reduce((sum, s) => sum + (s.percentage || 0), 0);
+        const totalPercentage = stages.reduce((sum: number, s: any) => sum + (s.percentage || 0), 0);
         const avgPercentage = totalPercentage / stages.length;
 
         if (avgPercentage >= 80) return 'Turbo';

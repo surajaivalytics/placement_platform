@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
             text = text.slice(1);
         }
 
-        const lines = text.split(/\r\n|\n|\r/).filter(line => line.trim());
+        const lines = text.split(/\r\n|\n|\r/).filter((line: string) => line.trim());
 
         if (lines.length < 2) {
             return NextResponse.json(
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Parse header
-        const rawHeaders = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase().replace(/^"|"$/g, ''));
+        const rawHeaders = parseCSVLine(lines[0]).map((h: string) => h.trim().toLowerCase().replace(/^"|"$/g, ''));
         console.log('Parsed Headers:', rawHeaders);
 
         // Define mapping for flexible header names
@@ -113,11 +113,11 @@ export async function POST(request: NextRequest) {
             'type': 'type'
         };
 
-        const headers = rawHeaders.map(h => headerMapping[h] || h);
+        const headers = rawHeaders.map((h: string) => headerMapping[h] || h);
 
         // Validate required headers
         const requiredHeaders = ['question', 'option_1', 'option_2', 'option_3', 'option_4', 'correct_option'];
-        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+        const missingHeaders = requiredHeaders.filter((h: string) => !headers.includes(h));
 
         if (missingHeaders.length > 0) {
             return NextResponse.json(
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
                 const row: Record<string, string> = {};
 
                 // Map values to headers safely
-                headers.forEach((header, index) => {
+                headers.forEach((header: string, index: number) => {
                     if (index < values.length) {
                         row[header] = values[index]?.trim() || '';
                     }
@@ -277,5 +277,5 @@ function parseCSVLine(line: string): string[] {
 
     result.push(current);
     // Use a clean trim
-    return result.map(v => v.trim());
+    return result.map((v: string) => v.trim());
 }

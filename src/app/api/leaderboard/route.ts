@@ -50,7 +50,7 @@ export async function GET(req: Request) {
         });
 
         // Calculate rankings and percentages
-        const leaderboard = topResults.map((result, index) => ({
+        const leaderboard = topResults.map((result: any, index: number) => ({
             rank: index + 1,
             userId: result.user.id,
             userName: result.user.name || 'Anonymous',

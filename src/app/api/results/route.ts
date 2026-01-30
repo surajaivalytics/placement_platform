@@ -72,7 +72,7 @@ export async function GET(req: Request) {
             });
 
             // Add percentage to each result
-            const resultsWithPercentage = results.map(result => ({
+            const resultsWithPercentage = results.map((result: any) => ({
                 ...result,
                 percentage: result.total > 0 ? Math.round((result.score / result.total) * 100) : 0
             }));

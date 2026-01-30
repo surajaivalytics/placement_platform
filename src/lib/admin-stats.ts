@@ -30,7 +30,7 @@ export async function getDashboardStats() {
         // Mocking activities for now since we might not have a dedicated activity log
         // In a real app, you'd query an AuditLog or Notification table
         const activities = [
-            ...recentUsers.map(u => ({
+            ...recentUsers.map((u: any) => ({
                 id: u.email,
                 type: 'user_signup',
                 title: 'New User Registered',

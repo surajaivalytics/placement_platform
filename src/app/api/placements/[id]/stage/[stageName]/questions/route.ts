@@ -59,7 +59,7 @@ export async function GET(
 
         // Check if stage is already completed
         const existingStage = application.assessmentStages.find(
-            (stage) => stage.stageName === stageName
+            (stage: any) => stage.stageName === stageName
         );
 
         if (existingStage?.submittedAt) {
@@ -113,7 +113,7 @@ export async function GET(
         );
 
         // Remove correct answers from options for user view
-        const sanitizedQuestions = selectedQuestions.map((q) => {
+        const sanitizedQuestions = selectedQuestions.map((q: any) => {
             let parsedMetadata = null;
             if (q.metadata) {
                 try {
@@ -254,7 +254,7 @@ function selectQuestionsForStage(
         const selected: QuestionWithOptions[] = [];
         for (const [category, count] of Object.entries(config.categories)) {
             const categoryQuestions = questions.filter(
-                (q) => q.category?.toLowerCase() === category.toLowerCase()
+                (q: any) => q.category?.toLowerCase() === category.toLowerCase()
             );
             selected.push(...categoryQuestions.slice(0, count));
         }
