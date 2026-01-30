@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -6,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
+  FileQuestion,
   GraduationCap,
   Users,
   BarChart3,
@@ -18,8 +20,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  HelpCircle,
   MonitorPlay,
-  AudioLines
+  AudioLines,
+
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -90,18 +94,24 @@ const SidebarContent = ({
     { href: "/dashboard", label: "Home", icon: LayoutDashboard },
     { href: "/dashboard/interview-suite", label: "AI Interview Suite", icon: Mic },
     { href: "/dashboard/voice-assessment", label: "Voice Assessment", icon: AudioLines },
+    { href: "/dashboard/resume-simulator", label: "Resume Simulator", icon: FileText },
     { href: "/dashboard/topics", label: "Topics", icon: BookOpen },
     { href: "/dashboard/mock-tests", label: "Mock Tests", icon: MonitorPlay },
     { href: "/dashboard/results", label: "Results", icon: BarChart3 },
-    { href: "/dashboard/profile", label: "Profile", icon: Settings },
+    { href: "/dashboard/programming", label: "Programming", icon: Code },
+    { href: "/dashboard/profile", label: "Settings", icon: Settings },
   ];
 
   const adminLinks = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard },
+    { href: "/admin/mcq-generator", label: "MCQ Generator", icon: Brain },
+    { href: "/admin/placements", label: "Placements", icon: Briefcase },
+    { href: "/admin/placement-questions", label: "Questions", icon: FileQuestion },
     { href: "/admin/tests", label: "Tests", icon: GraduationCap },
-    { href: "/admin/mock-tests", label: "Manage Mock Tests", icon: MonitorPlay },
+    { href: "/admin/company-tests", label: "Company Tests", icon: Building2 },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/dashboard/profile", label: "Settings", icon: Settings },
   ];
 
   const links = role === "admin" ? adminLinks : userLinks;
