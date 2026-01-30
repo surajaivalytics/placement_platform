@@ -19,16 +19,8 @@ interface CSVRow {
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.email) {
+        if (!session?.user || session.user.role !== 'admin') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
-
-        if (user?.role !== 'admin') {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const formData = await request.formData();
@@ -71,8 +63,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Read CSV file
-        const text = await file.text();
-        const lines = text.split('\n').filter(line => line.trim());
+        let text = await file.text();
+        // Remove BOM (Byte Order Mark) if present (common in Excel CSVs)
+        if (text.charCodeAt(0) === 0xFEFF) {
+            text = text.slice(1);
+        }
+
+        const lines = text.split(/\r\n|\n|\r/).filter(line => line.trim());
 
         if (lines.length < 2) {
             return NextResponse.json(
@@ -82,22 +79,32 @@ export async function POST(request: NextRequest) {
         }
 
         // Parse header
-        const rawHeaders = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const rawHeaders = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase().replace(/^"|"$/g, ''));
+        console.log('Parsed Headers:', rawHeaders);
 
         // Define mapping for flexible header names
         const headerMapping: Record<string, string> = {
             'id': 'id',
             'question': 'question',
+            'qs': 'question',
+            'statement': 'question',
             'text': 'question',
             'option_1': 'option_1',
             'option1': 'option_1',
+            'a': 'option_1',
             'option_2': 'option_2',
             'option2': 'option_2',
+            'b': 'option_2',
             'option_3': 'option_3',
             'option3': 'option_3',
+            'c': 'option_3',
             'option_4': 'option_4',
             'option4': 'option_4',
+            'd': 'option_4',
             'correct_option': 'correct_option',
+            'correct': 'correct_option',
+            'answer': 'correct_option',
+            'ans': 'correct_option',
             'correctoption': 'correct_option',
             'correct_index': 'correct_option',
             'explanation': 'explanation',
@@ -114,7 +121,7 @@ export async function POST(request: NextRequest) {
 
         if (missingHeaders.length > 0) {
             return NextResponse.json(
-                { error: `Missing required headers: ${missingHeaders.join(', ')}` },
+                { error: `Missing required headers: ${missingHeaders.join(', ')}. Found: ${headers.join(', ')}` },
                 { status: 400 }
             );
         }
@@ -137,9 +144,16 @@ export async function POST(request: NextRequest) {
                 const values = parseCSVLine(lines[i]);
                 if (values.length === 0) continue;
 
+                // Stop if row is suspiciously short (failed parse or empty line)
+                if (values.length < 2) continue;
+
                 const row: Record<string, string> = {};
+
+                // Map values to headers safely
                 headers.forEach((header, index) => {
-                    row[header] = values[index]?.trim() || '';
+                    if (index < values.length) {
+                        row[header] = values[index]?.trim() || '';
+                    }
                 });
 
                 // Validate required fields
@@ -155,10 +169,10 @@ export async function POST(request: NextRequest) {
                     // Convert correct_option (A, B, C, D or 1, 2, 3, 4) to index
                     let correctIndex = -1;
                     const co = row.correct_option.toUpperCase();
-                    if (co === 'A') correctIndex = 1;
-                    else if (co === 'B') correctIndex = 2;
-                    else if (co === 'C') correctIndex = 3;
-                    else if (co === 'D') correctIndex = 4;
+                    if (co === 'A' || co === '1') correctIndex = 1;
+                    else if (co === 'B' || co === '2') correctIndex = 2;
+                    else if (co === 'C' || co === '3') correctIndex = 3;
+                    else if (co === 'D' || co === '4') correctIndex = 4;
                     else {
                         correctIndex = parseInt(row.correct_option);
                     }
@@ -214,6 +228,14 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        // If nothing created and we have errors, treat as failure
+        if (questionsCreated.length === 0 && errors.length > 0) {
+            return NextResponse.json({
+                error: `Upload failed. 0 questions created. First error: ${errors[0]}`,
+                errors
+            }, { status: 400 });
+        }
+
         return NextResponse.json({
             message: `Successfully uploaded ${questionsCreated.length} questions to subtopic "${subtopic.name}"`,
             created: questionsCreated.length,
@@ -254,6 +276,6 @@ function parseCSVLine(line: string): string[] {
     }
 
     result.push(current);
-    // Remove potential carriage return and strip outer quotes
-    return result.map(v => v.trim().replace(/^"|"$/g, ''));
+    // Use a clean trim
+    return result.map(v => v.trim());
 }

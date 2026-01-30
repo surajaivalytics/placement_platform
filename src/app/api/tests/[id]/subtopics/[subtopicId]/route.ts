@@ -69,7 +69,7 @@ export async function PUT(
         }
 
         const { id: testId, subtopicId } = await params;
-        const { name, description, order } = await req.json();
+        const { name, description, order, roundTitle, type } = await req.json();
 
         // Verify subtopic belongs to the test
         const subtopic = await prisma.subtopic.findFirst({
@@ -93,6 +93,8 @@ export async function PUT(
                 name: name || subtopic.name,
                 description: description !== undefined ? description : subtopic.description,
                 order: order !== undefined ? order : subtopic.order,
+                roundTitle: roundTitle !== undefined ? roundTitle : subtopic.roundTitle,
+                type: type !== undefined ? type : subtopic.type,
             },
         });
 

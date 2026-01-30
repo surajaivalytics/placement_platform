@@ -81,8 +81,8 @@ export default function WiproVoiceAssessmentPage() {
           clarityScore = 40 + Math.random() * 20;
         }
 
-        const overallScore = (fluencyScore + pronunciationScore + paceScore + clarityScore) / 4;
-        const isPassed = overallScore >= 70;
+        const totalScore = (fluencyScore + pronunciationScore + paceScore + clarityScore) / 4;
+        const isPassed = totalScore >= 70;
 
         const res = await fetch(
           `/api/placements/${applicationId}/voice`,
@@ -96,7 +96,7 @@ export default function WiproVoiceAssessmentPage() {
               pronunciationScore,
               paceScore,
               clarityScore,
-              overallScore,
+              totalScore,
               isPassed,
             }),
           }

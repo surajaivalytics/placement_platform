@@ -11,6 +11,7 @@ interface Option {
 interface RequestQuestion {
     text: string;
     type?: string;
+    metadata?: string;
     options: Option[];
 }
 
@@ -38,19 +39,30 @@ export async function POST(
 
         // Validate question format
         for (const q of questions) {
-            if (!q.text || !Array.isArray(q.options) || q.options.length < 2) {
+            const isCoding = q.type === 'coding';
+
+            if (!q.text) {
                 return NextResponse.json(
-                    { error: 'Each question must have text and at least 2 options' },
+                    { error: 'Each question must have text' },
                     { status: 400 }
                 );
             }
 
-            const correctOptions = q.options.filter((o: Option) => o.isCorrect);
-            if (correctOptions.length !== 1) {
-                return NextResponse.json(
-                    { error: 'Each question must have exactly one correct option' },
-                    { status: 400 }
-                );
+            if (!isCoding) {
+                if (!Array.isArray(q.options) || q.options.length < 2) {
+                    return NextResponse.json(
+                        { error: 'MCQ questions must have at least 2 options' },
+                        { status: 400 }
+                    );
+                }
+
+                const correctOptions = q.options.filter((o: Option) => o.isCorrect);
+                if (correctOptions.length !== 1) {
+                    return NextResponse.json(
+                        { error: 'MCQ questions must have exactly one correct option' },
+                        { status: 400 }
+                    );
+                }
             }
         }
 
@@ -62,11 +74,12 @@ export async function POST(
                         testId: id,
                         text: q.text,
                         type: q.type || 'multiple-choice',
+                        metadata: q.metadata || null, // Ensure metadata is saved
                         options: {
-                            create: q.options.map((opt: Option) => ({
+                            create: q.options?.map((opt: Option) => ({
                                 text: opt.text,
                                 isCorrect: opt.isCorrect || false,
-                            })),
+                            })) || [],
                         },
                     },
                     include: {

@@ -42,7 +42,7 @@ export default function SubtopicsManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedSubtopic, setSelectedSubtopic] = useState<string | null>(null);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     name: '',
@@ -272,18 +272,87 @@ export default function SubtopicsManagementPage() {
           <DialogHeader>
             <DialogTitle>Create New Subtopic</DialogTitle>
             <DialogDescription>
-              Add a new subtopic to organize questions within this test.
+              Add a new subtopic. MCQ rounds must follow a strict order: Quants &rarr; Logical &rarr; Verbal &rarr; Technical.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Subtopic Name *</Label>
-              <Input
+              <Label htmlFor="name">Subtopic Type *</Label>
+              <select
                 id="name"
-                placeholder="e.g., Time and Work"
+                className="w-full p-2 border rounded-md"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
+              >
+                <option value="">Select a round...</option>
+                {/* Logic: Check what exists and offer next available MCQ round */}
+                {(() => {
+                  const existingNames = subtopics.map(s => s.name);
+                  const mcqOrder = ["Quantitative Aptitude", "Logical Reasoning", "Verbal Ability", "Technical Assessment"];
+
+                  // Find the first one not yet added
+                  const nextMcqIndex = mcqOrder.findIndex(name => !existingNames.includes(name));
+
+                  const options = [];
+
+                  // Allow the NEXT valid MCQ round (if any left)
+                  if (nextMcqIndex !== -1) {
+                    // Check if previous ones exist (strict order constraint)
+                    // Actually, if we just offer the *first* missing one from the list, we enforce order implicitly 
+                    // IF they are filling them in sequence. 
+                    // But if they deleted "Quants", we should force them to add "Quants" before "Logical".
+                    // So simply: The next available MCQ round is the FIRST one from the list that isn't present.
+                    // WAIT: The requirement says "1st quants, 2nd logical...". 
+                    // Does it mean if I have Quants, I MUST add Logical next? Or just that Logical CANNOT come before Quants?
+                    // "dont allow mixups" implies strict sequence.
+                    // So if I have Quants, the next valid one is Logical.
+                    // If I have nothing, next is Quants.
+                    // If I have Quants & Logical, next is Verbal.
+                    // What if I deleted Quants? Then I should probably re-add Quants.
+
+                    // Helper to check valid "next" standard round
+                    const lastStandard = existingNames.filter(n => mcqOrder.includes(n)).pop();
+
+                    // Actually, let's just show available standard rounds but disable out-of-order ones?
+                    // Or just show ALL options but validate on select?
+                    // Let's just show the CORRECT next one + Coding/Essay options.
+
+                    // Find the first missing standard round
+                    const firstMissingStandard = mcqOrder.find(name => !existingNames.includes(name));
+                    if (firstMissingStandard) {
+                      // Check if all *prior* standard rounds exist
+                      const idx = mcqOrder.indexOf(firstMissingStandard);
+                      const allPriorExist = mcqOrder.slice(0, idx).every(name => existingNames.includes(name));
+
+                      if (allPriorExist) {
+                        options.push(<option key={firstMissingStandard} value={firstMissingStandard}>{firstMissingStandard} (Standard Flow)</option>);
+                      } else {
+                        // If prior missing, we force the prior one first.
+                        // Actually, the logic `firstMissingStandard` already picks the first hole.
+                        // Example: Have [Quants, Verbal] (missing Logical).
+                        // mcqOrder.find => "Logical". 
+                        // prior of Logical is Quants -> exists. So we offer Logical.
+                        // This fills holes. Good. 
+                        options.push(<option key={firstMissingStandard} value={firstMissingStandard}>{firstMissingStandard} (Next Standard Round)</option>);
+                      }
+                    }
+                  }
+
+                  // Always allow these
+                  options.push(<option key="Coding" value="Coding">Coding</option>);
+                  options.push(<option key="Essay Writing" value="Essay Writing">Essay Writing</option>);
+                  options.push(<option key="Custom" value="Custom">Custom (Other)</option>);
+
+                  return options;
+                })()}
+              </select>
+              {formData.name === "Custom" && (
+                <Input
+                  className="mt-2"
+                  placeholder="Enter custom round name"
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
@@ -294,15 +363,21 @@ export default function SubtopicsManagementPage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
             </div>
+            {/* Auto-calculate order based on type? Or let them set it? 
+                For MCQ, order is fixed. For others, maybe auto-increment.
+            */}
             <div className="space-y-2">
               <Label htmlFor="order">Display Order</Label>
               <Input
                 id="order"
                 type="number"
-                placeholder="0"
+                placeholder="Auto-assigned"
                 value={formData.order}
                 onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
               />
+              <p className="text-xs text-muted-foreground">
+                Standard MCQ rounds recommended order: Quants(1), Logical(2), Verbal(3), Tech(4).
+              </p>
             </div>
           </div>
           <DialogFooter>

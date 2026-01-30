@@ -9,10 +9,11 @@ export async function logMonitoringEvent(company: string, type: string, message:
     if (!session?.user?.id) return { success: false, error: "Unauthorized" };
 
     try {
-        await prisma.monitoringEvent.create({
+        const event = await prisma.monitoringEvent.create({
             data: {
                 userId: session.user.id,
                 testType: company,
+                eventType: "VIOLATION",
                 violationType: type,
                 details: message,
                 timestamp: new Date()

@@ -12,7 +12,7 @@ export async function analyzeVoiceRecording(audioBuffer: Buffer, mimeType: strin
 
     try {
         console.log(`Analyzing audio: ${audioBuffer.length} bytes, type: ${mimeType}`);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
         const prompt = `
       Act as a professional Speech Assessor for Wipro/TCS placement interviews.

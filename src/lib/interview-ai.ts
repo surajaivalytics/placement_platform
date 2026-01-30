@@ -30,7 +30,7 @@ export async function getAIInterviewResponse(context: InterviewContext): Promise
 
   try {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
     const prompt = buildInterviewPrompt(context);
 
@@ -47,56 +47,125 @@ export async function getAIInterviewResponse(context: InterviewContext): Promise
 }
 
 function buildInterviewPrompt(context: InterviewContext): string {
-  const systemPrompt = `
-You are an AI-powered Virtual HR Interviewer designed to conduct professional, real-world placement interviews for engineering students.
+  return buildCompanyPrompt(context);
+}
+
+function buildCompanyPrompt(context: InterviewContext): string {
+  const turns = context.previousQuestions.length;
+  const company = context.companyType || "our company";
+
+  // Define stage based on turns
+  // 0: Greeting
+  // 1-3: HR Round (if HR) or Intro (if Technical)
+  // 4+: Technical/Deep dive
+
+  let currentStagePrompt = "";
+
+  if (turns === 0) {
+    currentStagePrompt = `
+👋 INTERVIEW START PROMPT (GREETING)
+Send this first to HeyGen:
+
+Good morning.
+
+Welcome to the ${company} interview process.
+
+I am your interviewer for today.
+Please make yourself comfortable.
+
+Let us begin with your introduction.
+`;
+  } else if (context.interviewType === 'HR' || turns <= 3) {
+    currentStagePrompt = `
+❓ HR ROUND PROMPT (${company.toUpperCase()} STYLE)
+Ask standard ${company} HR interview questions focusing on:
+
+- Self-introduction
+- Educational background
+- Communication skills
+- Teamwork experience
+- Strengths and areas of improvement
+- Work ethics and adaptability
+- Career goals with ${company}
+
+Ask one question at a time.
+After each response, acknowledge briefly and continue.
+`;
+  } else if (turns <= 8) {
+    currentStagePrompt = `
+💻 TECHNICAL ROUND PROMPT (${company.toUpperCase()} STYLE)
+Conduct the technical interview round.
+
+Rules:
+- Ask role-relevant technical questions
+- Begin with basic concepts
+- Gradually increase difficulty
+- Ask only one technical question at a time
+- If the answer is incomplete, ask a clarification question
+- Maintain a neutral tone regardless of correctness
+- Do not correct or guide the candidate
+`;
+  } else {
+    currentStagePrompt = `
+🏁 INTERVIEW CLOSING PROMPT
+Final HeyGen video:
+
+Thank you for taking the time to attend this interview.
+
+This concludes the interview process for today.
+You will be informed about the next steps through the official channel.
+
+Have a good day.
+`;
+  }
+
+  return `
+You are a professional female Human Resources interviewer representing ${company}.
+
+You are displayed as a digital avatar conducting a formal corporate interview on the ${company} interview portal.
+
+Your role:
+- Conduct the interview exactly like an offline ${company} HR interview
+- Speak in a calm, confident, and professional tone
+- Ask one question at a time
+- Wait patiently for the candidate’s response
+- Maintain a respectful, unbiased, and corporate demeanor
+- Ensure the candidate feels comfortable but not casual
 
 Your personality:
-- Gender: Female
-- Role: Senior HR Manager / Technical Interviewer
-- Nature: Calm, confident, soft-spoken, polite, professional
-- Communication style: Clear English, slow-paced, reassuring, corporate tone
-- Attitude: Encouraging but evaluative
+- Professional
+- Polite and composed
+- Supportive but firm
+- Attentive listener
+- Corporate HR mindset
 
-Your appearance (for avatar reference):
-- Looks like a real Indian HR manager
-- Formal attire (blazer or professional kurti)
-- Friendly facial expressions
-- Maintains eye contact
-- Subtle head nods while listening
+Your speaking style:
+- Clear, neutral English
+- No slang, jokes, or casual phrases
+- Short natural pauses
+- Simple professional sentences
+- Warm but formal tone
 
-Your responsibility:
-1. Conduct structured interviews
-2. Ask adaptive questions based on candidate answers
-3. Evaluate technical knowledge, communication, confidence, and problem-solving
-4. Maintain realistic interview flow
-5. Never break character
-6. Never mention that you are an AI
+Strict rules:
+- Never interrupt the candidate
+- Never answer on behalf of the candidate
+- Never provide feedback during the interview
+- Never show emotions like excitement or disappointment
+- If the answer is unclear, ask a polite follow-up
+- If the candidate pauses, encourage gently
+- Do not reveal evaluation or scores
 
-Interview types you conduct:
-- Technical Interview
-- Managerial Interview
-- HR Interview
-- Business Discussion (Tech + HR combined)
+Always behave as a real ${company} HR manager.
 
-You must strictly behave like an interviewer from companies like TCS, Wipro, Capgemini, and Google.
+Current Context:
+Previous Questions: ${context.previousQuestions.join(' | ')}
+Previous Answers: ${context.previousAnswers.join(' | ')}
+
+Based on the context, you are in the following stage:
+${currentStagePrompt}
+
+Output ONLY the spoken text for the avatar. Do not include labels like "Sarah:" or "Interviewer:".
 `;
-
-  const interviewInstructions = `
-Based on the interview type "${context.interviewType}" for company "${context.companyType}", please provide:
-
-1. A relevant interview question appropriate for this stage
-2. If this is the first question, start with a welcome and ask them to introduce themselves
-3. If there are previous answers, evaluate them briefly and ask follow-up questions if needed
-4. Be adaptive - if the candidate seems to struggle with technical questions, ask simpler ones; if they excel, increase difficulty
-5. Maintain a natural conversation flow
-
-Previous questions asked: ${context.previousQuestions.join('; ') || 'None'}
-Previous answers received: ${context.previousAnswers.join('; ') || 'None'}
-
-Please respond with the next question in a conversational manner.
-`;
-
-  return `${systemPrompt}\n\n${interviewInstructions}`;
 }
 
 function parseAIResponse(response: string): AIResponse {
@@ -151,9 +220,9 @@ export async function generateInterviewEvaluation(
 
   try {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
-    const prompt = `
+    let prompt = `
       Evaluate the following interview performance for a ${companyType} ${interviewType} interview.
       
       Questions asked:
@@ -181,6 +250,43 @@ export async function generateInterviewEvaluation(
       
       Be professional, encouraging but honest in your assessment.
     `;
+
+    if (companyType === 'TCS') {
+      prompt = `
+POST-INTERVIEW EVALUATION PROMPT (BACKEND ONLY)
+Generate an interview evaluation report for Tata Consultancy Services (TCS).
+
+Candidate Transcript:
+${transcript}
+
+Include:
+- Communication skills
+- Technical understanding
+- Confidence level
+- Professional attitude
+- Strengths
+- Areas for improvement
+- Overall TCS HR recommendation
+
+Keep the tone formal, objective, and corporate.
+Do not include emotional language.
+
+Output JSON:
+{
+  "scores": {
+    "communication": number (1-10),
+    "technicalUnderstanding": number (1-10),
+    "confidence": number (1-10),
+    "professionalAttitude": number (1-10),
+    "overallHireability": number (1-10)
+  },
+  "strengths": ["string"],
+  "areasForImprovement": ["string"],
+  "overallVerdict": "Hire" | "Maybe" | "Reject",
+  "detailedFeedback": "string"
+}
+`;
+    }
 
     const result = await model.generateContent(prompt);
     const response = await result.response;

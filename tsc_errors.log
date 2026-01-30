@@ -1,0 +1,81 @@
+scripts/create-subtopics.ts(55,26): error TS2353: Object literal may only specify known properties, and 'testId' does not exist in type 'SubtopicWhereInput'.
+scripts/create-subtopics.ts(83,25): error TS2353: Object literal may only specify known properties, and 'testId' does not exist in type '(Without<SubtopicCreateInput, SubtopicUncheckedCreateInput> & SubtopicUncheckedCreateInput) | (Without<...> & SubtopicCreateInput)'.
+src/app/(dashboard)/dashboard/page.tsx(185,21): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/page.tsx(258,13): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/page.tsx(298,23): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/page.tsx(384,23): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(26,26): error TS2304: Cannot find name 'params'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(37,9): error TS2304: Cannot find name 'setError'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(40,9): error TS2304: Cannot find name 'setLoading'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(44,9): error TS2304: Cannot find name 'params'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(47,7): error TS2304: Cannot find name 'params'.
+src/app/(dashboard)/dashboard/voice-assessment/page.tsx(324,66): error TS2322: Type '{ value: number; className: string; indicatorClassName: string; }' is not assignable to type 'IntrinsicAttributes & ProgressProps & RefAttributes<HTMLDivElement>'.
+  Property 'indicatorClassName' does not exist on type 'IntrinsicAttributes & ProgressProps & RefAttributes<HTMLDivElement>'.
+src/app/(dashboard)/layout.tsx(26,18): error TS2741: Property 'mobileOpen' is missing in type '{ setMobileOpen: Dispatch<SetStateAction<boolean>>; collapsed: boolean; setCollapsed: Dispatch<SetStateAction<boolean>>; role: Role | undefined; }' but required in type 'SidebarProps'.
+src/app/api/admin/subtopics/upload/route.ts(62,17): error TS2353: Object literal may only specify known properties, and 'testId' does not exist in type 'SubtopicWhereInput'.
+src/app/api/admin/subtopics/upload/route.ts(177,29): error TS2353: Object literal may only specify known properties, and 'subtopicId' does not exist in type 'Without<QuestionCreateInput, QuestionUncheckedCreateInput> & QuestionUncheckedCreateInput'.
+src/app/api/admin/subtopics/upload/route.ts(211,17): error TS2353: Object literal may only specify known properties, and 'totalQuestions' does not exist in type '(Without<SubtopicUpdateInput, SubtopicUncheckedUpdateInput> & SubtopicUncheckedUpdateInput) | (Without<...> & SubtopicUpdateInput)'.
+src/app/api/monitoring/route.ts(38,17): error TS2353: Object literal may only specify known properties, and 'eventType' does not exist in type '(Without<MonitoringEventCreateInput, MonitoringEventUncheckedCreateInput> & MonitoringEventUncheckedCreateInput) | (Without<...> & MonitoringEventCreateInput)'.
+src/app/api/placements/[id]/voice/route.ts(67,17): error TS2353: Object literal may only specify known properties, and 'overallScore' does not exist in type 'Without<VoiceAssessmentCreateInput, VoiceAssessmentUncheckedCreateInput> & VoiceAssessmentUncheckedCreateInput'.
+src/app/api/placements/[id]/voice/route.ts(78,17): error TS2353: Object literal may only specify known properties, and 'overallScore' does not exist in type '(Without<VoiceAssessmentUpdateInput, VoiceAssessmentUncheckedUpdateInput> & VoiceAssessmentUncheckedUpdateInput) | (Without<...> & VoiceAssessmentUpdateInput)'.
+src/app/api/tests/[id]/route.ts(26,25): error TS2353: Object literal may only specify known properties, and 'subtopics' does not exist in type 'TestCountOutputTypeSelect<DefaultArgs>'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/questions/route.ts(18,17): error TS2353: Object literal may only specify known properties, and 'testId' does not exist in type 'SubtopicWhereInput'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/questions/route.ts(32,17): error TS2353: Object literal may only specify known properties, and 'subtopicId' does not exist in type 'QuestionWhereInput'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/questions/route.ts(47,39): error TS2339: Property 'description' does not exist on type '{ id: string; name: string | null; }'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/route.ts(27,17): error TS2353: Object literal may only specify known properties, and 'testId' does not exist in type 'SubtopicWhereInput'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/route.ts(78,17): error TS2353: Object literal may only specify known properties, and 'testId' does not exist in type 'SubtopicWhereInput'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/route.ts(94,17): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type '(Without<SubtopicUpdateInput, SubtopicUncheckedUpdateInput> & SubtopicUncheckedUpdateInput) | (Without<...> & SubtopicUpdateInput)'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/route.ts(94,81): error TS2339: Property 'description' does not exist on type '{ id: string; name: string | null; }'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/route.ts(95,63): error TS2339: Property 'order' does not exist on type '{ id: string; name: string | null; }'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/submit/route.ts(28,17): error TS2353: Object literal may only specify known properties, and 'testId' does not exist in type 'SubtopicWhereInput'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/submit/route.ts(31,17): error TS2353: Object literal may only specify known properties, and 'questions' does not exist in type 'SubtopicInclude<DefaultArgs>'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/submit/route.ts(48,32): error TS2339: Property 'questions' does not exist on type '{ id: string; name: string | null; }'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/submit/route.ts(50,18): error TS2339: Property 'questions' does not exist on type '{ id: string; name: string | null; }'.
+src/app/api/tests/[id]/subtopics/[subtopicId]/submit/route.ts(50,36): error TS7006: Parameter 'question' implicitly has an 'any' type.
+src/app/api/tests/[id]/subtopics/[subtopicId]/submit/route.ts(52,57): error TS7006: Parameter 'opt' implicitly has an 'any' type.
+src/app/api/tests/[id]/subtopics/route.ts(23,22): error TS2353: Object literal may only specify known properties, and 'testId' does not exist in type 'SubtopicWhereInput'.
+src/app/api/tests/[id]/subtopics/route.ts(27,25): error TS2353: Object literal may only specify known properties, and 'questions' does not exist in type 'SubtopicCountOutputTypeSelect<DefaultArgs>'.
+src/app/api/tests/[id]/subtopics/route.ts(32,17): error TS2353: Object literal may only specify known properties, and 'order' does not exist in type 'SubtopicOrderByWithRelationInput | SubtopicOrderByWithRelationInput[]'.
+src/app/api/tests/[id]/subtopics/route.ts(58,38): error TS2339: Property '_count' does not exist on type '{ id: string; name: string | null; }'.
+src/app/api/tests/[id]/subtopics/route.ts(103,17): error TS2353: Object literal may only specify known properties, and 'testId' does not exist in type '(Without<SubtopicCreateInput, SubtopicUncheckedCreateInput> & SubtopicUncheckedCreateInput) | (Without<...> & SubtopicCreateInput)'.
+test_prisma/prisma.config.ts(4,30): error TS2307: Cannot find module 'prisma/config' or its corresponding type declarations.

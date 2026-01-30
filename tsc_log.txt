@@ -1,0 +1,111 @@
+prisma/seed.ts(1,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
+scripts/create-subtopics.ts(1,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
+scripts/create-test-user.ts(1,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
+src/app/(dashboard)/dashboard/page.tsx(185,21): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/page.tsx(258,13): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/page.tsx(298,23): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/page.tsx(384,23): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(26,26): error TS2304: Cannot find name 'params'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(37,9): error TS2304: Cannot find name 'setError'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(40,9): error TS2304: Cannot find name 'setLoading'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(44,9): error TS2304: Cannot find name 'params'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(47,7): error TS2304: Cannot find name 'params'.
+src/app/(dashboard)/dashboard/voice-assessment/page.tsx(324,66): error TS2322: Type '{ value: number; className: string; indicatorClassName: string; }' is not assignable to type 'IntrinsicAttributes & ProgressProps & RefAttributes<HTMLDivElement>'.
+  Property 'indicatorClassName' does not exist on type 'IntrinsicAttributes & ProgressProps & RefAttributes<HTMLDivElement>'.
+src/app/(dashboard)/layout.tsx(26,18): error TS2741: Property 'mobileOpen' is missing in type '{ setMobileOpen: Dispatch<SetStateAction<boolean>>; collapsed: boolean; setCollapsed: Dispatch<SetStateAction<boolean>>; role: Role | undefined; }' but required in type 'SidebarProps'.
+src/app/api/admin/analytics/route.ts(37,18): error TS7006: Parameter 'user' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(41,59): error TS7006: Parameter 'result' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(55,21): error TS7006: Parameter 'user' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(56,20): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(56,23): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(78,18): error TS7006: Parameter 'test' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(82,59): error TS7006: Parameter 'result' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(96,21): error TS7006: Parameter 'topic' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(97,20): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(97,23): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(118,18): error TS7006: Parameter 'test' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(122,59): error TS7006: Parameter 'result' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(136,21): error TS7006: Parameter 'company' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(137,20): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/analytics/route.ts(137,23): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/app/api/admin/placement-questions/route.ts(5,10): error TS2305: Module '"@prisma/client"' has no exported member 'Prisma'.
+src/app/api/admin/placements/route.ts(5,10): error TS2305: Module '"@prisma/client"' has no exported member 'Prisma'.
+src/app/api/admin/placements/route.ts(59,42): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/placements/route.ts(60,44): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/placements/route.ts(63,56): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/placements/route.ts(64,50): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/placements/route.ts(67,48): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/placements/route.ts(68,47): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/placements/route.ts(71,46): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/placements/route.ts(72,44): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/placements/route.ts(73,44): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/placements/route.ts(74,44): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/admin/stats/route.ts(27,53): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/app/api/admin/stats/route.ts(27,58): error TS7006: Parameter 'result' implicitly has an 'any' type.
+src/app/api/assignments/route.ts(5,10): error TS2305: Module '"@prisma/client"' has no exported member 'Prisma'.
+src/app/api/leaderboard/route.ts(53,45): error TS7006: Parameter 'result' implicitly has an 'any' type.
+src/app/api/leaderboard/route.ts(53,53): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/app/api/placements/[id]/stage/[stageName]/questions/route.ts(62,14): error TS7006: Parameter 'stage' implicitly has an 'any' type.
+src/app/api/placements/[id]/stage/[stageName]/route.ts(41,14): error TS7006: Parameter 'stage' implicitly has an 'any' type.
+src/app/api/placements/[id]/stage/[stageName]/route.ts(84,41): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/app/api/placements/[id]/stage/[stageName]/route.ts(86,59): error TS7006: Parameter 'o' implicitly has an 'any' type.
+src/app/api/tests/[id]/submit/route.ts(49,33): error TS7006: Parameter 'question' implicitly has an 'any' type.
+src/app/api/tests/[id]/submit/route.ts(51,58): error TS7006: Parameter 'opt' implicitly has an 'any' type.
+src/app/api/tests/[id]/subtopics/[subtopicId]/submit/route.ts(50,36): error TS7006: Parameter 'question' implicitly has an 'any' type.
+src/app/api/tests/[id]/subtopics/[subtopicId]/submit/route.ts(52,57): error TS7006: Parameter 'opt' implicitly has an 'any' type.
+src/app/api/tests/[id]/subtopics/route.ts(45,43): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/tests/[id]/subtopics/route.ts(50,45): error TS7006: Parameter 'acc' implicitly has an 'any' type.
+src/app/api/tests/[id]/subtopics/route.ts(50,50): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/tests/[id]/subtopics/route.ts(56,53): error TS7006: Parameter 'subtopic' implicitly has an 'any' type.
+src/lib/admin-stats.ts(33,32): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/lib/prisma-errors.ts(2,10): error TS2305: Module '"@prisma/client"' has no exported member 'Prisma'.
+src/lib/prisma-errors.ts(13,17): error TS18046: 'error' is of type 'unknown'.
+src/lib/prisma-errors.ts(16,78): error TS18046: 'error' is of type 'unknown'.
+src/lib/prisma-errors.ts(21,56): error TS18046: 'error' is of type 'unknown'.
+src/lib/prisma-errors.ts(26,69): error TS18046: 'error' is of type 'unknown'.
+src/lib/prisma-errors.ts(33,31): error TS18046: 'error' is of type 'unknown'.
+src/lib/prisma-errors.ts(34,75): error TS18046: 'error' is of type 'unknown'.
+src/lib/prisma-errors.ts(45,67): error TS18046: 'error' is of type 'unknown'.
+src/lib/prisma-errors.ts(55,67): error TS18046: 'error' is of type 'unknown'.
+src/lib/prisma.ts(1,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
+src/lib/prisma.ts(48,17): error TS7006: Parameter 'err' implicitly has an 'any' type.

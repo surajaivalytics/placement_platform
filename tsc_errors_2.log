@@ -1,0 +1,61 @@
+scripts/create-subtopics.ts(87,25): error TS2353: Object literal may only specify known properties, and 'totalQuestions' does not exist in type 'Without<SubtopicCreateInput, SubtopicUncheckedCreateInput> & SubtopicUncheckedCreateInput'.
+src/app/(dashboard)/dashboard/page.tsx(185,21): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/page.tsx(258,13): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/page.tsx(298,23): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/page.tsx(384,23): error TS2322: Type '{ hidden: { y: number; opacity: number; }; visible: { y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'Variant'.
+      Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ y: number; opacity: number; transition: { type: string; stiffness: number; damping: number; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'Transition<any> | undefined'.
+              Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ type: string; stiffness: number; damping: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'type' are incompatible.
+                    Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(26,26): error TS2304: Cannot find name 'params'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(37,9): error TS2304: Cannot find name 'setError'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(40,9): error TS2304: Cannot find name 'setLoading'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(44,9): error TS2304: Cannot find name 'params'.
+src/app/(dashboard)/dashboard/results/latest/page.tsx(47,7): error TS2304: Cannot find name 'params'.
+src/app/(dashboard)/dashboard/voice-assessment/page.tsx(324,66): error TS2322: Type '{ value: number; className: string; indicatorClassName: string; }' is not assignable to type 'IntrinsicAttributes & ProgressProps & RefAttributes<HTMLDivElement>'.
+  Property 'indicatorClassName' does not exist on type 'IntrinsicAttributes & ProgressProps & RefAttributes<HTMLDivElement>'.
+src/app/(dashboard)/layout.tsx(26,18): error TS2741: Property 'mobileOpen' is missing in type '{ setMobileOpen: Dispatch<SetStateAction<boolean>>; collapsed: boolean; setCollapsed: Dispatch<SetStateAction<boolean>>; role: Role | undefined; }' but required in type 'SidebarProps'.
+src/app/actions/monitoring.ts(13,13): error TS2322: Type '{ userId: string; testType: string; violationType: string; details: string; timestamp: Date; }' is not assignable to type '(Without<MonitoringEventCreateInput, MonitoringEventUncheckedCreateInput> & MonitoringEventUncheckedCreateInput) | (Without<...> & MonitoringEventCreateInput)'.
+  Type '{ userId: string; testType: string; violationType: string; details: string; timestamp: Date; }' is not assignable to type 'Without<MonitoringEventCreateInput, MonitoringEventUncheckedCreateInput> & MonitoringEventUncheckedCreateInput'.
+    Property 'eventType' is missing in type '{ userId: string; testType: string; violationType: string; details: string; timestamp: Date; }' but required in type 'MonitoringEventUncheckedCreateInput'.
+src/app/actions/voice-assessment.ts(71,17): error TS2353: Object literal may only specify known properties, and 'totalScore' does not exist in type '(Without<VoiceAssessmentUpdateInput, VoiceAssessmentUncheckedUpdateInput> & VoiceAssessmentUncheckedUpdateInput) | (Without<...> & VoiceAssessmentUpdateInput)'.
+src/app/actions/voice-assessment.ts(87,17): error TS2353: Object literal may only specify known properties, and 'totalScore' does not exist in type 'Without<VoiceAssessmentCreateInput, VoiceAssessmentUncheckedCreateInput> & VoiceAssessmentUncheckedCreateInput'.
+src/app/api/admin/subtopics/upload/route.ts(211,17): error TS2353: Object literal may only specify known properties, and 'totalQuestions' does not exist in type '(Without<SubtopicUpdateInput, SubtopicUncheckedUpdateInput> & SubtopicUncheckedUpdateInput) | (Without<...> & SubtopicUpdateInput)'.
+src/app/api/monitoring/route.ts(39,17): error TS2353: Object literal may only specify known properties, and 'metadata' does not exist in type '(Without<MonitoringEventCreateInput, MonitoringEventUncheckedCreateInput> & MonitoringEventUncheckedCreateInput) | (Without<...> & MonitoringEventCreateInput)'.
+test_prisma/prisma.config.ts(4,30): error TS2307: Cannot find module 'prisma/config' or its corresponding type declarations.

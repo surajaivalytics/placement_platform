@@ -1,6 +1,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -72,28 +73,60 @@ model VerificationToken {
 }
 
 model Test {
-  id                  String            @id @default(cuid())
-  title               String
-  description         String?
-  duration            Int
-  difficulty          String
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  company             String?
-  topic               String?
-  type                String?           @default("topic")
-  eligibilityCriteria Json?
-  assessmentStages    AssessmentStage[]
-  questions           Question[]
-  results             Result[]
-  subtopics           Subtopic[]
-  assignments         TestAssignment[]
-  TestEligibility     TestEligibility[]
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  duration    Int // in minutes
+  difficulty  String // Easy, Medium, Hard
+  type        String?  @default("topic") // "topic" or "company"
+  company     String?
+  topic       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  eligibilityCriteria Json? // { tenthPercentage: 60, twelfthPercentage: 60, graduationCGPA: 6.0, backlogs: 0 }
+
+  questions        Question[]
+  results          Result[]
+  assignments      TestAssignment[]
+  assessmentStages AssessmentStage[]
+  subtopics        Subtopic[]
+  eligibilityRecords TestEligibility[]
+}
+
+model TestEligibility {
+  id        String   @id @default(cuid())
+  userId    String
+  testId    String
+  isEligible Boolean @default(false)
+  criteria  Json?    // Store what criteria was met/checked
+  checkedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, testId])
+}
+
+model Subtopic {
+  id          String   @id @default(cuid())
+  name        String?
+  description String?
+  order       Int?
+  totalQuestions Int? @default(0) // Added field
+  roundTitle  String?  // Grouping title (e.g., "Online Assessment")
+  type        String?  @default("assessment") // assessment, coding, interview
+  
+  testId      String?
+  test        Test?    @relation(fields: [testId], references: [id], onDelete: Cascade)
+  
+  questions   Question[]
+  userProgress UserSubtopicProgress[]
 }
 
 model Question {
   id         String    @id @default(cuid())
   testId     String
+  subtopicId String?
   text       String
   type       String    @default("multiple-choice")
   category   String?
@@ -134,7 +167,8 @@ model Result {
   testId           String
   score            Int
   total            Int
-  aiFeedback       String?
+  aiFeedback       String?           @db.Text // AI-generated feedback from Gemini
+  details          Json?             // Detailed question-wise analysis
   createdAt        DateTime          @default(now())
   monitoringEvents MonitoringEvent[]
   test             Test              @relation(fields: [testId], references: [id], onDelete: Cascade)
@@ -176,7 +210,11 @@ model TestAssignment {
 
 model MonitoringEvent {
   id            String   @id @default(cuid())
-  resultId      String?
+  userId        String
+  testType      String?
+  eventType     String // Added field
+  violationType String? // Made optional if eventType supercedes it
+  details       String?
   timestamp     DateTime @default(now())
   details       String?
   testType      String?
@@ -213,6 +251,11 @@ model VoiceAssessment {
   pronunciationScore Float?
   paceScore          Float?
   clarityScore       Float?
+  totalScore         Float? // Renamed to match code usage
+  // Meta
+  confidenceScore Float?
+  status          String? @default("PENDING") // Using String for flexibility: PASSED, FAILED, HUMAN_REVIEW_PENDING
+  reviewType      String? @default("AI_ONLY") // AI_ONLY, HUMAN_VERIFIED
   isPassed           Boolean              @default(false)
   feedback           String?
   assessedAt         DateTime?

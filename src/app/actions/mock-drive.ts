@@ -21,6 +21,77 @@ export async function getActiveMockDrive(company: string) {
     return activeSession;
 }
 
+export async function getLatestMockDrive(company: string) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return null;
+
+    const latestSession = await prisma.mockDriveSession.findFirst({
+        where: {
+            userId: session.user.id,
+            company: company
+        },
+        orderBy: { updatedAt: 'desc' }
+    });
+
+    return latestSession;
+}
+
+export async function getMockDriveStatus(company: string) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return { isAuthenticated: false };
+
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+            tenthPercentage: true,
+            twelfthPercentage: true,
+            graduationCGPA: true,
+            backlogs: true,
+            gapYears: true
+        }
+    });
+
+    if (!user) return { isAuthenticated: false };
+
+    // Check Eligibility (Standard TCS Criteria)
+    // 60% in 10th, 12th, Graduation. No active backlogs. Max 2 years gap.
+    const missingFields: string[] = [];
+    if (user.tenthPercentage === null) missingFields.push("10th Percentage");
+    if (user.twelfthPercentage === null) missingFields.push("12th Percentage");
+    if (user.graduationCGPA === null) missingFields.push("Graduation CGPA");
+
+    let isEligible = false;
+    let eligibilityStatus = "PENDING_DATA"; // PENDING_DATA, ELIGIBLE, NOT_ELIGIBLE
+
+    if (missingFields.length === 0) {
+        const isTenthOk = (user.tenthPercentage ?? 0) >= 60;
+        const isTwelfthOk = (user.twelfthPercentage ?? 0) >= 60;
+        const isGradOk = (user.graduationCGPA ?? 0) >= 6.0; // Assuming CGPA Scale of 10
+        const isBacklogsOk = (user.backlogs ?? 0) === 0;
+        const isGapOk = (user.gapYears ?? 0) <= 2;
+
+        if (isTenthOk && isTwelfthOk && isGradOk && isBacklogsOk && isGapOk) {
+            isEligible = true;
+            eligibilityStatus = "ELIGIBLE";
+        } else {
+            eligibilityStatus = "NOT_ELIGIBLE";
+        }
+    }
+
+    // Check for Active Session
+    const activeSession = await getActiveMockDrive(company);
+    const latestSession = await getLatestMockDrive(company);
+
+    return {
+        isAuthenticated: true,
+        user,
+        missingFields,
+        eligibilityStatus,
+        activeSession,
+        latestSession
+    };
+}
+
 export async function createMockDrive(company: string) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return { success: false, error: "Unauthorized" };
@@ -47,13 +118,14 @@ export async function createMockDrive(company: string) {
     }
 }
 
-export async function updateMockDriveProgress(sessionId: string, round: number, score?: number, nextUrl?: string) {
+export async function updateMockDriveProgress(sessionId: string, round?: number, score?: number, nextUrl?: string, status?: string) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return;
 
     const data: any = { updatedAt: new Date() };
     if (round) data.currentRound = round;
     if (nextUrl) data.lastActiveUrl = nextUrl;
+    if (status) data.status = status;
 
     // Update score logic typically implies round completion
     if (score !== undefined) {

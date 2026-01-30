@@ -73,11 +73,12 @@ export async function POST(
         }
 
         const { id: testId } = await params;
-        const { text, options } = await req.json();
+        const body = await req.json();
+        const { text, type = 'multiple-choice', marks = 1, options, metadata } = body;
 
-        if (!text || !options || !Array.isArray(options) || options.length === 0) {
+        if (!text) {
             return NextResponse.json(
-                { error: 'Missing required fields' },
+                { error: 'Question text is required' },
                 { status: 400 }
             );
         }
@@ -94,19 +95,30 @@ export async function POST(
             );
         }
 
-        // Create question with options
-        const question = await prisma.question.create({
-            data: {
-                testId,
-                text,
-                type: 'multiple-choice',
-                options: {
+        // Prepare data for creation
+        const questionData: any = {
+            testId,
+            text,
+            type,
+            marks: Number(marks),
+            metadata, // For coding questions
+        };
+
+        // Add options if it's MCQ
+        if (type === 'mcq' || type === 'multiple-choice') {
+            if (Array.isArray(options) && options.length > 0) {
+                questionData.options = {
                     create: options.map((opt: { text: string; isCorrect: boolean }) => ({
                         text: opt.text,
                         isCorrect: opt.isCorrect || false,
                     })),
-                },
-            },
+                };
+            }
+        }
+
+        // Create question
+        const question = await prisma.question.create({
+            data: questionData,
             include: {
                 options: true,
             },

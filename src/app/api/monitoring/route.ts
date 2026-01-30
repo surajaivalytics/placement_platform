@@ -34,9 +34,10 @@ export async function POST(req: NextRequest) {
 
         const event = await prisma.monitoringEvent.create({
             data: {
+                userId: session.user.id,
                 resultId,
                 eventType,
-                metadata: metadata ? JSON.stringify(metadata) : null,
+                details: metadata ? JSON.stringify(metadata) : undefined,
             }
         });
 
