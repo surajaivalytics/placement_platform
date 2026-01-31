@@ -89,7 +89,7 @@ export async function PUT(req: Request) {
         }
 
         // Transaction to ensure options are updated atomically
-        const question = await prisma.$transaction(async (tx) => {
+        const question = await prisma.$transaction(async (tx: any) => {
             // 1. Update basic question details
             const updatedQuestion = await tx.question.update({
                 where: { id },

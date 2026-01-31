@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "setup": "node setup.js",
     "admin:create": "ts-node scripts/create-admin.ts",
     "admin:seed": "prisma db seed"
