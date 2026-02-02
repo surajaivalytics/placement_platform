@@ -1,6 +1,5 @@
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
@@ -54,6 +53,7 @@ model User {
   accountType           String?                @default("Regular")
   autoPayout            Boolean                @default(false)
   coverImage            String?
+  submissions           Submissions[]          @relation("userSubmissions")
   accounts              Account[]
   interviewSessions     InterviewSession[]
   mockDrives            MockDriveSession[]
@@ -63,7 +63,6 @@ model User {
   sessions              Session[]
   testEligibilities     TestEligibility[]      @relation("userTestEligibilities")
   subtopicProgress      UserSubtopicProgress[]
-  submissions           Submissions[]          @relation("userSubmissions")
 }
 
 model VerificationToken {
@@ -80,17 +79,17 @@ model Test {
   description         String?
   duration            Int
   difficulty          String
-  type                String?           @default("topic")
-  company             String?
-  topic               String?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
+  company             String?
+  topic               String?
+  type                String?           @default("topic")
   eligibilityCriteria Json?
+  assessmentStages    AssessmentStage[]
   questions           Question[]
   results             Result[]
-  assignments         TestAssignment[]
-  assessmentStages    AssessmentStage[]
   subtopics           Subtopic[]
+  assignments         TestAssignment[]
   eligibilityRecords  TestEligibility[]
 }
 
@@ -101,8 +100,8 @@ model TestEligibility {
   isEligible Boolean  @default(false)
   criteria   Json?
   checkedAt  DateTime @default(now())
-  user       User     @relation("userTestEligibilities", fields: [userId], references: [id], onDelete: Cascade)
   test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  user       User     @relation("userTestEligibilities", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, testId])
 }
@@ -124,13 +123,14 @@ model Subtopic {
 model Question {
   id         String    @id @default(cuid())
   testId     String
-  subtopicId String?
   text       String
   type       String    @default("multiple-choice")
   category   String?
   difficulty String?
   metadata   String?
   order      Int?
+  subtopicId String?
+  marks      Int       @default(1)
   options    Option[]
   subtopic   Subtopic? @relation(fields: [subtopicId], references: [id])
   test       Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
@@ -150,9 +150,9 @@ model Result {
   testId           String
   score            Int
   total            Int
-  aiFeedback       String?           @db.Text
-  details          Json?
+  aiFeedback       String?
   createdAt        DateTime          @default(now())
+  details          Json?
   monitoringEvents MonitoringEvent[]
   test             Test              @relation(fields: [testId], references: [id], onDelete: Cascade)
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -193,13 +193,13 @@ model TestAssignment {
 
 model MonitoringEvent {
   id            String   @id @default(cuid())
-  userId        String
   resultId      String?
-  testType      String?
-  eventType     String
-  violationType String?
-  details       String?
   timestamp     DateTime @default(now())
+  details       String?
+  testType      String?
+  userId        String
+  violationType String?
+  eventType     String
   result        Result?  @relation(fields: [resultId], references: [id], onDelete: Cascade)
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -230,15 +230,15 @@ model VoiceAssessment {
   pronunciationScore Float?
   paceScore          Float?
   clarityScore       Float?
-  totalScore         Float?
-  confidenceScore    Float?
-  status             String?              @default("PENDING")
-  reviewType         String?              @default("AI_ONLY")
   isPassed           Boolean              @default(false)
   feedback           String?
-  aiFeedback         Json?
   assessedAt         DateTime?
   createdAt          DateTime             @default(now())
+  aiFeedback         Json?
+  confidenceScore    Float?
+  reviewType         String?              @default("AI_ONLY")
+  status             String?              @default("PENDING")
+  totalScore         Float?
   application        PlacementApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
@@ -307,11 +307,13 @@ model MockDriveSession {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+
 model Problem {
   id              Int           @id @default(autoincrement())
   slug            String        @unique
   title           String
   description     String
+  type           String
   difficulty      String
   starterTemplate Json
   testCases       Json
