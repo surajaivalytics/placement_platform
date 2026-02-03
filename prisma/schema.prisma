@@ -70,7 +70,6 @@ model VerificationToken {
   token      String   @unique
   expires    DateTime
 
-
   @@unique([identifier, token])
 }
 
@@ -349,14 +348,4 @@ model Submissions {
   user      User     @relation("userSubmissions", fields: [userId], references: [id])
 
   @@unique([userId, problemId, language])
-}
-
-model OneTimePassword {
-  id        String   @id
-  email     String
-  code      String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([email])
 }

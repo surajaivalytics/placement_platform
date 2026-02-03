@@ -1,0 +1,32 @@
+
+> test-example@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.1 (Turbopack)
+- Environments: .env
+- Experiments (use with caution):
+  ┬╖ serverActions
+
+ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 7.4s
+  Running TypeScript ...
+Failed to compile.
+
+./src/lib/auth.ts:9:5
+Type error: Type 'import("D:/p-p/placement_platform/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("D:/p-p/placement_platform/node_modules/next-auth/adapters").Adapter'.
+  Types of property 'getUser' are incompatible.
+    Type '((id: string) => import("D:/p-p/placement_platform/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("D:/p-p/placement_platform/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("D:/p-p/placement_platform/node_modules/next-auth/core/types").Awaitable<import("D:/p-p/placement_platform/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("D:/p-p/placement_platform/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("D:/p-p/placement_platform/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("D:/p-p/placement_platform/node_modules/next-auth/core/types").Awaitable<import("D:/p-p/placement_platform/node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("D:/p-p/placement_platform/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("D:/p-p/placement_platform/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("D:/p-p/placement_platform/node_modules/next-auth/core/types").Awaitable<import("D:/p-p/placement_platform/node_modules/next-auth/adapters").AdapterUser | null>'.
+          Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
+            Property 'role' is missing in type 'import("D:/p-p/placement_platform/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("D:/p-p/placement_platform/node_modules/next-auth/adapters").AdapterUser'.
+
+   7 |
+   8 | export const authOptions: NextAuthOptions = {
+>  9 |     adapter: PrismaAdapter(prisma),
+     |     ^
+  10 |     secret: process.env.NEXTAUTH_SECRET,
+  11 |     providers: [
+  12 |         GoogleProvider({
+Next.js build worker exited with code: 1 and signal: null

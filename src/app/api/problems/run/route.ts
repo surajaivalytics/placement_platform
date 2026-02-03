@@ -11,12 +11,12 @@ export async function POST(req: Request) {
 
     if (!problem) return NextResponse.json({ error: "Not Found" }, { status: 404 });
 
-    const testCases = typeof problem.testCases === "string" 
-      ? JSON.parse(problem.testCases) 
+    const testCases = typeof problem.testCases === "string"
+      ? JSON.parse(problem.testCases)
       : problem.testCases;
 
-    const drivers = typeof problem.driverCode === "string" 
-      ? JSON.parse(problem.driverCode) 
+    const drivers = typeof problem.driverCode === "string"
+      ? JSON.parse(problem.driverCode)
       : problem.driverCode;
 
     let fullcode = drivers[language];
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
       });
 
       return NextResponse.json({
-        success: results.every(r => r.passed),
+        success: results.every((r: any) => r.passed),
         results: results,
         time: finalSubmission.time,
         memory: finalSubmission.memory,

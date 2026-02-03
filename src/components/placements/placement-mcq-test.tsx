@@ -180,7 +180,7 @@ export function PlacementMCQTest({
   const fetchIdentityStatus = async () => {
     setIdentityStatus('loading');
     try {
-      const res = await fetch('/api/identity');
+      const res = await fetch('/api/identity', { cache: 'no-store' });
       if (!res.ok) {
         throw new Error('Failed to fetch identity status');
       }

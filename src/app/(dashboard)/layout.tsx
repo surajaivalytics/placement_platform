@@ -28,7 +28,6 @@ export default function DashboardLayout({
                     setMobileOpen={setMobileOpen}
                     collapsed={collapsed}
                     setCollapsed={setCollapsed}
-                    setCollapsed={setCollapsed}
                     role={session?.user?.role}
                     user={session?.user}
                 />

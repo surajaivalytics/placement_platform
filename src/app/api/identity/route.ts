@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+export const dynamic = 'force-dynamic';
 
 // GET - Get identity verification status
 export async function GET(_req: Request) {
@@ -15,6 +16,7 @@ export async function GET(_req: Request) {
         }
 
         // For now, auto-verify all authenticated users
+        console.log('✅ Identity status requested for:', session.user.email);
         return NextResponse.json({
             status: 'verified',
             reason: null,
