@@ -70,7 +70,18 @@ model VerificationToken {
   token      String   @unique
   expires    DateTime
 
+
   @@unique([identifier, token])
+}
+
+model OneTimePassword {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }
 
 model Test {

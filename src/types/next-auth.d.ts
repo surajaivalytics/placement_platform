@@ -7,6 +7,7 @@ declare module "next-auth" {
         user: {
             id: string;
             role: Role;
+            isProfileComplete: boolean;
         } & DefaultSession["user"];
     }
 
@@ -18,5 +19,6 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
     interface JWT extends DefaultJWT {
         role: Role;
+        isProfileComplete: boolean;
     }
 }

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, CheckCircle2, XCircle, AlertCircle, School, GraduationCap, Calendar } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
+import { CheckCircle2, XCircle, AlertCircle, School, GraduationCap, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface EligibilityData {
@@ -172,7 +173,7 @@ export default function EligibilityPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50/50">
-        <Loader2 className="w-32 h-32 animate-spin text-blue-600" />
+        <Spinner size={128} className="text-blue-600" />
       </div>
     );
   }
@@ -382,7 +383,7 @@ export default function EligibilityPage() {
                 >
                   {submitting ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      <Spinner size={20} className="mr-2" />
                       Checking...
                     </>
                   ) : (

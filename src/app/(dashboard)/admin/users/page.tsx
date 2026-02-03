@@ -42,8 +42,8 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
       </div>
     );
   }

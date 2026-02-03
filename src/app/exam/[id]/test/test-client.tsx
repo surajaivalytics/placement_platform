@@ -21,7 +21,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader } from "@/components/ui/loader";
+import { Spinner } from "@/components/ui/loader";
 import { AIInterviewRunner } from "@/components/interview/ai-interview-runner";
 
 
@@ -393,7 +393,11 @@ export default function TestRunnerClient({ test, session }: { test: any, session
         )
     }
 
-    if (loading) return <div className="flex h-screen items-center justify-center"><Loader /></div>;
+    if (loading) return (
+        <div className="flex items-center justify-center h-screen">
+            <Spinner size={40} className="text-emerald-600" />
+        </div>
+    );
 
     // Transition Screen
     if (showRoundTransition) {

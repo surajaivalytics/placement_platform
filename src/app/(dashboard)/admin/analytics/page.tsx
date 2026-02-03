@@ -64,8 +64,8 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
       </div>
     );
   }
@@ -192,8 +192,8 @@ export default function AnalyticsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data.topicPerformance.map((topic) => (
-                      <TableRow key={topic.topic}>
+                    {data.topicPerformance.map((topic, index) => (
+                      <TableRow key={`${topic.topic}-${index}`}>
                         <TableCell className="font-medium">{topic.topic}</TableCell>
                         <TableCell className="text-center">{topic.attempts}</TableCell>
                         <TableCell className={`text-center ${getScoreColor(topic.avgScore)}`}>
@@ -232,8 +232,8 @@ export default function AnalyticsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data.companyPerformance.map((company) => (
-                      <TableRow key={company.company}>
+                    {data.companyPerformance.map((company, index) => (
+                      <TableRow key={`${company.company}-${index}`}>
                         <TableCell className="font-medium">{company.company}</TableCell>
                         <TableCell className="text-center">{company.attempts}</TableCell>
                         <TableCell className={`text-center ${getScoreColor(company.avgScore)}`}>

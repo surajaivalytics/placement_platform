@@ -128,7 +128,12 @@ export default function LoginPage() {
                         <div className="h-px bg-gray-100 flex-1" />
                     </div>
 
-                    <Button variant="outline" type="button" className="w-full h-12 rounded-xl border-gray-200 hover:bg-gray-50 font-bold text-gray-700 flex items-center justify-center gap-3 transition-all">
+                    <Button
+                        variant="outline"
+                        type="button"
+                        onClick={() => signIn('google', { callbackUrl: from })}
+                        className="w-full h-12 rounded-xl border-gray-200 hover:bg-gray-50 font-bold text-gray-700 flex items-center justify-center gap-3 transition-all"
+                    >
                         <img src="https://www.vectorlogo.zone/logos/google/google-icon.svg" className="w-5 h-5" alt="Google" />
                         Sign in with Google
                     </Button>

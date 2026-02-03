@@ -30,6 +30,16 @@ export default withAuth(
                 return NextResponse.redirect(new URL('/dashboard', req.url));
             }
         }
+
+        // Profile Completion Enforcement
+        if (isAuth && !token.isProfileComplete) {
+            const isProfilePage = req.nextUrl.pathname.startsWith('/dashboard/profile');
+            const isApi = req.nextUrl.pathname.startsWith('/api'); // Don't block API calls
+
+            if (req.nextUrl.pathname.startsWith('/dashboard') && !isProfilePage && !isApi) {
+                return NextResponse.redirect(new URL('/dashboard/profile?incomplete=true', req.url));
+            }
+        }
     },
     {
         callbacks: {

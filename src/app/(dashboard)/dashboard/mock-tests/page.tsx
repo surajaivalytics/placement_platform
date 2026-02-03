@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldAlert, Eye, Maximize, MousePointerClick, CheckCircle2, AlertTriangle, MonitorPlay, Lock, ArrowRight, Info } from "lucide-react";
+import { MonitorPlay, Lock, ArrowRight, Info } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
+import { Loader } from "@/components/ui/loader";
 
 // Animation Variants
 const containerVariants = {
@@ -96,10 +97,8 @@ export default function MockTestsPage() {
 
             {/* Tests Grid */}
             {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3].map(i => (
-                        <Card key={i} className="h-64 animate-pulse bg-gray-100" />
-                    ))}
+                <div className="flex justify-center items-center h-64">
+                    <Loader text="Loading Tests..." />
                 </div>
             ) : (
                 <motion.div

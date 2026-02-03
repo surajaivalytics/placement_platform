@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Clock, CheckCircle2, FileText, Code2, AlertCircle, PlayCircle, Lock } from 'lucide-react';
+import { Loader2, Clock, CheckCircle2, FileText, Code2, AlertCircle, PlayCircle, Lock, Building2 } from 'lucide-react';
 import { PageHeader } from "@/components/dashboard/page-header";
 
 // Mock Data for immediate visualization (if API empty)
@@ -99,7 +99,7 @@ export default function CompanyTestsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
       </div>
     );
   }
@@ -138,8 +138,8 @@ export default function CompanyTestsPage() {
       {/* TCS SECTION */}
       <div className="space-y-6">
         <div className="flex items-center gap-4 border-l-4 border-[#0067b1] pl-4">
-          <div className="w-12 h-12 relative overflow-hidden rounded-lg bg-white border border-gray-100 shadow-sm">
-            <img src="/logos/tcs-1696999494.jpg" alt="TCS Logo" className="object-contain p-1 w-full h-full" />
+          <div className="w-12 h-12 relative overflow-hidden rounded-lg bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+            <Building2 className="w-8 h-8 text-[#0067b1]" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900">TCS Recruitment Drive</h2>
         </div>
@@ -151,8 +151,8 @@ export default function CompanyTestsPage() {
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#0067b1] to-[#e43d8d]" />
 
                 <div className="flex justify-between items-start mb-6">
-                  <div className="h-10 w-24 relative">
-                    <img src="/logos/tcs-1696999494.jpg" alt="TCS" className="object-contain w-full h-full object-left" />
+                  <div className="h-10 w-24 relative flex items-center">
+                    <Building2 className="w-8 h-8 text-[#0067b1]" />
                   </div>
                   <span className="text-xs font-semibold text-gray-500 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
                     <Clock className="w-3 h-3" /> {test.duration} min
@@ -186,8 +186,8 @@ export default function CompanyTestsPage() {
       {/* WIPRO SECTION */}
       <div className="space-y-6">
         <div className="flex items-center gap-4 border-l-4 border-[#E63312] pl-4">
-          <div className="w-12 h-12 relative overflow-hidden rounded-lg bg-white border border-gray-100 shadow-sm">
-            <img src="/logos/Wipro_Secondary-Logo_Color_RGB.png" alt="Wipro Logo" className="object-contain p-1 w-full h-full" />
+          <div className="w-12 h-12 relative overflow-hidden rounded-lg bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+            <Building2 className="w-8 h-8 text-[#E63312]" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900">Wipro NTH Drive</h2>
         </div>
@@ -206,8 +206,8 @@ export default function CompanyTestsPage() {
 
               <div className="p-6">
                 <div className="flex justify-between items-start mb-6">
-                  <div className="h-10 w-24 relative">
-                    <img src="/logos/Wipro_Secondary-Logo_Color_RGB.png" alt="Wipro" className="object-contain w-full h-full object-left" />
+                  <div className="h-10 w-24 relative flex items-center">
+                    <Building2 className="w-8 h-8 text-[#E63312]" />
                   </div>
                   <span className="text-xs font-semibold text-gray-500 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
                     <Clock className="w-3 h-3" /> {test.duration} min

@@ -21,6 +21,7 @@ interface MockTest {
     difficulty: string;
     duration: number;
     type: string;
+    createdAt: string;
     _count: {
         questions: number;
     };
@@ -103,11 +104,26 @@ export default function MockTestsManagementPage() {
         }
     };
 
-    // Filter tests based on search
-    const filteredTests = tests.filter(test =>
-        test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        test.company?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const [sortBy, setSortBy] = useState('Newest First');
+
+    // Filter and sort tests
+    const filteredTests = tests
+        .filter(test =>
+            test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            test.company?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => {
+            if (sortBy === 'Newest First') {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+            if (sortBy === 'Oldest First') {
+                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            }
+            if (sortBy === 'Most Questions') {
+                return (b._count?.questions || 0) - (a._count?.questions || 0);
+            }
+            return 0;
+        });
 
     if (loading) {
         return (
@@ -319,10 +335,14 @@ export default function MockTestsManagementPage() {
                 </div>
                 <div className="flex gap-2 text-sm text-slate-500 font-medium w-full md:w-auto justify-end">
                     <span>Sort by:</span>
-                    <select className="bg-transparent border-none p-0 text-slate-900 font-bold focus:ring-0 cursor-pointer">
-                        <option>Newest First</option>
-                        <option>Oldest First</option>
-                        <option>Most Questions</option>
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="bg-transparent border-none p-0 text-slate-900 font-bold focus:ring-0 cursor-pointer"
+                    >
+                        <option value="Newest First">Newest First</option>
+                        <option value="Oldest First">Oldest First</option>
+                        <option value="Most Questions">Most Questions</option>
                     </select>
                 </div>
             </div>

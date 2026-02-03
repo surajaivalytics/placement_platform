@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 
 export function SiteLoader() {
     const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +33,7 @@ export function SiteLoader() {
                             className="relative"
                         >
                             <div className="w-20 h-20 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                                <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+                                <Spinner size={40} className="text-blue-600" />
                             </div>
                             <motion.div
                                 className="absolute inset-0 rounded-2xl border-2 border-blue-600/30"

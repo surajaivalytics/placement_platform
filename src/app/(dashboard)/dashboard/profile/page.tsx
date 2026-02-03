@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, Upload, CreditCard, Bell, Lock, User, Camera, Loader2, Save, CheckCircle, Smartphone, Mail } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Copy, Upload, CreditCard, Bell, Lock, User, Camera, Loader2, Save, CheckCircle, Smartphone, Mail, GraduationCap, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useSession } from "next-auth/react";
 
 interface UserProfile {
   name: string;
@@ -20,9 +23,13 @@ interface UserProfile {
   accountType: string;
   role: string;
   autoPayout: boolean;
+  graduationCGPA: number | null;
+  tenthPercentage: number | null;
+  twelfthPercentage: number | null;
 }
 
 export default function ProfilePage() {
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
@@ -35,10 +42,17 @@ export default function ProfilePage() {
     accountType: 'Regular',
     role: 'user',
     autoPayout: false,
+    graduationCGPA: null,
+    tenthPercentage: null,
+    twelfthPercentage: null,
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const isIncomplete = searchParams.get('incomplete') === 'true';
 
   useEffect(() => {
     fetchProfile();
@@ -51,14 +65,17 @@ export default function ProfilePage() {
         const data = await res.json();
         setUser({
           ...data,
-          name: data.name || '',
-          email: data.email || '',
-          image: data.image || '',
+          name: data.name || session?.user?.name || '',
+          email: data.email || session?.user?.email || '',
+          image: data.image || session?.user?.image || '',
           phone: data.phone || '',
           accountType: data.accountType || 'Regular',
           role: data.role || 'user',
           autoPayout: data.autoPayout || false,
-          coverImage: data.coverImage || '/images/default-cover.png'
+          coverImage: data.coverImage || '/images/default-cover.png',
+          graduationCGPA: data.graduationCGPA ?? null,
+          tenthPercentage: data.tenthPercentage ?? null,
+          twelfthPercentage: data.twelfthPercentage ?? null,
         });
       }
     } catch (error) {
@@ -69,6 +86,11 @@ export default function ProfilePage() {
   };
 
   const handleUpdate = async () => {
+    if (!user.phone || !user.graduationCGPA || !user.tenthPercentage || !user.twelfthPercentage) {
+      toast.error("Please fill in all required fields (Phone, Grades)!");
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await fetch('/api/user/profile', {
@@ -79,6 +101,9 @@ export default function ProfilePage() {
 
       if (res.ok) {
         toast.success("Profile updated successfully");
+        if (isIncomplete) {
+          window.location.href = '/dashboard'; // Force full reload to update session/middleware
+        }
       } else {
         throw new Error("Failed update");
       }
@@ -117,7 +142,11 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+    return (
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+      </div>
+    );
   }
 
   const renderContent = () => {
@@ -156,11 +185,11 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Phone Number</label>
+                <label className="text-sm font-semibold text-gray-700">Phone Number <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">🇮🇳 +91</span>
                   <Input
-                    className="pl-16 h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all"
+                    className={`pl-16 h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all ${(!user.phone && isIncomplete) ? 'border-red-500 ring-1 ring-red-200' : ''}`}
                     placeholder="9876543210"
                     value={user.phone}
                     onChange={(e) => setUser({ ...user, phone: e.target.value })}
@@ -170,16 +199,43 @@ export default function ProfilePage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Account Type</label>
-                <Select value={user.accountType} onValueChange={(val) => setUser({ ...user, accountType: val })}>
-                  <SelectTrigger className="h-12 rounded-xl border-gray-200 bg-gray-50/50 hover:bg-white">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Regular">Regular</SelectItem>
-                    <SelectItem value="Pro">Pro</SelectItem>
-                    <SelectItem value="Enterprise">Enterprise</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input className="h-12 rounded-xl border-gray-200 bg-gray-100" value={user.accountType} disabled />
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-gray-100">
+              <div className="flex items-center gap-2 mb-4">
+                <GraduationCap className="text-blue-600 w-5 h-5" />
+                <h3 className="text-lg font-bold text-gray-900">Academic Details</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">Graduation CGPA <span className="text-red-500">*</span></label>
+                  <Input
+                    type="number" step="0.01" max="10"
+                    className={`h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all ${(!user.graduationCGPA && isIncomplete) ? 'border-red-500 ring-1 ring-red-200' : ''}`}
+                    value={user.graduationCGPA ?? ''}
+                    onChange={(e) => setUser({ ...user, graduationCGPA: parseFloat(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">12th Percentage <span className="text-red-500">*</span></label>
+                  <Input
+                    type="number" step="0.01" max="100"
+                    className={`h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all ${(!user.twelfthPercentage && isIncomplete) ? 'border-red-500 ring-1 ring-red-200' : ''}`}
+                    value={user.twelfthPercentage ?? ''}
+                    onChange={(e) => setUser({ ...user, twelfthPercentage: parseFloat(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">10th Percentage <span className="text-red-500">*</span></label>
+                  <Input
+                    type="number" step="0.01" max="100"
+                    className={`h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all ${(!user.tenthPercentage && isIncomplete) ? 'border-red-500 ring-1 ring-red-200' : ''}`}
+                    value={user.tenthPercentage ?? ''}
+                    onChange={(e) => setUser({ ...user, tenthPercentage: parseFloat(e.target.value) })}
+                  />
+                </div>
               </div>
             </div>
 
@@ -319,6 +375,16 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-12">
+
+      {isIncomplete && (
+        <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-700">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Profile Incomplete</AlertTitle>
+          <AlertDescription>
+            You must complete your profile (Phone Number and Academic Details) to access the dashboard.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Cover Image */}
       <div className="relative h-64 w-full rounded-[32px] overflow-hidden group">

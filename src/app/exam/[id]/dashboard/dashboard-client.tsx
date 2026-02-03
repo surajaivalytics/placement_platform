@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertTriangle, Clock, Play, GraduationCap, FileText, Check, Terminal } from "lucide-react";
 
-import { Loader2 } from "lucide-react";
-import { Loader } from "@/components/ui/loader";
+import { Spinner } from "@/components/ui/loader";
+
 
 import { toast } from "sonner";
 
@@ -309,7 +309,7 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
                                         onClick={handleStart}
                                         disabled={loading}
                                     >
-                                        {loading ? <Loader size="sm" className="min-h-0 w-auto" text="" /> : <span className="flex items-center gap-2">{getButtonText()} <ArrowRight className="w-5 h-5" /></span>}
+                                        {loading ? <Spinner size={20} /> : <span className="flex items-center gap-2">{getButtonText()} <ArrowRight className="w-5 h-5" /></span>}
                                     </Button>
                                     <p className="text-xs text-center text-gray-400 mt-3 px-4 leading-normal">
                                         By clicking Launch, you agree to the Terms of Simulation.

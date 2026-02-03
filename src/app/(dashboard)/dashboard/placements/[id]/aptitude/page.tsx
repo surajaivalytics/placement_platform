@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { PlacementMCQTest } from '@/components/placements/placement-mcq-test';
 import { fetchPlacementQuestions } from '@/lib/placement-questions';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Spinner } from "@/components/ui/loader";
+import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Question {
@@ -36,7 +37,7 @@ export default function WiproAptitudeTestPage() {
       }
       const appData = await appRes.json();
       setApplication(appData);
-      
+
       const aptitudeStage = appData.assessmentStages?.find(
         (s: { stageName: string; submittedAt?: string | Date }) => s.stageName === 'aptitude'
       );
@@ -92,7 +93,7 @@ export default function WiproAptitudeTestPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Spinner size={32} className="text-blue-600" />
       </div>
     );
   }

@@ -2,7 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, Clock, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Eye, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
@@ -82,7 +83,7 @@ export function ApplicationsTable() {
     if (loading) {
         return (
             <div className="bg-white rounded-[20px] shadow-sm border border-gray-100/50 p-12 flex justify-center items-center">
-                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                <Spinner size={32} className="text-blue-600" />
             </div>
         );
     }

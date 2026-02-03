@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import Image from "next/image";
 
 interface LoaderProps {
     size?: "sm" | "md" | "lg" | "xl";
@@ -9,31 +9,27 @@ interface LoaderProps {
     description?: string;
 }
 
-export function Loader({ size = "lg", className, text = "Loading...", description }: LoaderProps) {
+export function Loader({ size = "lg", className, text, description }: LoaderProps) {
     const sizeClasses = {
-        sm: "w-4 h-4",
-        md: "w-8 h-8",
-        lg: "w-12 h-12",
-        xl: "w-16 h-16"
+        sm: 40,
+        md: 80,
+        lg: 120,
+        xl: 200
     };
+
+    const dimension = sizeClasses[size];
 
     return (
         <div className={cn("flex flex-col items-center justify-center min-h-[200px] w-full gap-4", className)}>
-            <div className="relative flex items-center justify-center">
-                {/* Outer Ring */}
-                <div className={cn(
-                    "absolute border-4 border-gray-100 rounded-full opacity-30",
-                    sizeClasses[size]
-                )} />
-
-                {/* Spinning Gradient Ring */}
-                <div className={cn(
-                    "border-4 border-t-blue-600 border-r-blue-600 border-b-transparent border-l-transparent rounded-full animate-spin",
-                    sizeClasses[size]
-                )} />
-
-                {/* Inner Pulse (Optional decorative element) */}
-                {/* <div className="absolute w-2 h-2 bg-blue-600 rounded-full animate-pulse" /> */}
+            <div className="relative flex items-center justify-center animate-pulse">
+                <Image
+                    src="/loader.png"
+                    alt="Loading..."
+                    width={dimension}
+                    height={dimension}
+                    className="object-contain"
+                    priority
+                />
             </div>
 
             {(text || description) && (
@@ -47,10 +43,24 @@ export function Loader({ size = "lg", className, text = "Loading...", descriptio
 }
 
 // Full page variant
-export function FullScreenLoader({ text = "Please wait...", description }: { text?: string, description?: string }) {
+export function FullScreenLoader({ text, description }: { text?: string, description?: string }) {
     return (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
             <Loader size="xl" text={text} description={description} />
+        </div>
+    );
+}
+
+export function Spinner({ className, size = 24 }: { className?: string, size?: number }) {
+    return (
+        <div className={cn("relative animate-pulse", className)} style={{ width: size, height: size }}>
+            <Image
+                src="/loader.png"
+                alt="Loading"
+                fill
+                className="object-contain"
+                sizes={`${size}px`}
+            />
         </div>
     );
 }

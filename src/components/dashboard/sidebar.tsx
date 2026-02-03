@@ -40,6 +40,11 @@ interface SidebarProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   role?: "user" | "admin";
+  user?: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
 }
 
 interface SidebarItemProps {
@@ -54,6 +59,11 @@ interface SidebarContentProps {
   role: "user" | "admin";
   collapsed: boolean;
   pathname: string;
+  user?: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
 }
 
 /* -------------------- Sidebar Item -------------------- */
@@ -92,6 +102,7 @@ const SidebarContent = ({
   role,
   collapsed,
   pathname,
+  user,
 }: SidebarContentProps) => {
   const userLinks = [
     { href: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -110,6 +121,7 @@ const SidebarContent = ({
     { href: "/admin/mcq-generator", label: "MCQ Generator", icon: Brain },
     { href: "/admin/tests", label: "Tests", icon: GraduationCap },
     { href: "/admin/subtopics", label: "Subtopics", icon: BookOpen },
+    { href: "/admin/mock-tests", label: "Manage Mock Tests", icon: MonitorPlay },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/dashboard/profile", label: "Settings", icon: Settings },
@@ -139,10 +151,25 @@ const SidebarContent = ({
       </nav>
 
       {!collapsed && (
-        <div className="p-4 border-t">
+        <div className="p-4 border-t space-y-4">
+          {/* User Profile Section */}
+          <div className="flex items-center gap-3 px-2">
+            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+              {user?.image ? (
+                <img src={user.image} alt={user.name || 'User'} className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-6 w-6 text-blue-600" />
+              )}
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-sm font-semibold truncate text-gray-900">{user?.name || 'User'}</p>
+              <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
+            </div>
+          </div>
+
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 text-red-600"
+            className="w-full justify-start gap-3 text-red-600 hover:bg-red-50 hover:text-red-700"
             onClick={() => signOut({ callbackUrl: "/login" })}
           >
             <LogOut className="w-5 h-5" />
@@ -162,6 +189,7 @@ export default function Sidebar({
   collapsed,
   setCollapsed,
   role = "user",
+  user,
 }: SidebarProps) {
   const pathname = usePathname();
 
@@ -174,7 +202,7 @@ export default function Sidebar({
           collapsed ? "w-24" : "w-64"
         )}
       >
-        <SidebarContent role={role} collapsed={collapsed} pathname={pathname} />
+        <SidebarContent role={role} collapsed={collapsed} pathname={pathname} user={user} />
 
         <Button
           size="icon"
@@ -207,6 +235,7 @@ export default function Sidebar({
               role={role}
               collapsed={false}
               pathname={pathname}
+              user={user}
             />
           </motion.aside>
         )}
