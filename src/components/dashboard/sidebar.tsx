@@ -98,6 +98,7 @@ const SidebarContent = ({
     { href: "/dashboard/topics", label: "Topics", icon: BookOpen },
     { href: "/dashboard/mock-tests", label: "Mock Tests", icon: MonitorPlay },
     { href: "/dashboard/interview-suite", label: "AI Interview", icon: Mic },
+    
     { href: "/dashboard/voice-assessment", label: "Voice", icon: AudioLines },
     { href: "/dashboard/programming", label: "Programming", icon: Code },
     { href: "/dashboard/resume-simulator", label: "Resume Simulator", icon: FileText },
@@ -108,6 +109,7 @@ const SidebarContent = ({
   const adminLinks = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard },
     { href: "/admin/mcq-generator", label: "MCQ Generator", icon: Brain },
+    { href: "/admin/problems", label: "Problems", icon: FileQuestion },
     { href: "/admin/tests", label: "Tests", icon: GraduationCap },
     { href: "/admin/subtopics", label: "Subtopics", icon: BookOpen },
     { href: "/admin/users", label: "Users", icon: Users },

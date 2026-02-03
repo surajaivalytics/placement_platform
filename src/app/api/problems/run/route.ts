@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { problemId, userCode, language } = await req.json();
+    const { problemId, userCode, language, languageId } = await req.json();
 
     const problem = await prisma.problem.findUnique({
       where: { id: problemId },
@@ -11,60 +11,90 @@ export async function POST(req: Request) {
 
     if (!problem) return NextResponse.json({ error: "Not Found" }, { status: 404 });
 
-    const testCases = typeof problem.testCases === 'string' ? JSON.parse(problem.testCases) : problem.testCases;
-    const drivers = typeof problem.driverCode === 'string' ? JSON.parse(problem.driverCode as string) : (problem.driverCode as any);
+    const testCases = typeof problem.testCases === "string" 
+      ? JSON.parse(problem.testCases) 
+      : problem.testCases;
 
-    // Prepare Batch Submissions
-    const submissions = testCases.map((tc: any) => {
+    const drivers = typeof problem.driverCode === "string" 
+      ? JSON.parse(problem.driverCode) 
+      : problem.driverCode;
 
+    let fullcode = drivers[language];
+    fullcode = fullcode.replace("{{USER_CODE}}", userCode);
 
-      let fullcode = drivers[language];
-      // Inject code and specific test case input
-      fullcode = fullcode.replace("{{USER_CODE}}", userCode);
+    // 1. Raw Text Formatting for Stdin
+    const formattedStdin = testCases.map((tc: any) => tc.input.trim()).join("\n");
 
-      Object.keys(tc.input).forEach((key)=>{
-        const value= tc.input[key];
+    const submissions = [
+      {
+        language_id: languageId,
+        source_code: Buffer.from(fullcode).toString("base64"),
+        stdin: Buffer.from(formattedStdin).toString("base64"),
+      },
+    ];
 
-
-        const formattedValue= Array.isArray(value) ? value.join(","):value;
-
-        const placeholder  = new RegExp(`{{${key}}}`,"g");
-
-        fullcode=fullcode.replace(placeholder,formattedValue);
-
-        console.log(fullcode);
-
-      });
-
-     
-
-      return {
-        language_id: language === "cpp" ? 54 : 71,
-        source_code: Buffer.from(fullcode).toString('base64'),
-        stdin: Buffer.from(JSON.stringify(tc.input)).toString('base64'),
-        expected_output: Buffer.from(tc.output).toString('base64'),
-      };
-    });
-
-    // Send to Judge0
-    const response = await fetch("http://135.235.192.49:2358/submissions/batch?base64_encoded=true&wait=true", {
+    // 2. Send to Judge0
+    const response = await fetch("http://135.235.192.49:2358/submissions/batch?base64_encoded=true", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ submissions }),
     });
 
-    let result = await response.json();
+    const initialResult = await response.json();
+    const tokens = initialResult.map((s: any) => s.token).join(",");
 
-    // If wait=true didn't return stdout, poll using tokens
-    if (Array.isArray(result) && result.length > 0 && !result[0].stdout) {
-      const tokens = result.map((s: any) => s.token).join(",");
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const poll = await fetch(`http://135.235.192.49:2358/submissions/batch?tokens=${tokens}&base64_encoded=true`);
-      const polledData = await poll.json();
-      result = polledData.submissions;
+    // 3. Polling Logic
+    async function pollbatch(tokens: string) {
+      let attempts = 0;
+      const MAX_ATTEMPTS = 20;
+      while (attempts < MAX_ATTEMPTS) {
+        const poll = await fetch(`http://135.235.192.49:2358/submissions/batch?tokens=${tokens}&base64_encoded=true`);
+        const data = await poll.json();
+        if (data.submissions) {
+          const allDone = data.submissions.every((s: any) => s.status && s.status.id > 2);
+          if (allDone) return data.submissions[0]; // Single batch return
+        }
+        attempts++;
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+      throw new Error("Judge0 timeout");
     }
 
-    return NextResponse.json(result);
+    const finalSubmission = await pollbatch(tokens);
+
+    // 4. Comparison & Processing Logic
+    if (finalSubmission.stdout) {
+      const decodedOutput = Buffer.from(finalSubmission.stdout, "base64").toString().trim().replace(/\r/g, "");
+      const actualOutputs = decodedOutput.split("\n");
+
+      const results = testCases.map((tc: any, index: number) => {
+        const actual = actualOutputs[index]?.trim();
+        const expected = tc.output.toString().trim();
+        return {
+          id: tc.id,
+          passed: actual === expected,
+          actual: actual,
+          expected: expected
+        };
+      });
+
+      return NextResponse.json({
+        success: results.every(r => r.passed),
+        results: results,
+        time: finalSubmission.time,
+        memory: finalSubmission.memory,
+        status: finalSubmission.status
+      });
+    }
+
+    // Return Error if no stdout (Compile Error / Runtime Error)
+    return NextResponse.json({
+      success: false,
+      status: finalSubmission.status,
+      compile_output: finalSubmission.compile_output ? Buffer.from(finalSubmission.compile_output, "base64").toString() : null,
+      stderr: finalSubmission.stderr ? Buffer.from(finalSubmission.stderr, "base64").toString() : null,
+    });
+
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Server Error" }, { status: 500 });
