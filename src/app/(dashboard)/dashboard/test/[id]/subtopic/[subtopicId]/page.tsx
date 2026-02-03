@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlacementMCQTest } from '@/components/placements/placement-mcq-test';
-import { Loader2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/loader';
 import { parseJsonSafely } from '@/lib/fetch-utils';
 
 interface Question {
@@ -18,10 +18,10 @@ interface Question {
   }[];
 }
 
-export default function SubtopicTestPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string; subtopicId: string }> 
+export default function SubtopicTestPage({
+  params
+}: {
+  params: Promise<{ id: string; subtopicId: string }>
 }) {
   const router = useRouter();
   const [testId, setTestId] = useState<string>('');
@@ -58,7 +58,7 @@ export default function SubtopicTestPage({
   const handleSubmit = async (answers: Record<string, string>) => {
     try {
       const startTime = Date.now();
-      
+
       const response = await fetch(`/api/tests/${testId}/subtopics/${subtopicId}/submit`, {
         method: 'POST',
         headers: {
@@ -88,7 +88,7 @@ export default function SubtopicTestPage({
     return (
       <div className="flex justify-center items-center h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+          <Spinner className="text-blue-600" size={48} />
           <p className="text-gray-500 font-medium animate-pulse">Loading Test...</p>
         </div>
       </div>

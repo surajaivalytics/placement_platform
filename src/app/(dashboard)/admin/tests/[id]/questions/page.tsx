@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ArrowLeft, Plus, Trash2, Download, Upload, Code, FileText, CheckCircle2, MoreVertical, Search, Check } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Spinner } from '@/components/ui/loader';
 
 interface Question {
   id: string;
@@ -187,7 +188,7 @@ export default function ManageTestQuestionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <Spinner className="text-indigo-500 border-indigo-500" size={48} />
       </div>
     );
   }

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner"; // Assuming sonner is used, or alerts
@@ -119,7 +120,7 @@ export default function LoginPage() {
                         disabled={loading}
                         className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign In"}
+                        {loading ? <Spinner size={20} /> : "Sign In"}
                     </Button>
 
                     <div className="flex items-center gap-4 py-2">

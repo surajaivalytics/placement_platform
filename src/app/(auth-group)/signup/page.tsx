@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { useState } from "react";
-import { ChevronDown, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 // import { supabase } from "@/lib/supabase";
@@ -156,7 +157,7 @@ export default function SignupPage() {
                   disabled={sendingOtp || otpSent || !email}
                   className="h-11 px-4 bg-slate-900 text-white hover:bg-slate-800"
                 >
-                  {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : (otpSent ? "Resend" : "Verify")}
+                  {sendingOtp ? <Spinner size={16} /> : (otpSent ? "Resend" : "Verify")}
                 </Button>
               )}
               {isVerified && (
@@ -182,7 +183,7 @@ export default function SignupPage() {
                   disabled={verifyingOtp || !otp}
                   className="h-11 px-4 bg-green-600 text-white hover:bg-green-700"
                 >
-                  {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm"}
+                  {verifyingOtp ? <Spinner size={16} /> : "Confirm"}
                 </Button>
               </div>
             )}
@@ -310,7 +311,7 @@ export default function SignupPage() {
             disabled={loading || !isVerified}
             className="w-full md:w-auto min-w-[140px] h-11 rounded-full bg-blue-600 text-white hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/20"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue"}
+            {loading ? <Spinner size={20} /> : "Continue"}
           </Button>
         </div>
       </form>

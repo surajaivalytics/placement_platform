@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Copy, Upload, CreditCard, Bell, Lock, User, Camera, Loader2, Save, CheckCircle, Smartphone, Mail, GraduationCap, AlertCircle } from "lucide-react";
+import { Copy, Upload, CreditCard, Bell, Lock, User, Camera, Save, CheckCircle, Smartphone, Mail, GraduationCap, AlertCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -144,7 +145,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+        <Spinner className="text-emerald-600" size={40} />
       </div>
     );
   }
@@ -440,7 +441,7 @@ export default function ProfilePage() {
 
           <div className="flex gap-3 mb-2">
             <Button className="rounded-xl px-6 bg-gray-900 text-white hover:bg-gray-800" onClick={handleUpdate} disabled={saving}>
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {saving && <Spinner className="mr-2" size={16} />}
               Save Changes
             </Button>
           </div>

@@ -10,6 +10,7 @@ import { generateQuestion } from '@/app/actions/interview';
 import { InterviewContext } from '@/lib/interview-ai';
 import { INTERVIEW_CONFIG, COMPANY_TYPES, INTERVIEW_TYPES } from '@/lib/interview-constants';
 import { useSession } from 'next-auth/react';
+import { Spinner } from '@/components/ui/loader';
 
 // STT Interface extension for TypeScript
 interface IWindow extends Window {
@@ -364,7 +365,7 @@ export default function InterviewInterface({ company, type }: InterviewInterface
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <Spinner className="text-blue-600 mx-auto" size={64} />
           <p className="mt-4 text-lg font-medium">Initializing interview environment...</p>
         </div>
       </div>
@@ -500,209 +501,211 @@ export default function InterviewInterface({ company, type }: InterviewInterface
                   className={`${companyColor.replace('bg-', 'bg-')} hover:opacity-90 text-white px-8 py-6 text-lg transition-all`}
                 >
                   {isProcessing ? (
-                    <div className="flex items-center gap-2">
-                      <span className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full" />
+                    <Spinner className="mr-2 border-2" size={20} />
                       Creating Session...
-                    </div>
-                  ) : (
-                    <>
-                      <Play className="w-5 h-5 mr-2" />
-                      Start Interview
-                    </>
-                  )}
-                </Button>
               </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Video Section */}
-            <div className="lg:col-span-1 space-y-6">
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>AI Interviewer</span>
-                    <Badge variant="outline" className={isSpeaking ? "bg-green-100 text-green-700 animate-pulse" : ""}>
-                      {isSpeaking ? "Speaking..." : "Live"}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="relative aspect-video bg-gray-200 rounded-xl overflow-hidden border-2 border-gray-300">
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
-                      <div className="text-center">
-                        <div className={`w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-3 transition-transform duration-500 ${isSpeaking ? 'scale-110 shadow-lg' : ''}`}>
-                          {isSpeaking ? (
-                            <Volume2 className="w-10 h-10 text-blue-600 animate-pulse" />
-                          ) : (
-                            <Volume2 className="w-10 h-10 text-gray-400" />
-                          )}
-                        </div>
-                        <p className="font-medium text-gray-700">AI Interviewer</p>
-                        <p className="text-sm text-gray-500">{isSpeaking ? 'Asking question...' : 'Listening...'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  {/* Camera Preview specific for active interview */}
-                  <CardTitle className="flex items-center justify-between">
-                    <span>You</span>
-                    <Badge variant="outline" className={isListening ? "bg-red-100 text-red-700 animate-pulse" : ""}>
-                      {isListening ? "Recording..." : "Camera Active"}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="relative aspect-video bg-gray-200 rounded-xl overflow-hidden border-2 border-gray-300">
-                    {isCameraOn ? (
-                      <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="w-full h-full object-cover transform scale-x-[-1]"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <VideoOff className="w-12 h-12 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="absolute bottom-4 left-4 flex gap-2">
-                      <button
-                        onClick={toggleCamera}
-                        className={`p-2 rounded-full ${isCameraOn ? 'bg-red-500' : 'bg-gray-500'} text-white`}
-                        title="Toggle Camera"
-                      >
-                        {isCameraOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-
-            </div>
-
-            {/* Main Interview Area - Slider Style */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card className="border-0 shadow-lg h-full flex flex-col">
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>Question {questionIndex + 1}</span>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => speak(currentQuestion)}
-                        disabled={isSpeaking}
-                        title="Replay Question"
-                      >
-                        <Volume2 className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-between">
-
-                  {/* Question Display */}
-                  <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-100 flex-grow flex items-center justify-center min-h-[200px]">
-                    <h2 className="text-xl md:text-2xl font-medium text-center text-gray-800 leading-relaxed">
-                      {currentQuestion}
-                    </h2>
-                  </div>
-
-                  {/* Answer Input Area */}
-                  <div className="space-y-4">
-                    <div className="relative">
-                      <textarea
-                        value={userAnswer}
-                        readOnly
-                        placeholder="Speak to answer..."
-                        className="w-full p-4 pr-12 border border-gray-300 rounded-xl min-h-[120px] bg-gray-50 text-lg resize-none focus:outline-none cursor-default"
-                        disabled={isProcessing}
-                      />
-                      <div className="absolute bottom-4 right-4">
-                        <Button
-                          variant={isListening ? "destructive" : "secondary"}
-                          size="icon"
-                          className={`rounded-full h-10 w-10 ${isListening ? 'animate-pulse' : ''}`}
-                          onClick={toggleListening}
-                          disabled={isProcessing}
-                          title={isListening ? "Stop Recording" : "Start Recording"}
-                        >
-                          {isListening ? <Square className="h-4 w-4" fill="currentColor" /> : <Mic className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-2">
-                      <p className="text-sm text-gray-500">
-                        {isListening ? "Listening..." : "Click mic to speak or type answer"}
-                      </p>
-                      <Button
-                        onClick={submitAnswer}
-                        disabled={!userAnswer.trim() || isProcessing}
-                        className={`${companyColor.replace('bg-', 'bg-')} hover:opacity-90 text-white px-8 py-6 text-lg rounded-xl min-w-[150px]`}
-                      >
-                        {isProcessing ? 'Processing...' : 'Submit Answer'}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Progress Indicator */}
-                  <div className="mt-8">
-                    <div className="flex justify-between text-xs text-gray-400 mb-1">
-                      <span>Progress</span>
-                      <span>~{interviewConfig?.duration} min left</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5" role="progressbar">
-                      <div
-                        className={`${companyColor} h-1.5 rounded-full transition-all duration-500 ease-out`}
-                        style={{ width: `${Math.min(100, (questionIndex + 1) * 10)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                </CardContent>
-              </Card>
-            </div>
+              ) : (
+              <>
+                <Play className="w-5 h-5 mr-2" />
+                Start Interview
+              </>
+                  )}
+            </Button>
           </div>
-        )}
+            </CardContent>
+    </Card>
+  ) : (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Video Section */}
+      <div className="lg:col-span-1 space-y-6">
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>AI Interviewer</span>
+              <Badge variant="outline" className={isSpeaking ? "bg-green-100 text-green-700 animate-pulse" : ""}>
+                {isSpeaking ? "Speaking..." : "Live"}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative aspect-video bg-gray-200 rounded-xl overflow-hidden border-2 border-gray-300">
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
+                <div className="text-center">
+                  <div className={`w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-3 transition-transform duration-500 ${isSpeaking ? 'scale-110 shadow-lg' : ''}`}>
+                    {isSpeaking ? (
+                      <Volume2 className="w-10 h-10 text-blue-600 animate-pulse" />
+                    ) : (
+                      <Volume2 className="w-10 h-10 text-gray-400" />
+                    )}
+                  </div>
+                  <p className="font-medium text-gray-700">AI Interviewer</p>
+                  <p className="text-sm text-gray-500">{isSpeaking ? 'Asking question...' : 'Listening...'}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            {/* Camera Preview specific for active interview */}
+            <CardTitle className="flex items-center justify-between">
+              <span>You</span>
+              <Badge variant="outline" className={isListening ? "bg-red-100 text-red-700 animate-pulse" : ""}>
+                {isListening ? "Recording..." : "Camera Active"}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative aspect-video bg-gray-200 rounded-xl overflow-hidden border-2 border-gray-300">
+              {isCameraOn ? (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover transform scale-x-[-1]"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <VideoOff className="w-12 h-12 text-gray-400" />
+                </div>
+              )}
+              <div className="absolute bottom-4 left-4 flex gap-2">
+                <button
+                  onClick={toggleCamera}
+                  className={`p-2 rounded-full ${isCameraOn ? 'bg-red-500' : 'bg-gray-500'} text-white`}
+                  title="Toggle Camera"
+                >
+                  {isCameraOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+
       </div>
 
-      {/* Custom Confirmation Modal */}
-      {showConfirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <Card className="w-full max-w-md bg-white border-0 shadow-2xl animate-in fade-in zoom-in duration-200">
-            <CardHeader className="p-6 pb-2">
-              <CardTitle className="text-xl font-bold text-gray-900">Finish Interview Early?</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-2">
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to finish the interview early? This will submit your current progress and you cannot undo this action.
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
-                  Cancel
-                </Button>
+      {/* Main Interview Area - Slider Style */}
+      <div className="lg:col-span-2 space-y-6">
+        <Card className="border-0 shadow-lg h-full flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex justify-between items-center">
+              <span>Question {questionIndex + 1}</span>
+              <div className="flex gap-2">
                 <Button
-                  onClick={() => {
-                    setShowConfirmDialog(false);
-                    completeInterview();
-                  }}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => speak(currentQuestion)}
+                  disabled={isSpeaking}
+                  title="Replay Question"
                 >
-                  Confirm Finish
+                  <Volume2 className="h-5 w-5" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col justify-between">
+
+            {/* Question Display */}
+            <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-100 flex-grow flex items-center justify-center min-h-[200px]">
+              <h2 className="text-xl md:text-2xl font-medium text-center text-gray-800 leading-relaxed">
+                {currentQuestion}
+              </h2>
+            </div>
+
+            {/* Answer Input Area */}
+            <div className="space-y-4">
+              <div className="relative">
+                <textarea
+                  value={userAnswer}
+                  readOnly
+                  placeholder="Speak to answer..."
+                  className="w-full p-4 pr-12 border border-gray-300 rounded-xl min-h-[120px] bg-gray-50 text-lg resize-none focus:outline-none cursor-default"
+                  disabled={isProcessing}
+                />
+                <div className="absolute bottom-4 right-4">
+                  <Button
+                    variant={isListening ? "destructive" : "secondary"}
+                    size="icon"
+                    className={`rounded-full h-10 w-10 ${isListening ? 'animate-pulse' : ''}`}
+                    onClick={toggleListening}
+                    disabled={isProcessing}
+                    title={isListening ? "Stop Recording" : "Start Recording"}
+                  >
+                    {isListening ? <Square className="h-4 w-4" fill="currentColor" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-2">
+                <p className="text-sm text-gray-500">
+                  {isListening ? "Listening..." : "Click mic to speak or type answer"}
+                </p>
+                <Button
+                  onClick={submitAnswer}
+                  disabled={!userAnswer.trim() || isProcessing}
+                  className={`${companyColor.replace('bg-', 'bg-')} hover:opacity-90 text-white px-8 py-6 text-lg rounded-xl min-w-[150px]`}
+                >
+                  {isProcessing ? 'Processing...' : 'Submit Answer'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Progress Indicator */}
+            <div className="mt-8">
+              <div className="flex justify-between text-xs text-gray-400 mb-1">
+                <span>Progress</span>
+                <span>~{interviewConfig?.duration} min left</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5" role="progressbar">
+                <div
+                  className={`${companyColor} h-1.5 rounded-full transition-all duration-500 ease-out`}
+                  style={{ width: `${Math.min(100, (questionIndex + 1) * 10)}%` }}
+                ></div>
+              </div>
+            </div>
+
+          </CardContent>
+        </Card>
+      </div>
     </div>
+  )
+}
+      </div >
+
+  {/* Custom Confirmation Modal */ }
+{
+  showConfirmDialog && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <Card className="w-full max-w-md bg-white border-0 shadow-2xl animate-in fade-in zoom-in duration-200">
+        <CardHeader className="p-6 pb-2">
+          <CardTitle className="text-xl font-bold text-gray-900">Finish Interview Early?</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-2">
+          <p className="text-gray-600 mb-6">
+            Are you sure you want to finish the interview early? This will submit your current progress and you cannot undo this action.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setShowConfirmDialog(false);
+                completeInterview();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Confirm Finish
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+    </div >
   );
 }

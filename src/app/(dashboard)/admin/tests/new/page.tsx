@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { GraduationCap, Clock, Target, Shield, BookOpen, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
+import { Spinner } from '@/components/ui/loader';
 
 export default function NewTestPage() {
   const router = useRouter();
@@ -62,11 +63,11 @@ export default function NewTestPage() {
         // Try to parse error response
         let errorData;
         let errorMessage = 'Failed to create test';
-        
+
         try {
           const text = await res.text();
           console.log('Error response text:', text);
-          
+
           if (text) {
             errorData = JSON.parse(text);
             errorMessage = errorData.details || errorData.error || errorMessage;
@@ -79,7 +80,7 @@ export default function NewTestPage() {
           console.error('Failed to parse error response:', parseError);
           errorMessage = `Server error (${res.status}): Unable to parse response`;
         }
-        
+
         alert(`Failed to create test: ${errorMessage}`);
       }
     } catch (error) {
@@ -237,7 +238,7 @@ export default function NewTestPage() {
             >
               {loading ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <Spinner className="border-white/30 border-t-white" size={20} />
                   Creating...
                 </div>
               ) : 'Finalize & Create Test'}

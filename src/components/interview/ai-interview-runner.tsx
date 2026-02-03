@@ -169,6 +169,13 @@ export function AIInterviewRunner({ interviewType, companyName, onFinish }: AIIn
         return () => stopMedia();
     }, []);
 
+    // Re-attach stream when stage changes (as video element is recreated)
+    useEffect(() => {
+        if (videoRef.current && streamRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+        }
+    }, [currentStage]);
+
     // Scroll to bottom of chat
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -358,7 +365,7 @@ export function AIInterviewRunner({ interviewType, companyName, onFinish }: AIIn
 
 
     // --- Stage Components ---
-    const SystemCheckStage = () => (
+    const renderSystemCheckStage = () => (
         <div className="flex flex-col items-center justify-center p-6 max-w-4xl mx-auto w-full h-[80vh]">
             <Card className="w-full bg-white rounded-3xl overflow-hidden shadow-2xl border-0 ring-1 ring-black/5">
                 <div className="bg-slate-900 p-8 text-white relative overflow-hidden">
@@ -437,7 +444,7 @@ export function AIInterviewRunner({ interviewType, companyName, onFinish }: AIIn
         </div>
     );
 
-    const ReadingStage = () => (
+    const renderReadingStage = () => (
         <div className="flex flex-col items-center justify-center p-6 max-w-5xl mx-auto w-full min-h-[80vh]">
             <Card className="w-full bg-white rounded-3xl overflow-hidden shadow-2xl border-0 ring-1 ring-black/5 flex flex-col md:flex-row h-full md:h-[600px]">
                 <div className="w-full md:w-1/3 bg-slate-900 p-6 flex flex-col items-center justify-center relative">
@@ -494,7 +501,7 @@ export function AIInterviewRunner({ interviewType, companyName, onFinish }: AIIn
         </div>
     );
 
-    const ExtemporeStage = () => (
+    const renderExtemporeStage = () => (
         <div className="flex flex-col items-center justify-center p-6 max-w-5xl mx-auto w-full min-h-[80vh]">
             <Card className="w-full bg-white rounded-3xl overflow-hidden shadow-2xl border-0 ring-1 ring-black/5 relative">
                 <div className="bg-slate-900 h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
@@ -538,9 +545,9 @@ export function AIInterviewRunner({ interviewType, companyName, onFinish }: AIIn
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-            {currentStage === 'SYSTEM_CHECK' && <SystemCheckStage />}
-            {currentStage === 'READING' && <ReadingStage />}
-            {currentStage === 'EXTEMPORE' && <ExtemporeStage />}
+            {currentStage === 'SYSTEM_CHECK' && renderSystemCheckStage()}
+            {currentStage === 'READING' && renderReadingStage()}
+            {currentStage === 'EXTEMPORE' && renderExtemporeStage()}
 
             {currentStage === 'INTERVIEW' && (
                 <div className="w-full h-full bg-black flex flex-col md:flex-row p-2 gap-4 overflow-hidden rounded-xl">

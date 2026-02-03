@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, AlertTriangle, Clock, Play, GraduationCap, FileText, Check, Terminal } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Clock, Play, GraduationCap, FileText, Check, Terminal, Trophy } from "lucide-react";
+import Link from 'next/link';
 
 import { Spinner } from "@/components/ui/loader";
 
@@ -304,16 +305,47 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
                                 </div>
 
                                 <div className="pt-2">
-                                    <Button
-                                        className="w-full h-12 bg-[#181C2E] hover:bg-[#2C3E50] text-lg font-bold shadow-xl shadow-blue-900/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                        onClick={handleStart}
-                                        disabled={loading}
-                                    >
-                                        {loading ? <Spinner size={20} /> : <span className="flex items-center gap-2">{getButtonText()} <ArrowRight className="w-5 h-5" /></span>}
-                                    </Button>
-                                    <p className="text-xs text-center text-gray-400 mt-3 px-4 leading-normal">
-                                        By clicking Launch, you agree to the Terms of Simulation.
-                                    </p>
+                                    {(session && session.status === 'COMPLETED') || (session && (session.currentRound || 1) > sortedRoundTitles.length) ? (
+                                        <div className="space-y-4">
+                                            <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex flex-col items-center text-center">
+                                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                                                    <Trophy className="w-6 h-6 text-green-600" />
+                                                </div>
+                                                <h3 className="font-bold text-green-900 text-lg">Detailed Analysis Ready</h3>
+                                                <p className="text-sm text-green-700">You have completed all rounds for this drive.</p>
+
+                                                <div className="flex gap-4 w-full mt-4">
+                                                    <div className="flex-1 bg-white rounded-lg p-2 border border-green-100 shadow-sm">
+                                                        <div className="text-xs text-gray-500 uppercase font-bold">Score</div>
+                                                        <div className="text-xl font-black text-green-700">{session.score || 0}%</div>
+                                                    </div>
+                                                    <div className="flex-1 bg-white rounded-lg p-2 border border-green-100 shadow-sm">
+                                                        <div className="text-xs text-gray-500 uppercase font-bold">Verdict</div>
+                                                        <div className="text-xl font-black text-green-700">{session.verdict || 'PASSED'}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <Link href={`/exam/${test.id}/result?status=Completed`} className="block w-full">
+                                                <Button className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg shadow-green-600/20">
+                                                    View Detailed Report
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <Button
+                                                className="w-full h-12 bg-[#181C2E] hover:bg-[#2C3E50] text-lg font-bold shadow-xl shadow-blue-900/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                                onClick={handleStart}
+                                                disabled={loading}
+                                            >
+                                                {loading ? <Spinner size={20} /> : <span className="flex items-center gap-2">{getButtonText()} <ArrowRight className="w-5 h-5" /></span>}
+                                            </Button>
+                                            <p className="text-xs text-center text-gray-400 mt-3 px-4 leading-normal">
+                                                By clicking Launch, you agree to the Terms of Simulation.
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

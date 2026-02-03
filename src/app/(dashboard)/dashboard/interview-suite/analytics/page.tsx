@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   BarChart,
   Bar,
   XAxis,
@@ -17,16 +17,17 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { 
-  TrendingUp, 
-  Users, 
-  GraduationCap, 
+import {
+  TrendingUp,
+  Users,
+  GraduationCap,
   BarChart3,
   Clock,
   Target
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { INTERVIEW_CONFIG } from '@/lib/interview-constants';
+import { Spinner } from '@/components/ui/loader';
 
 interface InterviewSession {
   id: string;
@@ -56,7 +57,7 @@ export default function InterviewAnalyticsPage() {
     const fetchData = async () => {
       try {
         const response = await fetch('/api/interviews');
-        
+
         if (response.ok) {
           const data = await response.json();
           setInterviews(data.interviews);
@@ -69,7 +70,7 @@ export default function InterviewAnalyticsPage() {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, []);
 
@@ -105,7 +106,7 @@ export default function InterviewAnalyticsPage() {
     return (
       <div className="container mx-auto py-8">
         <div className="flex justify-center items-center h-64">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <Spinner className="text-blue-600" size={64} />
         </div>
       </div>
     );
@@ -142,8 +143,8 @@ export default function InterviewAnalyticsPage() {
               <div>
                 <p className="text-sm text-gray-500">Avg. Score</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {interviews.length > 0 
-                    ? (interviews.reduce((sum, i) => sum + (i.scores.overallHireability || 0), 0) / interviews.length).toFixed(1) 
+                  {interviews.length > 0
+                    ? (interviews.reduce((sum, i) => sum + (i.scores.overallHireability || 0), 0) / interviews.length).toFixed(1)
                     : '0.0'}/10
                 </p>
               </div>
@@ -160,10 +161,10 @@ export default function InterviewAnalyticsPage() {
               <div>
                 <p className="text-sm text-gray-500">Success Rate</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {interviews.length > 0 
+                  {interviews.length > 0
                     ? Math.round(
-                        (interviews.filter(i => i.overallVerdict === 'Hire').length / interviews.length) * 100
-                      ) 
+                      (interviews.filter(i => i.overallVerdict === 'Hire').length / interviews.length) * 100
+                    )
                     : 0}%
                 </p>
               </div>
@@ -180,15 +181,15 @@ export default function InterviewAnalyticsPage() {
               <div>
                 <p className="text-sm text-gray-500">Avg. Duration</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {interviews.length > 0 
+                  {interviews.length > 0
                     ? Math.round(
-                        interviews.reduce((sum, i) => {
-                          if (i.endedAt) {
-                            return sum + (new Date(i.endedAt).getTime() - new Date(i.startedAt).getTime()) / 60000;
-                          }
-                          return sum;
-                        }, 0) / interviews.filter(i => i.endedAt).length
-                      )
+                      interviews.reduce((sum, i) => {
+                        if (i.endedAt) {
+                          return sum + (new Date(i.endedAt).getTime() - new Date(i.startedAt).getTime()) / 60000;
+                        }
+                        return sum;
+                      }, 0) / interviews.filter(i => i.endedAt).length
+                    )
                     : 0} min
                 </p>
               </div>

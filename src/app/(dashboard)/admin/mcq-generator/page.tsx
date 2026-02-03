@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Copy, Upload, Download, FileText, Loader2, Brain } from "lucide-react";
+import { Copy, Upload, Download, FileText, Brain } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function MCQGeneratorPage() {
@@ -288,7 +289,7 @@ export default function MCQGeneratorPage() {
                         >
                             {isLoading ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <Spinner className="mr-2" size={16} />
                                     Generating...
                                 </>
                             ) : (
@@ -319,7 +320,7 @@ export default function MCQGeneratorPage() {
                     <div className="space-y-6">
                         {isLoading && (
                             <div className="flex flex-col items-center justify-center p-12 border rounded-xl bg-card">
-                                <Loader2 className="h-10 w-10 animate-spin text-emerald-600 mb-4" />
+                                <Spinner className="text-emerald-600 mb-4" size={40} />
                                 <p className="text-lg font-medium text-foreground">Generating Questions...</p>
                                 <p className="text-sm text-muted-foreground">This may take up to 30 seconds.</p>
                             </div>

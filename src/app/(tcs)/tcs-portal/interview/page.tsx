@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/loader";
 
 import { generateQuestion } from '@/app/actions/interview';
 
@@ -356,7 +357,7 @@ export default function InterviewPage() {
     if (state === 'connecting') {
         return (
             <div className="min-h-screen bg-[#181C2E] flex flex-col items-center justify-center text-white space-y-4">
-                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <Spinner className="text-blue-500" size={64} />
                 <p className="text-lg animate-pulse">Connecting to Interviewer...</p>
             </div>
         )

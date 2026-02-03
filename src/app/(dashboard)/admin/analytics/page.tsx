@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, TrendingUp, Users, BookOpen, Building2 } from "lucide-react";
+import { TrendingUp, Users, BookOpen, Building2 } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 
 interface TopPerformer {
   id: string;
@@ -65,7 +66,7 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+        <Spinner className="text-emerald-600" size={40} />
       </div>
     );
   }

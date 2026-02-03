@@ -1,4 +1,4 @@
-import { Loader2, Mic } from "lucide-react";
+import { Mic } from "lucide-react";
 
 export default function Loading() {
     return (

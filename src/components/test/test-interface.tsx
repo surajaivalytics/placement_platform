@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, AlertCircle, CheckCircle2, Lock, PlayCircle, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
+import { Spinner } from '@/components/ui/loader';
 
 interface TestInterfaceProps {
   topicOrCompany?: string;
@@ -480,7 +481,7 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
   if (loading) return (
     <div className="flex justify-center items-center h-screen bg-slate-50">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <Spinner className="text-blue-600" size={48} />
         <p className="text-gray-500 font-medium animate-pulse">Loading Test Environment...</p>
       </div>
     </div>
@@ -782,7 +783,7 @@ export default function TestInterface({ topicOrCompany, type, testId }: TestInte
               )}
             </div>
             <div className="mt-3 flex items-center gap-2 px-1">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-200" />
+              <Spinner className="w-4 h-4 text-emerald-500" />
               <p className="text-xs font-bold text-gray-700">Proctoring Active</p>
             </div>
           </div>

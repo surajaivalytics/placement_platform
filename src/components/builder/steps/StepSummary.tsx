@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { FileText, Sparkles, Loader2 } from "lucide-react";
+import { FileText, Sparkles } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { BuilderResumeData } from "@/lib/builder/builderTypes";
 
 interface StepSummaryProps {
@@ -76,7 +77,7 @@ export default function StepSummary({ summary, resumeData, onChange }: StepSumma
                 >
                     {isGenerating ? (
                         <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <Spinner className="mr-2" size={16} />
                             Generating...
                         </>
                     ) : (

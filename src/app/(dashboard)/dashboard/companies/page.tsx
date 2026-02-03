@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Clock, CheckCircle2, FileText, Code2, AlertCircle, PlayCircle, Lock, Building2 } from 'lucide-react';
+import { Clock, CheckCircle2, FileText, Code2, AlertCircle, PlayCircle, Lock, Building2 } from 'lucide-react';
+import { Spinner } from "@/components/ui/loader";
 import { PageHeader } from "@/components/dashboard/page-header";
 
 // Mock Data for immediate visualization (if API empty)
@@ -99,7 +100,7 @@ export default function CompanyTestsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+        <Spinner className="text-emerald-600" size={40} />
       </div>
     );
   }

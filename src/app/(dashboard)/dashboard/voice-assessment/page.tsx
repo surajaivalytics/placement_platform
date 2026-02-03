@@ -9,6 +9,7 @@ import { submitVoiceAssessment } from '@/app/actions/voice-assessment';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Spinner } from '@/components/ui/loader';
 
 const QUESTIONS = [
     {
@@ -261,7 +262,7 @@ export default function VoiceAssessmentPage() {
 
                 {step === 'processing' && (
                     <motion.div key="processing" className="flex flex-col items-center justify-center min-h-[400px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <div className="w-24 h-24 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-8" />
+                        <Spinner className="mb-8 border-t-blue-600 border-blue-200" size={96} />
                         <h2 className="text-2xl font-semibold text-gray-800">Analyzing Voice Parameters...</h2>
                         <p className="text-gray-500 mt-2">Checking Fluency, Pronunciation & Pace</p>
                     </motion.div>

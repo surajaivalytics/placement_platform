@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Camera, CameraOff, Move } from 'lucide-react';
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/loader";
 
 export function WebcamMonitor() {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -90,7 +91,7 @@ export function WebcamMonitor() {
             {/* Loading State or Collapsed Icon */}
             {(!hasPermission && hasPermission !== false) && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <Spinner className="text-white" size={24} />
                 </div>
             )}
 

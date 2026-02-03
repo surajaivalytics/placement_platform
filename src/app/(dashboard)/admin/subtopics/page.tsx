@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { motion, AnimatePresence } from 'framer-motion';
+import { Spinner } from "@/components/ui/loader";
 
 interface Test {
   id: string;
@@ -49,7 +50,7 @@ export default function AdminSubtopicsPage() {
   const [selectedTest, setSelectedTest] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -195,7 +196,7 @@ export default function AdminSubtopicsPage() {
   const downloadCsvTemplate = () => {
     const headers = ["question", "option_1", "option_2", "option_3", "option_4", "correct_option", "explanation", "difficulty", "category"];
     const sampleRow = ["What is 2+2?", "2", "3", "4", "5", "C", "Basic arithmetic", "Easy", "Mathematics"];
-    
+
     const csvContent = "data:text/csv;charset=utf-8,"
       + headers.join(",") + "\n"
       + sampleRow.join(",");
@@ -217,7 +218,7 @@ export default function AdminSubtopicsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        <Spinner className="text-blue-600 border-t-blue-600 border-b-blue-600" size={48} />
       </div>
     );
   }

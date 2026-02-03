@@ -63,51 +63,28 @@ export default function TestRunnerClient({ test, session }: { test: any, session
             return [{ title: "Assessment", type: "assessment", sections: [{ id: 'general', name: 'General', questions: allQuestions }] }];
         }
 
-        const groups = new Map<string, any>();
-        let voiceQuestions: any[] = [];
+        const groupedRounds: Record<string, any[]> = {};
 
-        // Sort subtopics by order first
-        const sortedSubtopics = [...test.subtopics].sort((a: any, b: any) => a.order - b.order);
-
-        // First pass: Group normal rounds and collect voice questions
-        sortedSubtopics.forEach((sub: any) => {
-            const title = sub.roundTitle || "General Assessment";
-            const type = sub.type || 'assessment';
-
-            // Filter questions for this subtopic
-            let subQuestions = allQuestions.filter((q: any) => q.subtopicId === sub.id);
-
-            // Check for voice questions (assuming type or subtopic indicates voice)
-            // For now, let's assume if the round title implies Technical and questions are interviewish or explicitly voice
-            // Or allow filtering by question type if available. 
-            // If question.type === 'voice' does not exist, we might need heuristic.
-            // Let's assume we want to split "Technical Assessment" that has multiple question types.
-
-            const nonVoiceQuestions = subQuestions.filter((q: any) => q.type !== 'voice' && q.type !== 'audio');
-            const currentVoiceQuestions = subQuestions.filter((q: any) => q.type === 'voice' || q.type === 'audio');
-
-            voiceQuestions = [...voiceQuestions, ...currentVoiceQuestions];
-
-            // If we have non-voice questions or it's an interview round (which might have 0 questions listed if purely AI handled)
-            if (nonVoiceQuestions.length > 0 || type === 'interview') {
-                if (!groups.has(title)) {
-                    groups.set(title, {
-                        title,
-                        type,
-                        sections: [],
-                        minOrder: sub.order
-                    });
-                }
-                groups.get(title).sections.push({ ...sub, questions: nonVoiceQuestions });
-            }
+        // 1. Group by Title Logic (Same as Dashboard)
+        test.subtopics.forEach((sub: any) => {
+            const title = sub.roundTitle || (
+                sub.name.includes('Interview') ? 'Personal Interview' : 'Online Assessment'
+            );
+            if (!groupedRounds[title]) groupedRounds[title] = [];
+            groupedRounds[title].push(sub);
         });
 
-        const roundsList = Array.from(groups.values()).sort((a, b) => {
-            const minOrderA = a.minOrder || 999;
-            const minOrderB = b.minOrder || 999;
+        const sortedRoundTitles = Object.keys(groupedRounds).sort((a, b) => {
+            const minOrderA = Math.min(...groupedRounds[a].map((s: any) => s.order || 999));
+            const minOrderB = Math.min(...groupedRounds[b].map((s: any) => s.order || 999));
 
-            // Use same priority logic as Dashboard
             if (minOrderA === minOrderB) {
+                // Fallback to Dashboard Priority Logic
+                const groupA = groupedRounds[a];
+                const groupB = groupedRounds[b];
+                const typeA = groupA[0].type || '';
+                const typeB = groupB[0].type || '';
+
                 const getPriority = (t: string, title: string) => {
                     t = (t || '').toLowerCase(); title = (title || '').toLowerCase();
                     if (t === 'assessment') return 1;
@@ -116,31 +93,44 @@ export default function TestRunnerClient({ test, session }: { test: any, session
                     if (title.includes('hr') || t.includes('hr')) return 4;
                     return 5;
                 };
-                return getPriority(a.type, a.title) - getPriority(b.type, b.title);
+                return getPriority(typeA, a) - getPriority(typeB, b);
             }
             return minOrderA - minOrderB;
         });
 
-        // Add Voice Assessment Round if questions exist
-        // Or if we specifically want a Voice Round even without explicit voice questions (e.g. AI interview mode)
-        // But for now, let's append it if we found voice questions OR if we want to force it.
-        // If the user wants "Voice Assessment" instead of "Technical" having voice Qs.
-        if (voiceQuestions.length > 0) {
-            roundsList.push({
-                title: "Voice Assessment",
-                type: "assessment", // Or 'interview' if it uses AI runner? Let's stick to assessment UI for now unless requested
-                sections: [{ id: 'voice_sec', name: 'Voice Questions', questions: voiceQuestions }],
-                minOrder: 9999
-            });
-        }
+        // 2. Map back to Round Structure expected by Runner
+        const roundsList = sortedRoundTitles.map(title => {
+            const subtopics = groupedRounds[title];
 
-        // Adjust for dedicated AI Voice/HR rounds logic if they were part of subtopics
-        // If existing Technical was meant to be voice, we might have just stripped it.
-        // Assuming Standard flow.
+            // Collect questions for this round
+            let roundQuestions: any[] = [];
+            subtopics.forEach((sub: any) => {
+                const subQs = allQuestions.filter((q: any) => q.subtopicId === sub.id);
+                roundQuestions = [...roundQuestions, ...subQs];
+            });
+
+            // Determine Type
+            // If any subtopic indicates interview/voice, or title says so.
+            // Check questions for voice type?
+            // Dashboard logic checks for 'interview' in title or type.
+            const isInterview = title.toLowerCase().includes('interview') ||
+                title.toLowerCase() === 'hr' ||
+                subtopics.some((s: any) => s.type === 'interview');
+
+            const type = isInterview ? 'interview' : 'assessment';
+
+            return {
+                title,
+                type,
+                sections: subtopics.map((s: any) => ({
+                    ...s,
+                    questions: allQuestions.filter((q: any) => q.subtopicId === s.id)
+                })),
+                minOrder: Math.min(...subtopics.map((s: any) => s.order || 999))
+            };
+        });
 
         console.log("DEBUG: Computed Rounds:", roundsList);
-        roundsList.forEach(r => console.log(`Round: ${r.title}, Type: ${r.type}, Sections: ${r.sections.length}`));
-
         return roundsList;
     }, [test, allQuestions]);
 

@@ -18,8 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2 } from "lucide-react";
-import { importQuestionsFromContext } from "@/app/actions/import-questions";
+import { Spinner } from "@/components/ui/loader";
 
 interface Subtopic {
     id: string;
@@ -658,7 +657,7 @@ export function TestStructureEditor({ testId, testTitle }: TestStructureEditorPr
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>Close</Button>
                         <Button onClick={handleSmartUpload} disabled={!uploadFile || uploading} className="min-w-[120px]">
-                            {uploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</> : "Import Questions"}
+                            {uploading ? <><Spinner className="mr-2" size={16} /> Processing...</> : "Import Questions"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -667,3 +666,4 @@ export function TestStructureEditor({ testId, testTitle }: TestStructureEditorPr
         </div >
     );
 }
+

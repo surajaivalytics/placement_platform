@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { INTERVIEW_CONFIG } from '@/lib/interview-constants';
+import { Spinner } from '@/components/ui/loader';
 
 interface InterviewDetails {
     id: string;
@@ -73,7 +74,7 @@ export default function InterviewDetailsPage() {
         return (
             <div className="container mx-auto py-8">
                 <div className="flex justify-center items-center h-64">
-                    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <Spinner className="text-blue-600" size={64} />
                 </div>
             </div>
         );
@@ -125,7 +126,7 @@ export default function InterviewDetailsPage() {
                 <div className="md:col-span-2 space-y-6">
                     <Card className="border-0 shadow-lg overflow-hidden">
                         <div className={`h-2 w-full ${interview.overallVerdict.toLowerCase() === 'hire' ? 'bg-green-500' :
-                                interview.overallVerdict.toLowerCase() === 'maybe' ? 'bg-yellow-500' : 'bg-red-500'
+                            interview.overallVerdict.toLowerCase() === 'maybe' ? 'bg-yellow-500' : 'bg-red-500'
                             }`} />
                         <CardHeader className="pb-4">
                             <div className="flex justify-between items-start">

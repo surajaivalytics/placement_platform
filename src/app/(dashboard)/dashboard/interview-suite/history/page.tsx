@@ -4,25 +4,26 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Clock, 
-  GraduationCap, 
-  Users, 
-  BarChart3, 
-  FileText, 
+import {
+  Clock,
+  GraduationCap,
+  Users,
+  BarChart3,
+  FileText,
   Download,
   Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { INTERVIEW_CONFIG } from '@/lib/interview-constants';
+import { Spinner } from '@/components/ui/loader';
 
 interface InterviewSession {
   id: string;
@@ -50,7 +51,7 @@ export default function InterviewHistoryPage() {
     const fetchData = async () => {
       try {
         const response = await fetch('/api/interviews');
-        
+
         if (response.ok) {
           const data = await response.json();
           setInterviews(data.interviews);
@@ -63,7 +64,7 @@ export default function InterviewHistoryPage() {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, []);
 
@@ -90,7 +91,7 @@ export default function InterviewHistoryPage() {
     return (
       <div className="container mx-auto py-8">
         <div className="flex justify-center items-center h-64">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <Spinner className="text-blue-600" size={64} />
         </div>
       </div>
     );
@@ -143,16 +144,15 @@ export default function InterviewHistoryPage() {
                 {interviews.map((interview) => {
                   const config = INTERVIEW_CONFIG[interview.interviewType as keyof typeof INTERVIEW_CONFIG];
                   const overallScore = interview.scores.overallHireability || 0;
-                  
+
                   return (
                     <TableRow key={interview.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            interview.companyType === 'TCS' 
-                              ? 'bg-blue-100 text-blue-600' 
+                          <div className={`p-2 rounded-lg ${interview.companyType === 'TCS'
+                              ? 'bg-blue-100 text-blue-600'
                               : 'bg-gradient-to-r from-orange-100 to-red-100 text-red-600'
-                          }`}>
+                            }`}>
                             {interview.companyType === 'TCS' ? (
                               <GraduationCap className="w-5 h-5" />
                             ) : (
@@ -175,8 +175,8 @@ export default function InterviewHistoryPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-gray-600">
-                          {interview.endedAt 
-                            ? `${Math.round((new Date(interview.endedAt).getTime() - new Date(interview.startedAt).getTime()) / 1000 / 60)} min` 
+                          {interview.endedAt
+                            ? `${Math.round((new Date(interview.endedAt).getTime() - new Date(interview.startedAt).getTime()) / 1000 / 60)} min`
                             : 'In Progress'}
                         </div>
                       </TableCell>
@@ -227,8 +227,8 @@ export default function InterviewHistoryPage() {
               <div>
                 <p className="text-sm text-gray-500">Avg. Score</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {interviews.length > 0 
-                    ? (interviews.reduce((sum, i) => sum + (i.scores.overallHireability || 0), 0) / interviews.length).toFixed(1) 
+                  {interviews.length > 0
+                    ? (interviews.reduce((sum, i) => sum + (i.scores.overallHireability || 0), 0) / interviews.length).toFixed(1)
                     : '0.0'}/10
                 </p>
               </div>
@@ -245,10 +245,10 @@ export default function InterviewHistoryPage() {
               <div>
                 <p className="text-sm text-gray-500">Success Rate</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {interviews.length > 0 
+                  {interviews.length > 0
                     ? Math.round(
-                        (interviews.filter(i => i.overallVerdict === 'Hire').length / interviews.length) * 100
-                      ) 
+                      (interviews.filter(i => i.overallVerdict === 'Hire').length / interviews.length) * 100
+                    )
                     : 0}%
                 </p>
               </div>
