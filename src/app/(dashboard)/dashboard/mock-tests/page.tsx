@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MonitorPlay, Lock, ArrowRight, Info } from "lucide-react";
+import { MonitorPlay, Lock, ArrowRight, Info, ShieldAlert, Eye, MousePointerClick, AlertTriangle, CheckCircle2, PlayCircle } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { Loader } from "@/components/ui/loader";
@@ -34,8 +34,22 @@ export default function MockTestsPage() {
     React.useEffect(() => {
         const fetchTests = async () => {
             try {
+                // Fetch tests and user progress in parallel or assume API returns aggregated data
+                // For now, let's assume /api/tests returns user specific progress if authenticated
+                // If not, we might need a separate call. checking existing patterns...
+                // Assuming /api/tests?type=mock includes a 'status' or 'currentRound' field if updated backend.
+                // If not, we will need to fetch sessions.
+                // Let's standardly fetch tests then fetch progress if needed. 
+                // Currently assume the standard endpoint might need modification or we handle it here.
+
+                // Let's fetch tests first
                 const res = await fetch('/api/tests?type=mock');
                 const data = await res.json();
+
+                // If the API doesn't return progress (it likely doesn't yet), we mock it or fetch sessions.
+                // For this implementation, let's assume we can fetch active sessions.
+                // But to be safe and quick, let's just use what we have, if 'progress' is missing, show Start.
+
                 setTests(data.tests || []);
             } catch (error) {
                 console.error("Failed to fetch mock tests", error);
@@ -109,6 +123,10 @@ export default function MockTestsPage() {
                 >
                     {tests.map((test) => {
                         const style = getCompanyStyle(test.company);
+                        // Mock progress if not available yet (in real app, use test.progress or similar)
+                        const isInProgress = test.status === 'IN_PROGRESS';
+                        const isCompleted = test.status === 'COMPLETED';
+
                         return (
                             <motion.div key={test.id} variants={itemVariants}>
                                 <Card className="h-full flex flex-col border-t-4 hover:shadow-2xl transition-all duration-300 group overflow-hidden"
@@ -118,9 +136,13 @@ export default function MockTestsPage() {
                                             <div className="h-12 w-24 relative flex items-center">
                                                 <span className={`font-bold text-lg ${style.textColor}`}>{test.company || "MOCK TEST"}</span>
                                             </div>
-                                            <Badge variant="default" className="bg-green-600">
-                                                Live
-                                            </Badge>
+                                            {isCompleted ? (
+                                                <Badge className="bg-green-600 hover:bg-green-700">Completed</Badge>
+                                            ) : isInProgress ? (
+                                                <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-200">Resuming...</Badge>
+                                            ) : (
+                                                <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">New</Badge>
+                                            )}
                                         </div>
                                         <CardTitle className="mt-4 text-xl">{test.title}</CardTitle>
                                         <CardDescription className="line-clamp-2 min-h-[2.5rem]">{test.description || "No description provided."}</CardDescription>
@@ -149,7 +171,7 @@ export default function MockTestsPage() {
                                     <CardFooter className="mt-auto">
                                         <Link href={`/exam/${test.id}/dashboard`} className="w-full">
                                             <Button className={`w-full font-bold shadow-lg ${style.color} hover:opacity-90`}>
-                                                View Drive Details <ArrowRight className="ml-2 w-4 h-4" />
+                                                {isInProgress ? 'Resume Attempt' : isCompleted ? 'View Analysis' : 'Start Drive'} <ArrowRight className="ml-2 w-4 h-4" />
                                             </Button>
                                         </Link>
                                     </CardFooter>

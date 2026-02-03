@@ -424,7 +424,10 @@ export function AIInterviewRunner({ interviewType, companyName, onFinish }: AIIn
                             size="lg"
                             className="bg-slate-900 text-white hover:bg-slate-800 px-8 rounded-xl shadow-xl shadow-slate-200"
                             disabled={!micPermission || !camPermission}
-                            onClick={() => setCurrentStage('READING')}
+                            onClick={() => {
+                                console.log("Start Assessment clicked. Moving to READING stage.");
+                                setCurrentStage('READING');
+                            }}
                         >
                             Start Assessment <ArrowRight className="w-5 h-5 ml-2" />
                         </Button>
