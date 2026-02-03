@@ -45,6 +45,6 @@ export async function processAudioChunk(formData: FormData, testId: string, comp
 
     } catch (error) {
         console.error("Audio processing error:", error);
-        return { success: false, error: "Failed to process audio" };
+        return { success: false, error: error instanceof Error ? error.message : "Failed to process audio" };
     }
 }

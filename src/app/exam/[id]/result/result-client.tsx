@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2, XCircle, ArrowRight, Home, ChevronDown, ChevronUp, AlertCircle, Terminal, ListFilter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Confetti from '@/components/ui/confetti';
+import { toast } from "sonner";
 
 interface ResultClientProps {
     result: any; // Type accurately if possible
@@ -14,18 +15,49 @@ interface ResultClientProps {
 
 export default function ResultClient({ result }: ResultClientProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { score, total, details, test } = result;
     const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
     // Verdict logic might be stored or calculated. 
     // Assuming passed if > 60%
     const isPassed = percentage >= 60;
+    const justFinished = searchParams.get('justFinished') === 'true';
 
     const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
     const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
+    const [redirectTimer, setRedirectTimer] = useState<number | null>(null);
 
     useEffect(() => {
         setWindowSize({ width: window.innerWidth, height: window.innerHeight });
     }, []);
+
+    // Auto-redirect logic
+    useEffect(() => {
+        if (justFinished) {
+            let timeLeft = 5;
+            setRedirectTimer(timeLeft);
+
+            const timer = setInterval(() => {
+                timeLeft -= 1;
+                setRedirectTimer(timeLeft);
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    // Exit strict mode if active
+                    if (document.fullscreenElement) {
+                        try {
+                            document.exitFullscreen().catch(e => console.error(e));
+                        } catch (e) { console.error(e); }
+                    }
+                    router.push(`/exam/${test.id}/dashboard`);
+                }
+            }, 1000);
+
+            toast.info("Test Completed! Redirecting to dashboard in 5 seconds...");
+
+            return () => clearInterval(timer);
+        }
+    }, [justFinished, router, test.id]);
+
 
     const handleProceed = () => {
         router.push(`/exam/${test.id}/dashboard`);
@@ -38,6 +70,14 @@ export default function ResultClient({ result }: ResultClientProps) {
             {isPassed && windowSize.width > 0 && <Confetti width={windowSize.width} height={windowSize.height} />}
 
             <div className="max-w-5xl mx-auto space-y-8">
+
+                {/* Redirect Banner */}
+                {justFinished && redirectTimer !== null && (
+                    <div className="bg-blue-600 text-white px-4 py-2 rounded-lg text-center font-bold animate-pulse">
+                        Redirecting to Dashboard in {redirectTimer}s...
+                    </div>
+                )}
+
 
                 {/* Hero Section */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
