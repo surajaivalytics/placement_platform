@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+const Judge0_IP=process.env.JUDGE0_SERVER_IP;
+
 export async function POST(req: Request) {
   try {
     const { problemId, userCode, language, languageId } = await req.json();
@@ -22,7 +24,7 @@ export async function POST(req: Request) {
     let fullcode = drivers[language];
     fullcode = fullcode.replace("{{USER_CODE}}", userCode);
 
-    // 1. Raw Text Formatting for Stdin
+   
     const formattedStdin = testCases.map((tc: any) => tc.input.trim()).join("\n");
 
     const submissions = [
@@ -33,8 +35,8 @@ export async function POST(req: Request) {
       },
     ];
 
-    // 2. Send to Judge0
-    const response = await fetch("http://135.235.192.49:2358/submissions/batch?base64_encoded=true", {
+
+    const response = await fetch(`${Judge0_IP}/submissions/batch?base64_encoded=true`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ submissions }),
@@ -48,7 +50,7 @@ export async function POST(req: Request) {
       let attempts = 0;
       const MAX_ATTEMPTS = 20;
       while (attempts < MAX_ATTEMPTS) {
-        const poll = await fetch(`http://135.235.192.49:2358/submissions/batch?tokens=${tokens}&base64_encoded=true`);
+        const poll = await fetch(`${Judge0_IP}/submissions/batch?tokens=${tokens}&base64_encoded=true`);
         const data = await poll.json();
         if (data.submissions) {
           const allDone = data.submissions.every((s: any) => s.status && s.status.id > 2);
@@ -62,7 +64,7 @@ export async function POST(req: Request) {
 
     const finalSubmission = await pollbatch(tokens);
 
-    // 4. Comparison & Processing Logic
+    
     if (finalSubmission.stdout) {
       const decodedOutput = Buffer.from(finalSubmission.stdout, "base64").toString().trim().replace(/\r/g, "");
       const actualOutputs = decodedOutput.split("\n");
@@ -87,7 +89,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Return Error if no stdout (Compile Error / Runtime Error)
+ 
     return NextResponse.json({
       success: false,
       status: finalSubmission.status,
