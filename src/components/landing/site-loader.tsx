@@ -32,11 +32,11 @@ export function SiteLoader() {
                             transition={{ duration: 0.5 }}
                             className="relative"
                         >
-                            <div className="w-20 h-20 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                                <Spinner size={40} className="text-blue-600" />
+                            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                <Spinner size={40} className="text-primary" />
                             </div>
                             <motion.div
-                                className="absolute inset-0 rounded-2xl border-2 border-blue-600/30"
+                                className="absolute inset-0 rounded-2xl border-2 border-primary/30"
                                 animate={{ rotate: 180 }}
                                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
                             />
@@ -46,16 +46,16 @@ export function SiteLoader() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="text-2xl font-bold tracking-tight text-foreground"
+                            className="text-2xl font-black tracking-tighter text-foreground"
                         >
-                            Aivalytics
+                            AiValytics
                         </motion.h1>
 
                         <motion.div
                             className="h-1 w-32 bg-muted overflow-hidden rounded-full mt-2"
                         >
                             <motion.div
-                                className="h-full bg-blue-600"
+                                className="h-full bg-primary"
                                 initial={{ x: "-100%" }}
                                 animate={{ x: "100%" }}
                                 transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}

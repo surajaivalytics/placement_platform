@@ -534,9 +534,9 @@ export function PlacementMCQTest({
             <span className="text-slate-500 font-bold tracking-tight">Progress</span>
             <span className="text-slate-800 font-bold">{answeredCount} / {questions.length} answered</span>
           </div>
-          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner ring-1 ring-slate-200/50">
             <div 
-              className="h-full bg-slate-300 transition-all duration-500 ease-out rounded-full"
+              className="h-full bg-[#5D5FEF] transition-all duration-700 ease-out rounded-full shadow-[0_0_12px_rgba(93,95,239,0.4)]"
               style={{ width: `${(answeredCount / questions.length) * 100}%` }}
             />
           </div>
@@ -546,10 +546,10 @@ export function PlacementMCQTest({
       <main className="max-w-7xl mx-auto w-full flex-1">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Sidebar - Question Map */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 h-full">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Questions</h2>
+          {/* Left Sidebar - Question Map & Camera */}
+          <div className="lg:col-span-3 space-y-6 sticky top-6">
+            <div className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-500">
+              <h2 className="text-xl font-bold text-slate-800 mb-6 font-sans">Questions</h2>
               <div className="grid grid-cols-4 gap-3">
                 {questions.map((q, idx) => {
                   const isAnswered = answers[q.id];
@@ -560,21 +560,49 @@ export function PlacementMCQTest({
                       key={q.id}
                       onClick={() => handleJumpToQuestion(idx)}
                       className={`
-                        aspect-square rounded-[12px] text-lg font-bold transition-all duration-200
+                        aspect-square rounded-[12px] text-lg font-bold transition-all duration-500 transform relative overflow-hidden
                         ${isCurrent 
-                          ? 'bg-white text-[#5D5FEF] ring-2 ring-[#5D5FEF] shadow-md z-10' 
+                          ? 'bg-white text-[#5D5FEF] ring-2 ring-[#5D5FEF] shadow-lg scale-110 z-10' 
                           : isAnswered 
-                          ? 'bg-green-500 text-white shadow-sm' 
-                          : 'bg-[#E2E8F0] text-slate-500 hover:bg-slate-300'
+                          ? 'bg-emerald-500 text-white shadow-md hover:bg-emerald-600 hover:shadow-xl hover:scale-105' 
+                          : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 hover:shadow-md hover:scale-105'
                         }
                       `}
                     >
-                      {idx + 1}
+                      {/* Shimmer effect on hover */}
+                      {!isCurrent && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+                      )}
+                      <span className="relative z-10">{idx + 1}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
+
+            {/* Camera Preview in Sidebar */}
+            {cameraStatus === 'ready' && stream && (
+              <div className="bg-white rounded-[32px] p-4 shadow-sm border border-slate-100 overflow-hidden group">
+                <div className="relative aspect-video rounded-[24px] overflow-hidden bg-slate-900 shadow-2xl ring-1 ring-slate-200">
+                  <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md text-white text-[10px] px-3 py-1.5 rounded-full font-bold uppercase tracking-widest flex items-center gap-2 border border-white/10">
+                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                    Live Feed
+                  </div>
+                  <video 
+                    ref={previewVideoRef} 
+                    className="h-full w-full object-cover transform scale-x-[-1] transition-transform duration-700 group-hover:scale-110" 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                </div>
+                <div className="mt-4 flex items-center justify-center gap-2 py-1">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">Proctoring Active</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Main Question Area */}
@@ -582,15 +610,18 @@ export function PlacementMCQTest({
             <div className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 flex flex-col min-h-[500px]">
               {/* Question Header */}
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-bold text-slate-800">Question {currentQuestion + 1}</h3>
-                <span className="bg-[#F3E8FF] text-[#A855F7] px-4 py-1.5 rounded-full text-sm font-bold lowercase">
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-bold text-slate-800">Question {currentQuestion + 1}</h3>
+                  <div className="h-1 w-12 bg-[#5D5FEF] rounded-full" />
+                </div>
+                <span className="bg-[#F3E8FF] text-[#A855F7] px-5 py-2 rounded-full text-xs font-extrabold uppercase tracking-wider border border-[#E9D5FF]">
                   {currentQ.category || 'numerical'}
                 </span>
               </div>
 
               {/* Question Text Box */}
-              <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-[24px] p-8 mb-8">
-                <p className="text-xl text-slate-700 leading-relaxed font-medium">
+              <div className="bg-[#F8FAFC] border border-slate-100 rounded-[28px] p-10 mb-10 shadow-inner">
+                <p className="text-2xl text-slate-700 leading-relaxed font-medium">
                   {currentQ.text}
                 </p>
               </div>
@@ -606,25 +637,29 @@ export function PlacementMCQTest({
                       key={idx}
                       onClick={() => handleAnswer(option.text)}
                       className={`
-                        group w-full text-left p-6 rounded-[24px] border-2 transition-all duration-200
+                        group w-full text-left p-6 rounded-[24px] border-2 transition-all duration-300 transform
                         ${isSelected
-                          ? 'border-[#3B82F6] bg-white shadow-md'
-                          : 'border-slate-100 bg-white hover:border-slate-200'
+                          ? 'border-[#5D5FEF] bg-[#F5F3FF] shadow-lg -translate-y-0.5'
+                          : 'border-slate-50 bg-white hover:border-slate-200 hover:bg-slate-50/50'
                         }
                       `}
                     >
                       <div className="flex items-center gap-6">
                         <div className={`
-                          flex-none flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-200
+                          flex-none flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300
                           ${isSelected 
-                            ? 'border-[#3B82F6] bg-[#3B82F6]' 
-                            : 'border-slate-300'
+                            ? 'border-[#5D5FEF] bg-[#5D5FEF] shadow-md shadow-purple-200' 
+                            : 'border-slate-200 bg-white group-hover:border-slate-300'
                           }
                         `}>
-                          {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
+                          {isSelected ? (
+                            <div className="w-3.5 h-3.5 bg-white rounded-full scale-in-center" />
+                          ) : (
+                            <span className="text-sm font-bold text-slate-400 group-hover:text-slate-500">{label}</span>
+                          )}
                         </div>
-                        <div className="flex-1 text-lg font-bold text-slate-700">
-                          {label}. {option.text}
+                        <div className={`flex-1 text-lg font-bold transition-colors duration-300 ${isSelected ? 'text-[#5D5FEF]' : 'text-slate-600'}`}>
+                          {option.text}
                         </div>
                       </div>
                     </button>
@@ -638,25 +673,25 @@ export function PlacementMCQTest({
                   onClick={handlePrevious}
                   disabled={currentQuestion === 0}
                   variant="ghost"
-                  className="text-slate-500 font-bold hover:bg-slate-100 h-12 px-8 rounded-xl"
+                  className="text-slate-400 font-bold hover:bg-slate-100 hover:text-slate-700 h-14 px-8 rounded-2xl transition-all"
                 >
-                  Previous
+                  ← Previous
                 </Button>
 
                 <div className="flex items-center gap-4">
                   {currentQuestion === questions.length - 1 ? (
                     <Button
                       onClick={() => setShowSubmitConfirm(true)}
-                      className="bg-[#10B981] hover:bg-[#059669] text-white h-12 px-12 rounded-xl font-bold text-lg shadow-lg"
+                      className="bg-[#10B981] hover:bg-[#059669] text-white h-14 px-12 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-100 transition-all transform hover:-translate-y-1 active:scale-95"
                     >
-                      Submit Test
+                      Finish & Submit Test
                     </Button>
                   ) : (
                     <Button
                       onClick={handleNext}
-                      className="bg-[#5D5FEF] hover:bg-[#4A4CCF] text-white h-12 px-12 rounded-xl font-bold text-lg shadow-lg"
+                      className="bg-[#5D5FEF] hover:bg-[#4A4CCF] text-white h-14 px-12 rounded-2xl font-bold text-lg shadow-xl shadow-purple-100 transition-all transform hover:-translate-y-1 active:scale-95"
                     >
-                      Save & Next
+                      Save & Next →
                     </Button>
                   )}
                 </div>
@@ -668,45 +703,46 @@ export function PlacementMCQTest({
 
       {/* Confirmation Modal */}
       {showSubmitConfirm && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <Card className="max-w-md w-full rounded-[32px] border-none shadow-2xl overflow-hidden scale-in-center">
-            <CardHeader className="text-center pt-8">
-              <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-10 h-10 text-amber-600" />
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+          <Card className="max-w-lg w-full rounded-none border-none shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden scale-in-center">
+            <CardHeader className="text-center pt-12 pb-6 bg-white">
+              <div className="w-28 h-28 bg-amber-50 rounded-none flex items-center justify-center mx-auto mb-8 border-4 border-amber-200 shadow-2xl">
+                <AlertCircle className="w-16 h-16 text-amber-500" strokeWidth={3} />
               </div>
-              <CardTitle className="text-3xl font-bold text-slate-800">Submit Test?</CardTitle>
+              <CardTitle className="text-4xl font-black text-slate-900 tracking-tight">Submit Test?</CardTitle>
             </CardHeader>
-            <CardContent className="px-8 pb-8 space-y-8">
-              <p className="text-center text-slate-500 font-medium text-lg leading-relaxed">
-                You&apos;re about to submit your test. Once submitted, you cannot change your answers.
+            <CardContent className="px-12 pb-12 space-y-8 bg-white">
+              <p className="text-center text-slate-600 font-medium text-lg leading-relaxed">
+                You&apos;re about to submit your test. Once submitted, your score will be final and cannot be modified.
               </p>
               
-              <div className="flex justify-center gap-12 py-4 bg-slate-50 rounded-[24px]">
+              <div className="flex justify-center gap-12 py-8 bg-slate-50 rounded-none border-l-4 border-primary shadow-lg">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-[#3B82F6]">{answeredCount}</div>
-                  <div className="text-xs uppercase font-bold text-slate-400 tracking-wider">Answered</div>
+                  <div className="text-5xl font-black text-primary mb-2">{answeredCount}</div>
+                  <div className="text-[10px] uppercase font-black text-slate-500 tracking-[0.3em]">Answered</div>
                 </div>
+                <div className="w-[2px] bg-slate-200 my-2" />
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-300">{questions.length - answeredCount}</div>
-                  <div className="text-xs uppercase font-bold text-slate-400 tracking-wider">Remaining</div>
+                  <div className="text-5xl font-black text-slate-300 mb-2">{questions.length - answeredCount}</div>
+                  <div className="text-[10px] uppercase font-black text-slate-500 tracking-[0.3em]">Remaining</div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 <Button
                   onClick={handleSubmit}
-                  className="w-full h-14 rounded-2xl bg-[#10B981] hover:bg-[#059669] text-white font-bold text-xl shadow-lg"
+                  className="w-full h-16 rounded-none bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-2xl shadow-primary/20 transition-all duration-500 hover:-translate-y-1 hover:shadow-3xl uppercase tracking-wider border-b-4 border-primary/80"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Submitting...' : 'Yes, Submit Now'}
+                  {isSubmitting ? 'Submitting...' : 'Yes, Submit Test'}
                 </Button>
                 <Button
                   onClick={() => setShowSubmitConfirm(false)}
                   variant="ghost"
-                  className="w-full h-12 rounded-2xl font-bold text-slate-400 hover:text-slate-600"
+                  className="w-full h-14 rounded-none font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-all duration-300"
                   disabled={isSubmitting}
                 >
-                  Back to Test
+                  No, Keep Working
                 </Button>
               </div>
             </CardContent>
@@ -714,22 +750,6 @@ export function PlacementMCQTest({
         </div>
       )}
 
-      {/* Camera Preview */}
-      {cameraStatus === 'ready' && stream && (
-        <div className="fixed bottom-8 right-8 z-[60] w-72 aspect-video rounded-[24px] border-4 border-white shadow-2xl overflow-hidden proctoring-feed">
-          <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 rounded-full font-bold uppercase tracking-widest flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-            Camera
-          </div>
-          <video 
-            ref={previewVideoRef} 
-            className="h-full w-full object-cover grayscale-[0.1]" 
-            autoPlay 
-            playsInline 
-            muted 
-          />
-        </div>
-      )}
       {/* Violation Warning Modal */}
       <ViolationWarningModal
         isOpen={showWarningModal}

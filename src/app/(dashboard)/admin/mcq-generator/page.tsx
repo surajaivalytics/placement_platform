@@ -76,7 +76,14 @@ export default function MCQGeneratorPage() {
             toast.success("MCQs Generated Successfully!");
         } catch (error: any) {
             console.error("Client Error:", error);
-            toast.error(error.message);
+            
+            // Check if it's a quota error and show a more helpful message
+            const errorMsg = error.message || String(error);
+            if (errorMsg.includes("Quota") || errorMsg.includes("quota") || errorMsg.includes("429")) {
+                toast.error(errorMsg, { duration: 10000 }); // Show for 10 seconds
+            } else {
+                toast.error(errorMsg);
+            }
         } finally {
             setIsLoading(false);
         }

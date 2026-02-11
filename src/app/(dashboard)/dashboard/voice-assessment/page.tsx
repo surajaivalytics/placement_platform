@@ -9,6 +9,7 @@ import { submitVoiceAssessment } from '@/app/actions/voice-assessment';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from "@/lib/utils";
 
 const QUESTIONS = [
     {
@@ -43,11 +44,7 @@ export default function VoiceAssessmentPage() {
     const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    // const { toast } = useToast(); -> Removed
     const [result, setResult] = useState<any>(null);
-
-    // ... (Implementation of recording logic, timer, submission)
-    // Due to length, I will separate the logic into hook or keep it here if simple.
 
     // Start Recording
     const startRecording = async () => {
@@ -85,7 +82,7 @@ export default function VoiceAssessmentPage() {
 
         } catch (err) {
             console.error("Error accessing mic:", err);
-            toast.error("Microphone Access Denied", { description: "Please allow microphone access to continue." });
+            toast.error("Access Denied", { description: "Microphone registration failed. Please verify hardware permissions." });
         }
     };
 
@@ -102,41 +99,10 @@ export default function VoiceAssessmentPage() {
         if (currentQuestionIndex < QUESTIONS.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
         } else {
-            submitAllRecordings();
+            finishAssessment();
         }
     };
 
-    const submitAllRecordings = async () => {
-        setStep('processing');
-
-        // In a real scenario, we might want to merge the blobs or user the last one
-        // For this prototype, let's assume we send the LAST recording (or we need to change logic to send all)
-        // The prompt implies "For each response". But currently our server action analyzes ONE file.
-        // Simplifying: We will stitch them or just send the last/main one for evaluation demo.
-        // BETTER: Send the LAST one (Reading Task) or merge them? 
-        // Requirement says: "Evaluate EACH parameter independently".
-        // I made `recordings` an array. I should merge them or pick one.
-        // For Wipro standard, usually it's one continuous or segmented. 
-        // Let's MERGE them conceptually (client side merging is hard without ffmpeg).
-        // WORKAROUND: Send the longest one or key one (Self Intro).
-        // OR: Update backend to accept multiple. 
-        // Let's assume we send the first one (Self Intro) for now as it has most unexpected speech.
-        // Wait, the prompt lists 3 questions. 
-        // Let's update `submitVoiceAssessment` to probably handle the "Reading Task" for Pronunciation best, and "Intro" for Fluency.
-        // For this MVP, I will only send the LAST recording (Reason: simplistic).
-        // NO, that's bad. 
-        // I will modify the client to Record ONE long session? No, separate is better.
-        // I will pick the FIRST recording (Intro) for now to test.
-
-        // ADJUSTMENT: I'll capture the *last* standard blob available in state from the `onstop`. 
-        // Since `setRecordings` is async, we might not have it immediately in this function scope if called from onstop.
-        // Handled by `useEffect` or waiting.
-
-        // Actually, `handleNextQuestion` calls `submitAllRecordings`.
-        // Let's change flow: `stopRecording` updates state. Effect triggers submission if finished.
-    };
-
-    // ... (Effect for submission when recordings.length === questions.length)
     useEffect(() => {
         if (recordings.length === QUESTIONS.length && step === 'assessment') {
             finishAssessment();
@@ -145,8 +111,6 @@ export default function VoiceAssessmentPage() {
 
     const finishAssessment = async () => {
         setStep('processing');
-        // Create a single blob from all parts? Or just one?
-        // Let's send the first one for simplicity for now to validation.
         const finalBlob = recordings[0];
         const formData = new FormData();
         formData.append('audio', finalBlob, 'recording.webm');
@@ -156,7 +120,7 @@ export default function VoiceAssessmentPage() {
             setResult(res.data);
             setStep('result');
         } else {
-            toast.error("Submission Failed", { description: res.error });
+            toast.error("Transmission Error", { description: res.error });
             setStep('instructions');
             setRecordings([]);
             setCurrentQuestionIndex(0);
@@ -164,42 +128,75 @@ export default function VoiceAssessmentPage() {
     };
 
     return (
-        <div className="container mx-auto p-4 max-w-4xl min-h-screen py-10">
-            <AnimatePresence mode="wait">
+        <div className="max-w-6xl mx-auto space-y-12 pb-20 animate-in fade-in duration-1000">
+            {/* ---------- Header ---------- */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16 px-6">
+                <div className="space-y-4">
+                    <p className="text-primary font-black uppercase tracking-[0.3em] text-[10px]">Acoustic Analysis</p>
+                    <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter leading-none">Voice <span className="text-primary italic">Engine</span></h1>
+                    <p className="text-gray-500 font-medium text-lg mt-4 max-w-2xl">High-precision linguistic audit based on institutional proficiency standards.</p>
+                </div>
+            </div>
 
+            <AnimatePresence mode="wait">
                 {step === 'instructions' && (
-                    <motion.div key="instructions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <Card className="border-none shadow-xl bg-white/50 backdrop-blur-sm">
-                            <CardHeader>
-                                <CardTitle className="text-3xl text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                                    Voice Assessment
-                                </CardTitle>
-                                <CardDescription className="text-center text-lg">Wipro Standard Proficiency Test</CardDescription>
+                    <motion.div key="instructions" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="px-6">
+                        <Card className="rounded-none border-0 shadow-2xl overflow-hidden aivalytics-card">
+                            <CardHeader className="p-12 border-b border-gray-50 bg-[#f0f9f8]/30">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-16 h-16 bg-primary text-white flex items-center justify-center rounded-none shadow-xl shadow-primary/20">
+                                        <Volume2 className="w-8 h-8" />
+                                    </div>
+                                    <div>
+                                        <p className="text-primary font-black uppercase tracking-[0.3em] text-[10px] mb-1">Pre-Audit Briefing</p>
+                                        <CardTitle className="text-3xl font-black text-gray-900 tracking-tighter">Evaluation Protocols</CardTitle>
+                                    </div>
+                                </div>
                             </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="p-4 bg-blue-50 rounded-xl">
-                                        <h3 className="font-semibold text-blue-700 mb-2">Instructions</h3>
-                                        <ul className="list-disc ml-4 text-gray-600 space-y-1">
-                                            <li>Ensure you are in a quiet room.</li>
-                                            <li>Speaking time: 45-60 seconds per answer.</li>
-                                            <li>Speak naturally and clearly.</li>
-                                            <li>3 Sections: Intro, Reasoning, Reading.</li>
+                            <CardContent className="p-12 space-y-12">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-1.5 h-6 bg-primary" />
+                                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Environment Checks</h3>
+                                        </div>
+                                        <ul className="space-y-4">
+                                            {[
+                                                'Zero-decibel background noise environment required.',
+                                                'Standardized hardware (Microphone) verification.',
+                                                'Natural linguistic rhythm and tonal consistency.',
+                                                'Institutional reading and reasoning segments.'
+                                            ].map((text, i) => (
+                                                <li key={i} className="flex items-start gap-4 group">
+                                                    <div className="w-5 h-5 bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/30 transition-colors">
+                                                        <div className="w-1.5 h-1.5 bg-gray-200 group-hover:bg-primary transition-colors" />
+                                                    </div>
+                                                    <span className="text-gray-500 font-medium text-sm leading-relaxed">{text}</span>
+                                                </li>
+                                            ))}
                                         </ul>
                                     </div>
-                                    <div className="p-4 bg-purple-50 rounded-xl">
-                                        <h3 className="font-semibold text-purple-700 mb-2">Evaluation Criteria</h3>
-                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                                            <div>• Fluency</div>
-                                            <div>• Pronunciation</div>
-                                            <div>• Pace (WPM)</div>
-                                            <div>• Clarity</div>
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-1.5 h-6 bg-primary" />
+                                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Parameter Matrix</h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {['Fluency', 'Enunciation', 'WPM Velocity', 'Clarity Index'].map((label, i) => (
+                                                <div key={i} className="p-6 border border-gray-50 bg-gray-50/30 group hover:bg-white hover:border-primary/20 transition-all duration-500 shadow-sm">
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 group-hover:text-primary transition-colors">Indicator 0{i + 1}</p>
+                                                    <p className="font-black text-gray-900 tracking-tight">{label}</p>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex justify-center mt-8">
-                                    <Button onClick={() => setStep('assessment')} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-6 rounded-full text-lg shadow-lg hover:shadow-xl transition-all">
-                                        Start Assessment <ChevronRight className="ml-2" />
+                                <div className="pt-12 border-t border-gray-50 flex justify-center">
+                                    <Button 
+                                        onClick={() => setStep('assessment')} 
+                                        className="h-20 px-16 rounded-none bg-gray-900 text-white hover:bg-black font-black uppercase tracking-[0.3em] text-[12px] shadow-2xl transition-all hover:-translate-y-2 border-b-4 border-primary"
+                                    >
+                                        Initialize Engine <ChevronRight className="ml-4 w-5 h-5" />
                                     </Button>
                                 </div>
                             </CardContent>
@@ -208,50 +205,59 @@ export default function VoiceAssessmentPage() {
                 )}
 
                 {step === 'assessment' && (
-                    <motion.div key="assessment" initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -50, opacity: 0 }}>
-                        <Card className="border-none shadow-xl overflow-hidden">
-                            <div className="h-2 bg-gray-100 w-full">
+                    <motion.div key="assessment" initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -50, opacity: 0 }} className="px-6">
+                        <Card className="rounded-none border-0 shadow-2xl overflow-hidden aivalytics-card">
+                            <div className="h-2 bg-gray-50 w-full overflow-hidden">
                                 <motion.div
-                                    className="h-full bg-blue-600"
+                                    className="h-full bg-primary"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${((currentQuestionIndex) / QUESTIONS.length) * 100}%` }}
+                                    transition={{ duration: 0.8, ease: "circOut" }}
                                 />
                             </div>
-                            <CardHeader className="text-center pb-2">
-                                <Badge variant="outline" className="w-fit mx-auto mb-2 text-blue-600 border-blue-200">
-                                    Question {currentQuestionIndex + 1} of {QUESTIONS.length}
+                            <CardHeader className="p-12 text-center pb-6">
+                                <Badge className="mx-auto mb-6 rounded-none bg-primary/10 text-primary border-primary/20 px-6 py-2 font-black uppercase tracking-[0.3em] text-[9px] shadow-none">
+                                    Module {currentQuestionIndex + 1} of {QUESTIONS.length}
                                 </Badge>
-                                <CardTitle className="text-2xl">{QUESTIONS[currentQuestionIndex].title}</CardTitle>
+                                <CardTitle className="text-4xl font-black text-gray-900 tracking-tighter">{QUESTIONS[currentQuestionIndex].title}</CardTitle>
                             </CardHeader>
-                            <CardContent className="flex flex-col items-center space-y-8 pt-6">
-                                <div className="w-full max-w-2xl bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center">
-                                    <p className="text-xl text-gray-800 leading-relaxed font-medium">
-                                        {QUESTIONS[currentQuestionIndex].text}
+                            <CardContent className="flex flex-col items-center space-y-16 p-12 pt-6">
+                                <div className="w-full max-w-3xl bg-gray-50 p-12 rounded-none border-l-[10px] border-primary shadow-inner text-center relative">
+                                    <div className="absolute top-4 right-6 text-[10px] font-black text-gray-200 uppercase tracking-[0.4em]">Audit Text</div>
+                                    <p className="text-2xl text-gray-900 leading-tight font-black tracking-tighter">
+                                        "{QUESTIONS[currentQuestionIndex].text}"
                                     </p>
                                 </div>
 
-                                <div className="flex flex-col items-center justify-center space-y-4">
+                                <div className="flex flex-col items-center justify-center space-y-8">
                                     {!isRecording ? (
-                                        <Button
-                                            onClick={startRecording}
-                                            className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-red-200 shadow-xl transition-transform hover:scale-105"
-                                        >
-                                            <Mic size={32} />
-                                        </Button>
+                                        <div className="relative group">
+                                            <div className="absolute inset-0 bg-primary/20 blur-2xl group-hover:bg-primary/40 transition-all duration-700" />
+                                            <Button
+                                                onClick={startRecording}
+                                                className="w-32 h-32 rounded-none bg-gray-900 hover:bg-black text-white shadow-2xl transition-all hover:-translate-y-2 border-b-8 border-primary relative z-10 flex items-center justify-center"
+                                            >
+                                                <Mic size={48} className="text-primary" />
+                                            </Button>
+                                        </div>
                                     ) : (
                                         <div className="flex flex-col items-center">
-                                            <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center animate-pulse mb-4">
-                                                <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center">
-                                                    <Square size={24} className="text-white fill-current" onClick={stopRecording} />
-                                                </div>
+                                            <div className="w-32 h-32 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 relative">
+                                                <div className="absolute inset-0 bg-primary/5 animate-pulse" />
+                                                <Button 
+                                                    onClick={stopRecording}
+                                                    className="w-24 h-24 rounded-none bg-red-600 hover:bg-red-700 text-white shadow-2xl transition-all flex items-center justify-center border-b-4 border-red-900"
+                                                >
+                                                    <Square size={32} className="fill-current" />
+                                                </Button>
                                             </div>
-                                            <span className="text-red-500 font-mono font-medium text-xl">
+                                            <div className="px-10 py-4 bg-gray-900 text-white rounded-none font-black text-3xl tracking-widest shadow-2xl border-l-[6px] border-primary">
                                                 00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
-                                            </span>
+                                            </div>
                                         </div>
                                     )}
-                                    <p className="text-gray-400 text-sm">
-                                        {isRecording ? 'Recording... Tap square to stop' : 'Tap microphone to start answer'}
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] italic">
+                                        {isRecording ? 'Acoustic Transmission Active' : 'Initialize registration sequence'}
                                     </p>
                                 </div>
                             </CardContent>
@@ -260,55 +266,66 @@ export default function VoiceAssessmentPage() {
                 )}
 
                 {step === 'processing' && (
-                    <motion.div key="processing" className="flex flex-col items-center justify-center min-h-[400px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <div className="w-24 h-24 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-8" />
-                        <h2 className="text-2xl font-semibold text-gray-800">Analyzing Voice Parameters...</h2>
-                        <p className="text-gray-500 mt-2">Checking Fluency, Pronunciation & Pace</p>
+                    <motion.div key="processing" className="flex flex-col items-center justify-center min-h-[500px] px-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <div className="w-32 h-32 bg-gray-900 flex items-center justify-center relative shadow-2xl border-b-8 border-primary overflow-hidden">
+                           <div className="absolute inset-0 bg-primary opacity-20 animate-pulse" />
+                           <RefreshCcw className="w-12 h-12 text-primary animate-spin" />
+                        </div>
+                        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mt-12">Linguistics <span className="text-primary italic">Processing</span></h2>
+                        <p className="text-gray-400 font-bold uppercase tracking-[0.3em] text-xs mt-4">Auditing Phonemes, Resonance & Cadence Velocity</p>
                     </motion.div>
                 )}
 
                 {step === 'result' && result && (
-                    <motion.div key="result" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                        <Card className="border-none shadow-2xl">
-                            <CardHeader className="text-center border-b border-gray-100 bg-gray-50/50">
-                                <div className="mb-4 flex justifying-center">
+                    <motion.div key="result" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="px-6">
+                        <Card className="rounded-none border-0 shadow-2xl overflow-hidden aivalytics-card">
+                            <CardHeader className="p-12 text-center border-b border-gray-50 bg-gray-50/30">
+                                <div className="mb-10 flex justify-center">
                                     {result.isPassed ? (
-                                        <div className="mx-auto bg-green-100 text-green-700 px-6 py-2 rounded-full font-bold text-lg flex items-center gap-2">
-                                            <CheckCircle size={20} /> PASSED
-                                        </div>
+                                        <Badge className="rounded-none bg-primary text-white border-0 px-10 py-4 font-black uppercase tracking-[0.5em] text-xs shadow-2xl shadow-primary/30 flex gap-4">
+                                            <CheckCircle size={18} /> Credentials Verified
+                                        </Badge>
                                     ) : (
-                                        <div className="mx-auto bg-red-100 text-red-700 px-6 py-2 rounded-full font-bold text-lg flex items-center gap-2">
-                                            <AlertCircle size={20} /> FAILED
-                                        </div>
+                                        <Badge variant="destructive" className="rounded-none bg-gray-900 text-white border-0 px-10 py-4 font-black uppercase tracking-[0.5em] text-xs shadow-2xl flex gap-4">
+                                            <AlertCircle size={18} /> Audit Deficiency
+                                        </Badge>
                                     )}
                                 </div>
-                                <CardTitle className="text-4xl text-gray-800">{Math.round(result.totalScore)}<span className="text-base text-gray-400 font-normal">/100</span></CardTitle>
-                                <CardDescription>Overall Proficiency Score</CardDescription>
+                                <p className="text-primary font-black uppercase tracking-[0.3em] text-[10px] mb-2">Overall Compliance Rating</p>
+                                <CardTitle className="text-8xl font-black text-gray-900 tracking-tighter leading-none">{Math.round(result.totalScore)}<span className="text-2xl text-gray-400 font-medium tracking-widest ml-4">/ 100</span></CardTitle>
                             </CardHeader>
-                            <CardContent className="p-8">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <ScoreItem label="Fluency" score={result.fluencyScore} color="bg-blue-500" />
-                                    <ScoreItem label="Pronunciation" score={result.pronunciationScore} color="bg-purple-500" />
-                                    <ScoreItem label="Pace (WPM)" score={result.paceScore} color="bg-indigo-500" />
-                                    <ScoreItem label="Clarity" score={result.clarityScore} color="bg-pink-500" />
+                            <CardContent className="p-12">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                                    <ScoreItem label="Lingual Fluency" score={result.fluencyScore} color="bg-primary" />
+                                    <ScoreItem label="Enunciation" score={result.pronunciationScore} color="bg-primary" />
+                                    <ScoreItem label="Cadence (WPM)" score={result.paceScore} color="bg-primary" />
+                                    <ScoreItem label="Clarity Index" score={result.clarityScore} color="bg-primary" />
                                 </div>
 
                                 {result.status === 'HUMAN_REVIEW_PENDING' && (
-                                    <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm text-center">
-                                        ⚠️ Low Confidence Score ({result.confidenceScore}%). This result has been flagged for Human Review.
+                                    <div className="mt-16 p-10 bg-gray-900 border-l-[10px] border-primary text-white space-y-4">
+                                        <div className="flex items-center gap-4">
+                                            <AlertCircle className="w-8 h-8 text-primary" />
+                                            <h4 className="font-black uppercase tracking-[0.2em] text-sm">Review Flag Active</h4>
+                                        </div>
+                                        <p className="text-gray-400 font-bold text-sm tracking-widest leading-relaxed uppercase">
+                                            Confidence parameters below institutional threshold ({result.confidenceScore}%). Record archived for administrative oversight.
+                                        </p>
                                     </div>
                                 )}
 
-                                <div className="mt-8 flex justify-center">
-                                    <Button onClick={() => { setStep('instructions'); setCurrentQuestionIndex(0); setRecordings([]); }} variant="outline" className="gap-2">
-                                        <RefreshCcw size={16} /> Retry Assessment
+                                <div className="mt-16 flex justify-center">
+                                    <Button 
+                                        onClick={() => { setStep('instructions'); setCurrentQuestionIndex(0); setRecordings([]); }} 
+                                        className="h-16 px-12 rounded-none border border-gray-100 bg-white hover:bg-gray-50 text-gray-900 font-black uppercase tracking-widest text-[10px] transition-all flex gap-4 shadow-sm"
+                                    >
+                                        <RefreshCcw size={16} className="text-primary" /> Re-Initialize Engine
                                     </Button>
                                 </div>
                             </CardContent>
                         </Card>
                     </motion.div>
                 )}
-
             </AnimatePresence>
         </div>
     );
@@ -316,12 +333,22 @@ export default function VoiceAssessmentPage() {
 
 function ScoreItem({ label, score, color }: { label: string, score: number, color: string }) {
     return (
-        <div className="space-y-2">
-            <div className="flex justify-between items-end">
-                <span className="font-medium text-gray-600">{label}</span>
-                <span className="font-bold text-gray-900">{score}<span className="text-gray-400 text-xs">/25</span></span>
+        <div className="space-y-6">
+            <div className="space-y-2">
+                <p className="font-black text-gray-900 tracking-tighter text-xl">{label}</p>
+                <div className="flex justify-between items-end">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Audit Score</span>
+                    <span className="font-black text-gray-900 text-sm tracking-widest">{score}<span className="text-gray-300 font-medium italic ml-1">/ 25</span></span>
+                </div>
             </div>
-            <Progress value={(score / 25) * 100} className="h-3" indicatorClassName={color} />
+            <div className="h-2 bg-gray-50 border border-gray-100 rounded-none overflow-hidden">
+                <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(score / 25) * 100}%` }}
+                    transition={{ duration: 1.5, ease: "circOut", delay: 0.5 }}
+                    className={cn("h-full", color)} 
+                />
+            </div>
         </div>
-    )
+    );
 }

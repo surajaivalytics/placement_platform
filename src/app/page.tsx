@@ -6,7 +6,7 @@ import { ArrowRight, CheckCircle2, Star, Shield, Zap, Target, BookOpen, Clock, T
 import { Navbar } from "@/components/landing/navbar";
 import { SiteLoader } from "@/components/landing/site-loader";
 import { ScrollAnimation } from "@/components/landing/scroll-animation";
-import LifeAtCollage from "@/components/landing/life-at-collage";
+import LifeAtAiValytics from "@/components/landing/life-at-aivalytics";
 import MentorsSection from "@/components/landing/mentors-section";
 import SubjectsGrid from "@/components/landing/subjects-grid";
 import { WhyChooseUsSlideshow } from "@/components/landing/why-choose-us-slideshow";
@@ -17,57 +17,49 @@ import { JourneyLine } from "@/components/landing/journey-line";
 
 export default function Home() {
   return (
-    <div className="bg-[#020617] min-h-screen font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="bg-white min-h-screen font-sans selection:bg-primary/30 selection:text-primary">
       <SiteLoader />
       <Navbar />
 
-      <main className="relative bg-[#020617] min-h-screen overflow-hidden">
-        <BackgroundBeams />
-        {/* <JourneyLine /> */}
+      <main className="relative bg-white min-h-screen overflow-hidden">
+        {/* HERO SECTION - RE-DESIGNED FOR AiValytics */}
+        <section className="relative pt-44 pb-20 lg:pt-56 lg:pb-40 bg-[#f0f9f8] overflow-hidden">
+          {/* Background Decorative Blobs */}
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] -mr-64 -mt-64 animate-blob" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[100px] -ml-40 -mb-40 animate-blob animation-delay-2000" />
 
-        {/* HERO SECTION (Image 1) */}
-        <section className="relative pt-20 pb-20 lg:pt-32 lg:pb-32">
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="container mx-auto px-8 relative z-10">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20">
               {/* Left Content */}
-              <div className="w-full lg:w-[600px] space-y-8 text-center lg:text-left">
+              <div className="w-full lg:w-[650px] space-y-8 text-center lg:text-left transition-all duration-700">
                 <ScrollAnimation>
-                  <h1 className="text-5xl lg:text-[3.5rem] font-[900] text-white leading-[1.05] tracking-tight">
-                    <span className="text-emerald-600">Aivalytics </span>Aptitude
-                    <br />
-                    Simplified!!!
+                  <p className="text-primary font-black uppercase tracking-[0.3em] text-sm mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    Welcome to AiValytics
+                  </p>
+                  <h1 className="text-5xl lg:text-7xl font-black text-gray-900 leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                    Best Online Education <br />
+                    <span className="text-primary bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">Expertise</span>
                   </h1>
 
-                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 lg:gap-4 mt-8">
-                    {["Aptitude", "Coding", "Interview Prep", "New Age Skills"].map((item) => (
-                      <div key={item} className="flex items-center gap-2 text-gray-400 font-semibold text-sm">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-lg lg:text-xl text-gray-500 font-medium leading-relaxed max-w-xl mt-8 animate-in fade-in slide-in-from-bottom-12 duration-1200">
+                    Far far away, behind the word mountains, far from the countries 
+                    Vokalia and Consonantia, there live the blind texts.
+                  </p>
 
-                  <div className="pt-10">
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mt-12 animate-in fade-in slide-in-from-bottom-16 duration-1400">
                     <Link href="/signup">
-                      <Button size="lg" className="rounded-2xl px-12 h-16 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xl shadow-xl shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95">
-                        Sign Up for Free
+                      <Button size="lg" className="rounded-none px-10 h-16 bg-primary hover:bg-primary/90 text-white font-black text-sm uppercase tracking-widest shadow-2xl shadow-primary/20 transition-all duration-500 hover:-translate-y-2 hover:shadow-3xl hover:shadow-primary/30 active:scale-95 group relative overflow-hidden">
+                        <span className="relative z-10 flex items-center">
+                          Get Started Now! <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
+                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
                       </Button>
                     </Link>
-                  </div>
-
-                  {/* Trust Indicators */}
-                  <div className="flex items-center justify-center lg:justify-start gap-4 pt-12">
-                    <div className="flex -space-x-3">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="w-12 h-12 rounded-full border-4 border-white overflow-hidden shadow-sm">
-                          <img src={`https://i.pravatar.cc/150?u=${i}`} alt="User" />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-left">
-                      <p className="font-extrabold text-white leading-none">10 Million+</p>
-                      <p className="text-sm text-gray-400 font-medium">Monthly Active Learners</p>
-                    </div>
+                    <Link href="/courses">
+                      <Button size="lg" variant="outline" className="rounded-none px-10 h-16 border-white bg-white hover:bg-gray-50 text-primary font-black text-sm uppercase tracking-widest shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl active:scale-95 group border-2 hover:border-primary/20">
+                        View Course <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
+                      </Button>
+                    </Link>
                   </div>
                 </ScrollAnimation>
               </div>
@@ -75,33 +67,18 @@ export default function Home() {
               {/* Right Content - Visual Elements */}
               <div className="w-full lg:flex-1 relative">
                 <ScrollAnimation delay={0.2} className="relative z-10 flex justify-end">
-                  <div className="relative w-full max-w-[560px] rounded-xl ">
+                  <div className="relative w-full max-w-[650px]">
+                    {/* The image should look like the one in AiValytics */}
                     <img
-                      src="/images/image copy 2.png"
-                      alt="Student Success"
-                      className="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl"
+                      src="/images/image copy 2.png" 
+                      alt="AiValytics Student"
+                      className="w-full h-auto drop-shadow-[0_35px_60px_rgba(0,0,0,0.1)] rounded-[2rem] transform lg:translate-x-10 pointer-events-none transition-transform duration-700 hover:scale-105"
                     />
-
-                    {/* Floating Badges */}
-                    <div className="absolute top-0 -left-2 lg:-left-12 bg-white p-3 lg:p-4 rounded-3xl shadow-2xl border border-gray-100 flex items-center gap-3 lg:gap-4 animate-bounce duration-[3000ms]">
-                      <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-xl lg:text-2xl">🏆</div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Got Placed</p>
-                          <span className="bg-emerald-600 text-[8px] lg:text-[10px] text-white px-2 py-0.5 rounded-full font-bold">10 LPA</span>
-                        </div>
-                        <p className="text-xs lg:text-sm font-bold text-white">Mayur Jain</p>
-                      </div>
-                    </div>
-
-                    <div className="absolute bottom-12 -right-2 lg:-right-8 bg-white p-3 lg:p-4 rounded-3xl shadow-2xl border border-gray-100 flex items-center gap-3 lg:gap-4">
-                      <div className="text-right">
-                        <p className="text-lg lg:text-xl font-black text-white">4.5</p>
-                        <p className="text-[8px] lg:text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Google Reviews</p>
-                      </div>
-                      <div className="flex text-amber-400">
-                        <Star className="w-3 h-3 lg:w-4 lg:h-4 fill-current" />
-                      </div>
+                    
+                    {/* Floating Experience Badge */}
+                    <div className="absolute top-20 -left-10 lg:-left-20 bg-white p-6 rounded-[2rem] shadow-[0_20px_40px_rgba(0,0,0,0.08)] border border-gray-50 animate-float hover:shadow-[0_30px_60px_rgba(0,0,0,0.12)] transition-shadow duration-500 cursor-pointer group">
+                       <p className="text-4xl font-black text-primary group-hover:scale-110 transition-transform duration-300">15+</p>
+                       <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Years Experience</p>
                     </div>
                   </div>
                 </ScrollAnimation>
@@ -110,58 +87,59 @@ export default function Home() {
           </div>
         </section>
 
-        {/* COMPANY TICKER (New) */}
-        <CompanyTicker />
+        {/* COMPANY TICKER (Refined for light theme) */}
+        <div className="py-12 bg-white border-y border-gray-50 overflow-hidden">
+          <CompanyTicker />
+        </div>
 
-        {/* PREMIUM LEARNING SECTION (Image 2) */}
-        <section className="py-12 lg:py-16 relative" id="how-it-works">
-          {/* Subtle patterned background */}
-          <div className="absolute inset-0 opacity-[0.03] bg-[url('/grid-pattern.svg')] pointer-events-none" />
-
-          <div className="container mx-auto px-4">
+        {/* PREMIUM LEARNING SECTION - LIGHT THEME */}
+        <section className="py-24 lg:py-32 relative bg-white" id="how-it-works">
+          <div className="container mx-auto px-8">
             <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
               {/* Left Image Column */}
-              <div className="w-full lg:w-1/2 relative bg-white/50 backdrop-blur-sm p-4 rounded-[4rem] border border-white/40 shadow-xl">
+              <div className="w-full lg:w-1/2 relative">
                 <ScrollAnimation delay={0.1} className="relative">
-                  <div className="relative rounded-[3rem] overflow-hidden border-[12px] border-emerald-50/50 shadow-2xl rotate-[-2deg]">
+                  <div className="relative rounded-[3rem] overflow-hidden border-[12px] border-gray-50 shadow-[0_40px_80px_rgba(0,0,0,0.06)] group">
                     <img
                       src="/images/image copy.png"
-                      alt="Premium Experience"
-                      className="w-full h-auto"
+                      alt="Learning Experience"
+                      className="w-full h-auto transition-transform duration-700 group-hover:scale-110"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                   </div>
-                  {/* Background Decorative Frame */}
-                  <div className="absolute -inset-4 border-2 border-emerald-100 rounded-[3.5rem] -z-10 rotate-[1deg]"></div>
+                  {/* Decorative Elements */}
+                  <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+                  <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
                 </ScrollAnimation>
               </div>
 
               {/* Right Content Column */}
               <div className="w-full lg:w-[600px] space-y-10">
                 <ScrollAnimation>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-xs tracking-widest uppercase">
+                  <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-[10px] tracking-[0.2em] uppercase">
                     ✨ Premium Learning
                   </div>
-                  <h2 className="text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] pt-4">
-                    Master Your <span className="text-emerald-500">Career path </span> <br /> with AI
+                  <h2 className="text-5xl lg:text-7xl font-black text-gray-900 leading-[1.1] pt-6">
+                    Master Your <br />
+                    <span className="text-primary italic">Career Path</span> with AI
                   </h2>
-                  <p className="text-xl text-gray-300 leading-relaxed font-medium">
+                  <p className="text-lg lg:text-xl text-gray-500 leading-relaxed font-medium mt-6">
                     Unlock your potential with our AI-driven placement platform.
-                    We provide tailored resources, real-time feedback, and
-                    comprehensive analytics to help you crack the toughest interviews.
+                    Tailored resources, real-time feedback, and advanced analytics.
                   </p>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-10">
                     {[
-                      { title: "Personalized Roadmap", icon: <Target className="w-6 h-6 text-emerald-400" /> },
-                      { title: "Mock Interviews", icon: <MessageSquare className="w-6 h-6 text-emerald-400" /> },
-                      { title: "Real-time Analytics", icon: <TrendingUp className="w-6 h-6 text-emerald-400" /> },
-                      { title: "Expert Mentorship", icon: <Users className="w-6 h-6 text-emerald-400" /> },
+                      { title: "Personalized Roadmap", icon: <Target className="w-6 h-6 text-primary" />, color: "bg-primary/10" },
+                      { title: "Mock Interviews", icon: <MessageSquare className="w-6 h-6 text-blue-500" />, color: "bg-blue-50" },
+                      { title: "Real-time Analytics", icon: <TrendingUp className="w-6 h-6 text-orange-500" />, color: "bg-orange-50" },
+                      { title: "Expert Mentorship", icon: <Users className="w-6 h-6 text-emerald-500" />, color: "bg-emerald-50" },
                     ].map((feat) => (
-                      <div key={feat.title} className="flex items-center gap-4 p-5 rounded-3xl bg-[#0f172a]/80 backdrop-blur-md border border-gray-800 shadow-sm hover:shadow-md transition-shadow hover:border-emerald-500/50 group">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                      <div key={feat.title} className="flex items-center gap-5 p-6 rounded-[2rem] bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 hover:border-primary/30 group">
+                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-500 group-hover:scale-110 shadow-inner", feat.color)}>
                           {feat.icon}
                         </div>
-                        <span className="font-bold text-gray-200 group-hover:text-white transition-colors">{feat.title}</span>
+                        <span className="font-bold text-gray-800 text-sm tracking-tight">{feat.title}</span>
                       </div>
                     ))}
                   </div>
@@ -171,32 +149,34 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SUBJECTS GRID (New) */}
-        <SubjectsGrid />
+        {/* SUBJECTS GRID */}
+        <div className="bg-[#f0f9f8] py-24">
+           <SubjectsGrid />
+        </div>
 
-        {/* WHY CHOOSE US (Image 3) */}
-        <section className="py-12 lg:py-16 relative" id="features">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-50/30 to-transparent -z-10" />
-
-          <div className="container mx-auto px-4">
+        {/* WHY CHOOSE US - LIGHT REFINEMENT */}
+        <section className="py-24 lg:py-32 relative bg-white" id="features">
+          <div className="container mx-auto px-8">
             <div className="flex flex-col lg:flex-row gap-16 lg:gap-24">
-              {/* Left Column: Heading + Image */}
-              <div className="w-full lg:w-[700px] space-y-8">
+              {/* Left Column */}
+              <div className="w-full lg:w-[700px] space-y-10">
                 <ScrollAnimation>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs tracking-widest uppercase">
+                  <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-[10px] tracking-[0.2em] uppercase">
                     ★ Why Choose Us
                   </div>
-                  <h2 className="text-5xl lg:text-7xl font-extrabold text-white leading-[1.1] pt-4">
+                  <h2 className="text-5xl lg:text-7xl font-black text-gray-900 leading-[1.1] pt-6">
                     Experience the <br />
-                    <span className="text-emerald-600">Difference</span>
+                    <span className="text-primary italic">Difference</span>
                   </h2>
-                  <p className="text-xl text-gray-300 font-medium max-w-lg mt-6">
-                    Join a community of thousands of students achieving their career goals with our advanced, human-centric platform.
+                  <p className="text-xl text-gray-500 font-medium max-w-lg mt-8 leading-relaxed">
+                    Join a community of thousands of students achieving their career goals with our advanced engine.
                   </p>
                 </ScrollAnimation>
 
-                <ScrollAnimation delay={0.2} className="w-full">
-                  <WhyChooseUsSlideshow />
+                <ScrollAnimation delay={0.2} className="w-full pt-10">
+                  <div className="rounded-[3rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.04)]">
+                    <WhyChooseUsSlideshow />
+                  </div>
                 </ScrollAnimation>
               </div>
 
@@ -204,34 +184,18 @@ export default function Home() {
               <div className="w-full lg:w-1/2 pt-12 lg:pt-32">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   {[
-                    {
-                      title: "AI Analysis Engine",
-                      desc: "Real-time performance tracking and personalized roadmaps.",
-                      icon: <Shield className="w-8 h-8 text-emerald-600" />
-                    },
-                    {
-                      title: "Company Patterns",
-                      desc: "Exact test patterns for top MNCs like TCS & Infosys.",
-                      icon: <Zap className="w-8 h-8 text-emerald-600" />
-                    },
-                    {
-                      title: "Smart Feedback",
-                      desc: "Instant, actionable insights on your weak areas.",
-                      icon: <Star className="w-8 h-8 text-emerald-600" />
-                    },
-                    {
-                      title: "Real-Time Sims",
-                      desc: "Experience the actual pressure of exam environments.",
-                      icon: <Target className="w-8 h-8 text-emerald-600" />
-                    },
+                    { title: "AI Analysis Engine", icon: <Shield className="w-8 h-8 text-primary" />, desc: "Real-time performance tracking and personalized roadmaps." },
+                    { title: "Company Patterns", icon: <Zap className="w-8 h-8 text-amber-500" />, desc: "Exact test patterns for top MNCs like TCS & Infosys." },
+                    { title: "Smart Feedback", icon: <Star className="w-8 h-8 text-rose-500" />, desc: "Instant, actionable insights on your weak areas." },
+                    { title: "Real-Time Sims", icon: <Target className="w-8 h-8 text-indigo-500" />, desc: "Experience the actual pressure of exam environments." },
                   ].map((item, idx) => (
                     <ScrollAnimation key={idx} delay={idx * 0.1}>
-                      <div className="p-8 bg-white/5 backdrop-blur-md rounded-[2.5rem] border border-white/10 hover:border-emerald-500/30 transition-all h-full shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 group">
-                        <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-6 shadow-sm border border-white/10 group-hover:bg-emerald-500/20 group-hover:text-emerald-400 transition-colors">
+                      <div className="p-10 bg-white rounded-[2.5rem] border border-gray-100 hover:border-primary/30 transition-all duration-500 h-full shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-2xl hover:-translate-y-2 group">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-gray-50 flex items-center justify-center mb-8 border border-gray-100 group-hover:bg-primary group-hover:text-white transition-all duration-500">
                           {item.icon}
                         </div>
-                        <h4 className="text-xl font-bold text-white mb-3">{item.title}</h4>
-                        <p className="text-gray-400 font-medium leading-relaxed">{item.desc}</p>
+                        <h4 className="text-xl font-black text-gray-900 mb-4">{item.title}</h4>
+                        <p className="text-gray-500 font-medium leading-relaxed text-sm">{item.desc}</p>
                       </div>
                     </ScrollAnimation>
                   ))}
@@ -241,84 +205,79 @@ export default function Home() {
           </div>
         </section>
 
-        {/* MENTORS SECTION (New) */}
-        <MentorsSection />
+        {/* MENTORS SECTION */}
+        <div className="bg-[#f0f9f8] py-24">
+           <MentorsSection />
+        </div>
 
-        {/* CTA BANNER (Image 4) */}
-        <section className="py-16 mt-28 container mx-auto px-4 relative z-10">
+        {/* CTA BANNER - AiValytics COLOR */}
+        <section className="py-24 mt-20 container mx-auto px-8 relative z-10">
           <ScrollAnimation>
-            <div className="bg-emerald-600 rounded-[3.5rem] p-12 lg:p-16 relative overflow-hidden flex flex-col lg:flex-row items-center justify-between text-white shadow-2xl">
-              <div className="absolute top-0 right-0 w-96 h-48 bg-emerald-500/30 rounded-full blur-[80px] -mr-32 -mt-32"></div>
-
-              {/* Decorative circle */}
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-700/30 rounded-full mix-blend-multiply filter blur-3xl -ml-20 -mb-20"></div>
-
-              <div className="relative z-10 w-full lg:w-3/5 space-y-10 text-center lg:text-left">
-                <h2 className="text-5xl lg:text-6xl font-extrabold leading-[1.1]">
-                  Start Your Success <br />
-                  Story Today
+            <div className="bg-primary rounded-[4rem] p-16 lg:p-24 relative overflow-hidden flex flex-col lg:flex-row items-center justify-between text-white shadow-3xl">
+              <div className="absolute top-0 right-0 w-[800px] h-[400px] bg-white/10 rounded-full blur-[120px] -mr-64 -mt-64" />
+              
+              <div className="relative z-10 w-full lg:w-3/5 space-y-12 text-center lg:text-left">
+                <h2 className="text-5xl lg:text-7xl font-black leading-[1.05] tracking-tight">
+                  Start Your <br />
+                  Success Story <br />
+                  <span className="opacity-60 italic text-white/80">Today</span>
                 </h2>
-                <p className="text-xl lg:text-2xl text-emerald-100 font-medium max-w-lg mx-auto lg:mx-0">
-                  Join thousands of students who have cracked their dream companies with Aivalytics.
+                <p className="text-xl lg:text-2xl text-white/80 font-medium max-w-xl mx-auto lg:mx-0">
+                  Join thousands of students who have cracked their dream companies with AiValytics's advanced engine.
                 </p>
-                <div>
+                <div className="pt-6">
                   <Link href="/signup">
-                    <Button size="lg" className="rounded-2xl px-12 h-16 bg-white text-emerald-700 hover:bg-emerald-50 font-bold text-xl shadow-2xl shadow-black/10 transition-all hover:scale-105 active:scale-95">
+                    <Button size="lg" className="rounded-none px-14 h-20 bg-white text-primary hover:bg-gray-100 font-black text-lg uppercase tracking-[0.2em] shadow-2xl transition-all hover:-translate-y-1 active:scale-95">
                       Get Started Now
                     </Button>
                   </Link>
                 </div>
               </div>
 
-              <div className="w-full lg:w-2/5 mt-16 lg:-mt-10 relative flex justify-center ">
+              <div className="w-full lg:w-2/5 mt-20 lg:-mt-20 relative flex justify-center lg:justify-end ">
                 <img
                   src="/images/image.png"
-                  alt="Success Image"
-                  className="relative h-[250px] lg:h-[400px] w-auto object-contain z-10 scale-100 lg:scale-[1.6] translate-y-0 lg:translate-y-12 drop-shadow-2xl"
+                  alt="Student Success"
+                  className="relative h-[350px] lg:h-[600px] w-auto object-contain z-10 scale-125 lg:scale-[1.8] translate-y-10 lg:translate-x-10 drop-shadow-[0_50px_100px_rgba(0,0,0,0.3)]"
                 />
               </div>
             </div>
           </ScrollAnimation>
         </section>
 
-        {/* LIFE AT AIVALYTICS (Image 1 - Collage) */}
-        <LifeAtCollage />
+        <div className="pb-32">
+           <LifeAtAiValytics />
+        </div>
       </main>
 
-      {/* FOOTER (Image 5) */}
-      <footer className="bg-[#020617] text-white py-24 relative overflow-hidden">
-        {/* Background Decorative elements */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] -z-10" />
-
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
-            <div className="space-y-8">
-              <Link href="/" className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
-                  <Laptop className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-3xl font-black tracking-tight text-white">Aivalytics</span>
+      {/* FOOTER - LIGHT THEME */}
+      <footer className="bg-white text-gray-900 py-32 relative overflow-hidden border-t border-gray-100">
+        <div className="container mx-auto px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 lg:gap-12">
+            <div className="space-y-10">
+              <Link href="/" className="flex flex-col group">
+                <span className="text-3xl font-black text-gray-900 leading-none group-hover:text-primary transition-colors tracking-tighter">AiValytics</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mt-2">Online Education & Learning</span>
               </Link>
-              <p className="text-gray-400 font-medium leading-relaxed max-w-sm">
+              <p className="text-gray-500 font-medium leading-relaxed max-w-sm">
                 Empowering your career with AI-driven aptitude preparation, real-time analytics, and personalized mentorship.
               </p>
-              <div className="flex gap-4">
+              <div className="flex gap-4 pt-4">
                 {['facebook', 'twitter', 'instagram', 'linkedin'].map((social) => (
-                  <div key={social} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all cursor-pointer group">
-                    <Star className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <div key={social} className="w-12 h-12 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white hover:border-primary transition-all cursor-pointer group shadow-sm">
+                    <Star className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   </div>
                 ))}
               </div>
             </div>
 
-            <div>
-              <h5 className="text-xl font-bold text-white mb-8">Navigation</h5>
-              <ul className="space-y-4">
-                {['Home', 'Products', 'Features', 'About Us', 'Contact'].map((link) => (
+            <div className="lg:pl-10">
+              <h5 className="text-xl font-black text-gray-900 mb-10 uppercase tracking-widest text-sm">Navigation</h5>
+              <ul className="space-y-6">
+                {['Home', 'Courses', 'Team', 'About Us', 'Contact'].map((link) => (
                   <li key={link}>
-                    <Link href="#" className="text-gray-400 font-medium hover:text-emerald-400 transition-colors flex items-center gap-2 group">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 scale-0 group-hover:scale-100 transition-transform" />
+                    <Link href="#" className="text-gray-500 font-bold hover:text-primary transition-colors flex items-center gap-3 group uppercase tracking-widest text-xs">
+                      <div className="w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform" />
                       {link}
                     </Link>
                   </li>
@@ -327,12 +286,12 @@ export default function Home() {
             </div>
 
             <div>
-              <h5 className="text-xl font-bold text-white mb-8">Legal</h5>
-              <ul className="space-y-4">
+              <h5 className="text-xl font-black text-gray-900 mb-10 uppercase tracking-widest text-sm">Legal</h5>
+              <ul className="space-y-6">
                 {['Terms of Service', 'Privacy Policy', 'Cookie Policy', 'Refund Policy'].map((link) => (
                   <li key={link}>
-                    <Link href="#" className="text-gray-400 font-medium hover:text-emerald-400 transition-colors flex items-center gap-2 group">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 scale-0 group-hover:scale-100 transition-transform" />
+                    <Link href="#" className="text-gray-500 font-bold hover:text-primary transition-colors flex items-center gap-3 group uppercase tracking-widest text-xs">
+                      <div className="w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform" />
                       {link}
                     </Link>
                   </li>
@@ -340,30 +299,30 @@ export default function Home() {
               </ul>
             </div>
 
-            <div className="space-y-8">
-              <h5 className="text-xl font-bold text-white mb-8">Newsletter</h5>
-              <p className="text-gray-400 font-medium">Subscribe to get the latest updates and job alerts.</p>
+            <div className="space-y-10">
+              <h5 className="text-xl font-black text-gray-900 mb-10 uppercase tracking-widest text-sm">Newsletter</h5>
+              <p className="text-gray-500 font-medium leading-relaxed">Subscribe to get the latest updates and job alerts directly to your inbox.</p>
               <div className="relative group">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl px-6 font-medium text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full h-16 bg-gray-50 border border-gray-100 rounded-none px-6 font-bold text-gray-900 focus:outline-none focus:border-primary transition-colors placeholder:text-gray-400"
                 />
-                <button className="absolute right-2 top-2 bottom-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 rounded-xl font-bold transition-colors shadow-lg shadow-emerald-500/20">
+                <button className="absolute right-2 top-2 bottom-2 bg-primary hover:bg-primary/90 text-white px-8 rounded-none font-black transition-all shadow-xl shadow-primary/20 uppercase tracking-[0.2em] text-[10px]">
                   Join
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-24 pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
-            <p className="text-gray-400 font-medium text-sm">
-              © {new Date().getFullYear()} Aivalytics. Designed with passion for students.
+          <div className="mt-32 pt-12 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-10">
+            <p className="text-gray-400 font-bold text-xs uppercase tracking-[0.2em]">
+              © {new Date().getFullYear()} AiValytics. Powered by Students.
             </p>
-            <div className="flex gap-8 text-sm font-bold text-gray-400">
-              <Link href="#" className="hover:text-emerald-400 transition-colors uppercase tracking-widest">Support</Link>
-              <Link href="#" className="hover:text-emerald-400 transition-colors uppercase tracking-widest">Help Center</Link>
-              <Link href="#" className="hover:text-emerald-400 transition-colors uppercase tracking-widest">Security</Link>
+            <div className="flex gap-10 text-xs font-black text-gray-400 uppercase tracking-widest">
+              <Link href="#" className="hover:text-primary transition-colors">Support</Link>
+              <Link href="#" className="hover:text-primary transition-colors">Help Center</Link>
+              <Link href="#" className="hover:text-primary transition-colors">Security</Link>
             </div>
           </div>
         </div>

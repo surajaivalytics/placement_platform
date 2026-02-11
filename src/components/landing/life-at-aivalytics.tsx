@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ScrollAnimation } from './scroll-animation';
 import Image from 'next/image';
 
-const LifeAtCollage = () => {
+const LifeAtAiValytics = () => {
     return (
         <section className="py-24 bg-gray-900 overflow-hidden">
             <div className="container mx-auto px-4 mb-16">
@@ -54,18 +54,18 @@ const LifeAtCollage = () => {
                     </div>
                 </ScrollAnimation>
 
-                {/* PrepInsta - Top Mid-Right */}
+                {/* Innovation Lab - Top Mid-Right */}
                 <ScrollAnimation delay={0.2} className="md:col-span-1 md:row-span-1">
                     <div className="relative group overflow-hidden rounded-[2.5rem] h-[300px] md:h-full shadow-2xl border-4 border-gray-800">
                         <Image
                             src="/images/students_seminar.png"
-                            alt="PrepInsta"
+                            alt="Innovation Lab"
                             fill
                             className="object-cover transition-transform duration-1000 group-hover:scale-110"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                         <div className="absolute bottom-0 left-0 p-8">
-                            <h3 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">PrepInsta</h3>
+                            <h3 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Innovation Lab</h3>
                         </div>
                     </div>
                 </ScrollAnimation>
@@ -124,4 +124,4 @@ const LifeAtCollage = () => {
     );
 };
 
-export default LifeAtCollage;
+export default LifeAtAiValytics;
