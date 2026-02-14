@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         hostname: 'th.bing.com',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.freepik.com',
+        pathname: '**',
+      },
     ],
   },
 };
