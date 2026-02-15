@@ -31,8 +31,15 @@ export async function POST(req: Request) {
         const responsesData: any[] = [];
         let score = 0;
         let totalScore = 0;
+        const categoryResults: Record<string, { correct: number; total: number }> = {};
 
         questions.forEach(q => {
+            const category = "General";
+            if (!categoryResults[category]) {
+                categoryResults[category] = { correct: 0, total: 0 };
+            }
+            categoryResults[category].total++;
+
             const selectedOptionId = answers[q.id];
             const options: any[] = q.options as any[] || [];
             let isCorrect = false;
@@ -46,6 +53,7 @@ export async function POST(req: Request) {
             if (selectedOption?.isCorrect) {
                 isCorrect = true;
                 score += q.points;
+                categoryResults[category].correct++;
             }
             totalScore += q.points;
 

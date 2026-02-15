@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { executeCode, mapPistonToStatus } from '@/lib/piston';
+import { executeCode, mapPistonToStatus, PistonExecutionResult } from '@/lib/piston';
 import { generateCodingEvaluation } from '@/lib/assessment-ai';
 
 export async function POST(req: Request) {
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
         if (!question) return NextResponse.json({ error: 'Question not found' }, { status: 404 });
 
-        const metadata = question.codingMetadata as any || {};
+        const metadata = (question.codingMetadata as { testCases?: { input: string; output: string }[]; driverCode?: Record<string, string> }) || {};
         const testCases = metadata.testCases || [];
 
         // 2. Prepare Code for Execution
@@ -32,20 +32,20 @@ export async function POST(req: Request) {
         }
 
         // 3. Execute with Piston
-        let runResults: any[] = [];
+        let runResults: PistonExecutionResult[] = [];
         if (testCases.length === 0) {
             const result = await executeCode(fullcode, language, "");
             runResults.push(result);
         } else {
             // Execute all test cases in parallel
             runResults = await Promise.all(
-                testCases.map((tc: any) =>
+                testCases.map((tc: { input?: string | number }) =>
                     executeCode(fullcode, language, tc.input?.toString().trim() || "")
                 )
-            );
+            ) as PistonExecutionResult[];
         }
 
-        const passedCases = runResults.filter((res: any, index: number) => {
+        const passedCases = runResults.filter((res: PistonExecutionResult, index: number) => {
             const status = mapPistonToStatus(res);
             const stdout = res.run.stdout.trim();
             const expected = testCases[index]?.output?.toString().trim() || "";
@@ -54,6 +54,7 @@ export async function POST(req: Request) {
 
         const totalCases = Math.max(testCases.length, 1);
         const score = (passedCases / totalCases) * 100;
+        const isPassed = score >= 70;
 
         // Generate AI Evaluation
         const aiEvaluation = await generateCodingEvaluation(
@@ -146,7 +147,7 @@ export async function POST(req: Request) {
         }
 
         // Transform results for UI compatibility if needed
-        const formattedRunResults = runResults.map((res: any, index: number) => {
+        const formattedRunResults = runResults.map((res: PistonExecutionResult, index: number) => {
             const status = mapPistonToStatus(res);
             const stdout = res.run.stdout.trim();
             const expected = testCases[index]?.output?.toString().trim() || "";
@@ -169,8 +170,9 @@ export async function POST(req: Request) {
             results: formattedRunResults
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error('Coding Submit Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: errorMessage }, { status: 500 });
     }
 }

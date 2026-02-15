@@ -62,7 +62,7 @@ export default function TCSAdvancedTestPage() {
     loadTestData();
   }, [loadTestData]);
 
-  const handleSubmit = async (answers: Record<string, string>) => {
+  const handleSubmit = async (answers: Record<string, string>, proctoringData?: any) => {
     try {
       const res = await fetch(
         `/api/placements/${applicationId}/stage/advanced`,
@@ -74,6 +74,7 @@ export default function TCSAdvancedTestPage() {
             score: 0,
             total: questions.length,
             timeSpent: testDuration * 60,
+            proctoringData,
           }),
         }
       );
@@ -143,6 +144,7 @@ export default function TCSAdvancedTestPage() {
         testTitle="TCS Advanced Quantitative + Logical Test"
         onSubmit={handleSubmit}
         onTimeUp={() => alert('Time is up!')}
+        applicationId={applicationId}
       />
     </div>
   );

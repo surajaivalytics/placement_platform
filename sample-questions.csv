@@ -1,7 +1,0 @@
-Question,Option 1,Option 2,Option 3,Option 4,Correct Index
-What is 2+2?,3,4,5,6,2
-Capital of France?,London,Berlin,Madrid,Paris,4
-What is the time complexity of binary search?,O(n),O(log n),O(n^2),O(1),2
-Which data structure uses LIFO?,Queue,Stack,Array,Tree,2
-What is 15% of 200?,20,25,30,35,3
-If a train travels 120 km in 2 hours what is its speed?,50 km/h,60 km/h,70 km/h,80 km/h,2

@@ -62,7 +62,7 @@ export default function WiproAptitudeTestPage() {
     loadTestData();
   }, [loadTestData]);
 
-  const handleSubmit = async (answers: Record<string, string>) => {
+  const handleSubmit = async (answers: Record<string, string>, proctoringData?: any) => {
     try {
       const res = await fetch(
         `/api/placements/${applicationId}/stage/aptitude`,
@@ -71,9 +71,10 @@ export default function WiproAptitudeTestPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             answers,
-            score: 0,
+            score: 0, // Backend calculates this
             total: questions.length,
             timeSpent: testDuration * 60,
+            proctoringData, // Send proctoring violations
           }),
         }
       );
@@ -143,6 +144,7 @@ export default function WiproAptitudeTestPage() {
         testTitle="Wipro Aptitude Test"
         onSubmit={handleSubmit}
         onTimeUp={() => alert('Time is up!')}
+        applicationId={applicationId}
       />
     </div>
   );

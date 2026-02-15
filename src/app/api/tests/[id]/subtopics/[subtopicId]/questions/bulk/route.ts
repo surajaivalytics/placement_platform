@@ -42,10 +42,7 @@ export async function POST(
                             }
                         }
                     })
-                ),
-                {
-                    timeout: 20000 // Increase timeout to 20s per batch just in case
-                }
+                )
             );
 
             successCount += batch.length;

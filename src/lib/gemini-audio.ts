@@ -60,39 +60,32 @@ export async function analyzeVoiceRecording(audioBuffer: Buffer, mimeType: strin
         return response.text();
     };
 
-    // Try primary model then fallback
+    // Try primary model then fallback with proper model names
     try {
         try {
-            // Updated to use 2.0 flash as primary based on availability check
-            const text = await tryGenerate("gemini-2.0-flash");
+            // Primary: Use gemini-2.0-flash-exp (experimental)
+            const text = await tryGenerate("gemini-2.0-flash-exp");
             const jsonStr = text.replace(/```json|```/g, "").trim();
             return JSON.parse(jsonStr);
         } catch (e: any) {
-            console.warn("gemini-2.0-flash failed, trying gemini-1.5-flash...");
-            // Fallback to 1.5 flash
+            console.warn("gemini-2.0-flash-exp failed, trying gemini-1.5-flash...", e.message);
+
+            // Fallback 1: gemini-1.5-flash
             try {
-                const text = await tryGenerate("gemini-3-flash-preview");
+                const text = await tryGenerate("gemini-1.5-flash");
                 const jsonStr = text.replace(/```json|```/g, "").trim();
                 return JSON.parse(jsonStr);
-            } catch (innerE) {
-                // Fallback to 1.5 pro or latest
-                console.warn("gemini-1.5-flash failed, trying gemini-1.5-flash-latest...");
-                const text = await tryGenerate("gemini-3-flash-preview");
+            } catch (innerE: any) {
+                console.warn("gemini-1.5-flash failed, trying gemini-1.5-pro...", innerE.message);
+
+                // Fallback 2: gemini-1.5-pro (most reliable)
+                const text = await tryGenerate("gemini-1.5-pro");
                 const jsonStr = text.replace(/```json|```/g, "").trim();
                 return JSON.parse(jsonStr);
             }
         }
-    } catch (error) {
-        // Second fallback to Pro if Flash fails completely
-        try {
-            console.warn("Flash models failed, trying gemini-1.5-pro...");
-            const text = await tryGenerate("gemini-3-flash-preview");
-            const jsonStr = text.replace(/```json|```/g, "").trim();
-            return JSON.parse(jsonStr);
-        } catch (finalErr) {
-            console.error("All Gemini models failed:", finalErr);
-            console.error("All Gemini models failed:", finalErr);
-            throw new Error(`Failed to analyze voice recording: ${(finalErr as Error).message}`);
-        }
+    } catch (finalErr: any) {
+        console.error("All Gemini models failed:", finalErr);
+        throw new Error(`Voice analysis failed: ${finalErr.message || 'Unknown error'}. Please check your GEMINI_API_KEY.`);
     }
 }

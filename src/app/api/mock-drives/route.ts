@@ -33,7 +33,10 @@ export async function GET(req: Request) {
                     _avg: { durationMinutes: true }
                 }),
                 prisma.mockCompanyDrive.groupBy({
-                    by: ['companyName']
+                    by: ['companyName'],
+                    orderBy: {
+                        companyName: 'asc'
+                    }
                 })
             ])
         ]);

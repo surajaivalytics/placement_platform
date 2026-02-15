@@ -19,7 +19,7 @@ export async function POST(
         }
 
         const { id: testId, subtopicId } = await params;
-        const { answers, timeSpent } = await req.json();
+        const { answers, timeSpent, proctoringData } = await req.json();
 
         // Verify subtopic belongs to test
         const subtopic = await prisma.subtopic.findFirst({
@@ -87,6 +87,24 @@ export async function POST(
                 updatedAt: new Date(),
             },
         });
+
+        // Log proctoring violations if present
+        if (proctoringData?.violations?.length > 0) {
+            await Promise.all(
+                proctoringData.violations.map((v: any) =>
+                    prisma.monitoringEvent.create({
+                        data: {
+                            userId: session.user.id,
+                            eventType: `violation_${v.type}`,
+                            violationType: v.type,
+                            details: JSON.stringify(v.metadata || {}),
+                            timestamp: new Date(v.timestamp),
+                            testType: `subtopic_${subtopicId}`,
+                        }
+                    })
+                )
+            );
+        }
 
         return NextResponse.json({
             message: 'Subtopic test submitted successfully',

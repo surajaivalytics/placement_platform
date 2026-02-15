@@ -101,7 +101,7 @@ function SubtopicResultContent({
   const PerformanceIcon = performance.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 relative overflow-hidden">
+    <div className="min-h-screen bg-[#f8fcfb] relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse" />
@@ -200,13 +200,13 @@ function SubtopicResultContent({
                   transition={{ delay: 0.4 }}
                   className="text-center space-y-2"
                 >
-                  <p className="text-caption font-semibold uppercase tracking-wide opacity-90">
+                  <p className="text-[11px] font-bold uppercase tracking-wider opacity-90">
                     {performance.subtitle}
                   </p>
-                  <h1 className="text-h1 font-bold">
+                  <h1 className="text-4xl md:text-5xl font-black tracking-tighter">
                     {performance.title}
                   </h1>
-                  <p className="text-body opacity-90 max-w-2xl mx-auto">
+                  <p className="text-base opacity-90 max-w-2xl mx-auto leading-relaxed">
                     {performance.message}
                   </p>
                 </motion.div>
@@ -284,7 +284,7 @@ function SubtopicResultContent({
                       <TrendingUp className="w-4 h-4 text-green-500/30" />
                     </div>
                     <div className="text-3xl font-bold text-green-600 mb-1">{score}</div>
-                    <div className="text-caption text-gray-500 font-semibold uppercase tracking-wide">Correct Answers</div>
+                    <div className="text-caption text-gray-500 font-bold uppercase tracking-wider">Correct Answers</div>
                   </div>
                 </div>
 
@@ -297,7 +297,7 @@ function SubtopicResultContent({
                       <Zap className="w-4 h-4 text-blue-500/30" />
                     </div>
                     <div className="text-3xl font-bold text-blue-600 mb-1">{total}</div>
-                    <div className="text-caption text-gray-500 font-semibold uppercase tracking-wide">Total Questions</div>
+                    <div className="text-caption text-gray-500 font-bold uppercase tracking-wider">Total Questions</div>
                   </div>
                 </div>
 
@@ -310,7 +310,7 @@ function SubtopicResultContent({
                       <Star className={`w-4 h-4 ${performance.textColor} opacity-30`} />
                     </div>
                     <div className={`text-3xl font-bold ${performance.textColor} mb-1`}>{Math.round(percentage)}%</div>
-                    <div className="text-caption text-gray-500 font-semibold uppercase tracking-wide">Accuracy Rate</div>
+                    <div className="text-caption text-gray-500 font-bold uppercase tracking-wider">Accuracy Rate</div>
                   </div>
                 </div>
               </motion.div>
@@ -323,8 +323,8 @@ function SubtopicResultContent({
                 className="mb-8"
               >
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-caption text-gray-500 font-semibold uppercase tracking-wide">Performance</span>
-                  <span className={`text-ui font-semibold ${performance.textColor}`}>{Math.round(percentage)}%</span>
+                  <span className="text-caption text-gray-500 font-bold uppercase tracking-wider">Performance</span>
+                  <span className={`text-base font-bold ${performance.textColor}`}>{Math.round(percentage)}%</span>
                 </div>
                 <div className="h-2 w-full bg-gray-100 rounded-none overflow-hidden shadow-inner">
                   <motion.div
@@ -352,7 +352,7 @@ function SubtopicResultContent({
                 <Button
                   onClick={() => router.push(`/dashboard/test/${testId}/subtopics`)}
                   variant="outline"
-                  className="h-12 rounded-none border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-gray-900 text-ui-sm font-semibold uppercase tracking-wide shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg flex items-center justify-center gap-2"
+                  className="h-11 rounded-none border border-gray-200 bg-white hover:bg-gray-50 hover:border-primary/30 hover:text-primary text-gray-900 text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md flex items-center justify-center gap-2"
                 >
                   <List className="w-4 h-4" />
                   All Subtopics
@@ -360,14 +360,14 @@ function SubtopicResultContent({
                 <Button
                   onClick={() => router.push(`/dashboard/test/${testId}/subtopic/${subtopicId}`)}
                   variant="outline"
-                  className="h-12 rounded-none border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 text-blue-600 text-ui-sm font-semibold uppercase tracking-wide shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg flex items-center justify-center gap-2"
+                  className="h-11 rounded-none border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 text-blue-600 text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" />
                   Retry Test
                 </Button>
                 <Button
                   onClick={() => router.push('/dashboard/topics')}
-                  className="h-12 rounded-none bg-gray-900 hover:bg-black text-white text-ui-sm font-semibold uppercase tracking-wide shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl border-b-2 border-primary flex items-center justify-center gap-2"
+                  className="h-11 rounded-none bg-gray-900 hover:bg-black text-white text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md border-b-2 border-primary flex items-center justify-center gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back to Topics
@@ -383,7 +383,7 @@ function SubtopicResultContent({
             transition={{ delay: 1.5 }}
             className="mt-6 text-center"
           >
-            <p className="text-body text-gray-500 italic">
+            <p className="text-base text-gray-500 italic">
               {isPassed 
                 ? "\"Success is the sum of small efforts repeated day in and day out.\"" 
                 : "\"The expert in anything was once a beginner. Keep learning!\""}
@@ -405,7 +405,7 @@ export default function SubtopicResultPage({
       <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-ui text-gray-500 font-semibold">Loading your results...</p>
+          <p className="text-base text-gray-500 font-bold">Loading your results...</p>
         </div>
       </div>
     }>

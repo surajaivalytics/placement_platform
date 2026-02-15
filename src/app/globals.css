@@ -32,8 +32,8 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 175 20% 90%;
-    --input: 175 20% 90%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 175 71% 41%;
 
     --radius: 0.5rem;
@@ -42,6 +42,15 @@
     --gradient-start: 175 71% 97%;
     --gradient-mid: 175 40% 99%;
     --gradient-end: 175 71% 95%;
+
+    /* Spacing scale for consistency */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    --spacing-3xl: 4rem;
   }
 
   .dark {
@@ -198,20 +207,20 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     font-size: 15px;
     font-weight: 400;
-    line-height: 1.6;
-    letter-spacing: -0.01em;
+    line-height: 1.65;
+    letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Typography System - Matching Prepinsta Style */
+  /* Typography System - Enhanced for Readability */
   h1,
   .text-h1 {
     font-family: 'Inter', sans-serif;
     font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
   }
 
   h2,
@@ -219,17 +228,17 @@
     font-family: 'Inter', sans-serif;
     font-size: 2rem;
     font-weight: 700;
-    line-height: 1.3;
-    letter-spacing: -0.02em;
+    line-height: 1.25;
+    letter-spacing: -0.022em;
   }
 
   h3,
   .text-h3 {
     font-family: 'Inter', sans-serif;
     font-size: 1.5rem;
-    font-weight: 600;
-    line-height: 1.4;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.018em;
   }
 
   h4,
@@ -238,7 +247,7 @@
     font-size: 1.25rem;
     font-weight: 600;
     line-height: 1.4;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   h5,
@@ -246,8 +255,8 @@
     font-family: 'Inter', sans-serif;
     font-size: 1.125rem;
     font-weight: 600;
-    line-height: 1.5;
-    letter-spacing: -0.01em;
+    line-height: 1.45;
+    letter-spacing: -0.012em;
   }
 
   h6,
@@ -388,9 +397,9 @@
   .aivalytics-card {
     background: white;
     border-radius: 0;
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
-    border: 1px solid hsl(var(--border) / 0.5);
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    border: 1px solid hsl(var(--border) / 0.6);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     position: relative;
   }
@@ -405,14 +414,14 @@
     height: 2px;
     background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
     opacity: 0;
-    transition: opacity 0.6s ease;
+    transition: opacity 0.5s ease;
   }
 
   .unstop-card:hover,
   .aivalytics-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 35px 70px -15px rgba(30, 178, 166, 0.18);
-    border-color: hsl(var(--primary) / 0.3);
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px -5px rgba(30, 178, 166, 0.12), 0 8px 10px -6px rgba(30, 178, 166, 0.08);
+    border-color: hsl(var(--primary) / 0.25);
   }
 
   .unstop-card:hover::before,
@@ -427,8 +436,8 @@
   }
 
   .card-hover:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 30px 60px -15px rgba(30, 178, 166, 0.2);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px -10px rgba(30, 178, 166, 0.15);
   }
 
   /* Progress bar */
@@ -449,32 +458,32 @@
 
   /* Smooth transitions */
   * {
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
   }
 
   /* Input focus glow effect */
   input,
   textarea,
   select {
-    caret-color: auto;
+    caret-color: hsl(var(--primary));
   }
 
   input:focus,
   textarea:focus,
   select:focus {
     outline: none;
-    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.2);
-    caret-color: auto;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    caret-color: hsl(var(--primary));
   }
 
   /* Button hover effects */
   button {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   button:hover {
-    transform: translateY(-0.5px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   button:active {
@@ -483,24 +492,24 @@
 
   /* Scrollbar styling */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: hsl(var(--muted) / 0.3);
-    border-radius: 10px;
+    background: hsl(var(--muted) / 0.2);
+    border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, hsl(var(--primary) / 0.6), hsl(var(--primary) / 0.8));
-    border-radius: 10px;
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.5), hsl(var(--primary) / 0.7));
+    border-radius: 4px;
     border: 2px solid hsl(var(--background));
-    transition: background 0.3s ease;
+    transition: background 0.25s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, hsl(var(--primary) / 0.8), hsl(var(--primary)));
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.7), hsl(var(--primary) / 0.9));
   }
 }
 

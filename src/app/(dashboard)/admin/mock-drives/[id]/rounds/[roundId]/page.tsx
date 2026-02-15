@@ -340,10 +340,10 @@ export default function RoundQuestionsPage() {
                                                         )}
                                                     </CardContent>
                                                     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                                        <Button variant="white" size="icon" className="h-8 w-8 shadow-sm border border-slate-200 rounded-lg" onClick={() => handleEditQuestion(question)} title="Edit Question">
-                                                            <Pencil className="w-4 h-4 text-slate-600" />
+                                                        <Button variant="outline" size="icon" className="h-8 w-8 shadow-sm border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" onClick={() => handleEditQuestion(question)} title="Edit Question">
+                                                            <Pencil className="w-4 h-4" />
                                                         </Button>
-                                                        <Button variant="white" size="icon" className="h-8 w-8 shadow-sm border border-slate-200 rounded-lg hover:border-red-200 hover:bg-red-50" onClick={() => handleDeleteQuestion(question.id)} title="Delete Question">
+                                                        <Button variant="outline" size="icon" className="h-8 w-8 shadow-sm border border-slate-200 rounded-lg hover:border-red-200 hover:bg-red-50 group/btn transition-colors" onClick={() => handleDeleteQuestion(question.id)} title="Delete Question">
                                                             <Trash2 className="w-4 h-4 text-slate-400 group-hover/btn:text-red-500" />
                                                         </Button>
                                                     </div>

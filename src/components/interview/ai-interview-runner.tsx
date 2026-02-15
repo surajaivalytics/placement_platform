@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Play, ShieldAlert, BadgeCheck, Volume2, ArrowRight, CheckCircle2, AlertCircle, MonitorPlay, Download, AlertTriangle, Loader2 } from "lucide-react";
@@ -44,6 +45,8 @@ export function AIInterviewRunner({
     enrollmentId,
     roundId
 }: AIInterviewRunnerProps) {
+    const router = useRouter();
+    const params = useParams();
     // --- Constants ---
     const READING_PASSAGES = [
         "Artificial Intelligence is revolutionizing the way we work and live. From consistent automation to complex problem-solving, AI systems are becoming integral to modern industry. However, ethical considerations regarding privacy and bias remain paramount.",

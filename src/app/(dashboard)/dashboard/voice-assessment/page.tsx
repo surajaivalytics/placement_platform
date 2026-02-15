@@ -41,28 +41,88 @@ export default function VoiceAssessmentPage() {
     const [isRecording, setIsRecording] = useState(false);
     const [timeLeft, setTimeLeft] = useState(0);
     const [recordings, setRecordings] = useState<Blob[]>([]);
-    const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const isProcessingRef = useRef(false);
     const [result, setResult] = useState<any>(null);
+
+    // Cleanup function to stop all recording resources
+    const cleanupRecording = () => {
+        // Stop timer
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+
+        // Stop MediaRecorder
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            try {
+                mediaRecorderRef.current.stop();
+            } catch (e) {
+                console.error('Error stopping MediaRecorder:', e);
+            }
+            mediaRecorderRef.current = null;
+        }
+
+        // Stop all media tracks
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => {
+                track.stop();
+            });
+            streamRef.current = null;
+        }
+
+        setIsRecording(false);
+    };
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            cleanupRecording();
+        };
+    }, []);
 
     // Start Recording
     const startRecording = async () => {
+        // Prevent starting if already recording
+        if (isRecording || mediaRecorderRef.current) {
+            console.warn('Recording already in progress');
+            return;
+        }
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            streamRef.current = stream;
+            
             const mediaRecorder = new MediaRecorder(stream);
             mediaRecorderRef.current = mediaRecorder;
             const chunks: Blob[] = [];
 
             mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) chunks.push(e.data);
+                if (e.data.size > 0) {
+                    chunks.push(e.data);
+                }
             };
 
             mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-                setRecordings(prev => [...prev, audioBlob]);
-                setAudioChunks([]);
+                // Create blob only if we have chunks
+                if (chunks.length > 0) {
+                    const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+                    setRecordings(prev => [...prev, audioBlob]);
+                }
+                
+                // Cleanup
+                cleanupRecording();
+                
+                // Move to next question
                 handleNextQuestion();
+            };
+
+            mediaRecorder.onerror = (event) => {
+                console.error('MediaRecorder error:', event);
+                toast.error("Recording Error", { description: "Audio recording failed. Please try again." });
+                cleanupRecording();
             };
 
             mediaRecorder.start();
@@ -82,16 +142,27 @@ export default function VoiceAssessmentPage() {
 
         } catch (err) {
             console.error("Error accessing mic:", err);
-            toast.error("Access Denied", { description: "Microphone registration failed. Please verify hardware permissions." });
+            toast.error("Access Denied", { description: "Microphone permission denied. Please allow microphone access." });
+            cleanupRecording();
         }
     };
 
     const stopRecording = () => {
-        if (mediaRecorderRef.current && isRecording) {
+        // Guard: only stop if actually recording
+        if (!isRecording || !mediaRecorderRef.current) {
+            return;
+        }
+
+        // Guard: only stop if not already stopped
+        if (mediaRecorderRef.current.state === 'inactive') {
+            return;
+        }
+
+        try {
             mediaRecorderRef.current.stop();
-            setIsRecording(false);
-            if (timerRef.current) clearInterval(timerRef.current);
-            mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        } catch (e) {
+            console.error('Error stopping recording:', e);
+            cleanupRecording();
         }
     };
 
@@ -99,31 +170,55 @@ export default function VoiceAssessmentPage() {
         if (currentQuestionIndex < QUESTIONS.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
         } else {
+            // All questions done, trigger finish
             finishAssessment();
         }
     };
 
-    useEffect(() => {
-        if (recordings.length === QUESTIONS.length && step === 'assessment') {
-            finishAssessment();
-        }
-    }, [recordings, step]);
+    // Remove the useEffect that was causing duplicate submissions
+    // We'll handle submission directly in handleNextQuestion
 
     const finishAssessment = async () => {
-        setStep('processing');
-        const finalBlob = recordings[0];
-        const formData = new FormData();
-        formData.append('audio', finalBlob, 'recording.webm');
+        // Prevent duplicate submissions
+        if (isProcessingRef.current) {
+            console.warn('Already processing submission');
+            return;
+        }
 
-        const res = await submitVoiceAssessment(formData);
-        if (res.success) {
-            setResult(res.data);
-            setStep('result');
-        } else {
-            toast.error("Transmission Error", { description: res.error });
+        // Guard: need at least one recording
+        if (recordings.length === 0) {
+            toast.error("No Recording", { description: "Please record at least one answer." });
+            return;
+        }
+
+        isProcessingRef.current = true;
+        setStep('processing');
+
+        try {
+            // Use the first recording (or combine if needed)
+            const finalBlob = recordings[0];
+            const formData = new FormData();
+            formData.append('audio', finalBlob, 'recording.webm');
+
+            const res = await submitVoiceAssessment(formData);
+            
+            if (res.success) {
+                setResult(res.data);
+                setStep('result');
+            } else {
+                toast.error("Submission Failed", { description: res.error || "Please try again." });
+                setStep('instructions');
+                setRecordings([]);
+                setCurrentQuestionIndex(0);
+                isProcessingRef.current = false;
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            toast.error("Network Error", { description: "Failed to submit assessment. Please check your connection." });
             setStep('instructions');
             setRecordings([]);
             setCurrentQuestionIndex(0);
+            isProcessingRef.current = false;
         }
     };
 

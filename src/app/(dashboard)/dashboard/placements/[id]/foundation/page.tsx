@@ -65,7 +65,7 @@ export default function TCSFoundationTestPage() {
     loadTestData();
   }, [loadTestData]);
 
-  const handleSubmit = async (answers: Record<string, string>) => {
+  const handleSubmit = async (answers: Record<string, string>, proctoringData?: any) => {
     try {
       // Calculate score by checking answers
       // Note: We don't have correct answers on client side, backend will validate
@@ -79,6 +79,7 @@ export default function TCSFoundationTestPage() {
             score: 0, // Backend will calculate actual score
             total: questions.length,
             timeSpent: testDuration * 60,
+            proctoringData,
           }),
         }
       );
@@ -152,6 +153,7 @@ export default function TCSFoundationTestPage() {
         testTitle="TCS Foundation Test"
         onSubmit={handleSubmit}
         onTimeUp={handleTimeUp}
+        applicationId={applicationId}
       />
     </div>
   );
