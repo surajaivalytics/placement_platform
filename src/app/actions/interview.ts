@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { InterviewContext, getAIInterviewResponse } from '@/lib/interview-ai';
 
 export async function generateQuestion(context: InterviewContext): Promise<{ question: string }> {
     try {
