@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle, CardHeader, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Trash2, Download, Upload, FileText, Check, Pencil, Search, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Download, Upload, FileText, Check, Pencil, Search, Loader2, ShieldCheck, CheckCircle2, MonitorPlay, Timer } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QuestionForm } from '@/components/admin/question-form';
@@ -340,10 +340,10 @@ export default function RoundQuestionsPage() {
                                                         )}
                                                     </CardContent>
                                                     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                                        <Button variant="white" size="icon" className="h-8 w-8 shadow-sm border border-slate-200 rounded-lg" onClick={() => handleEditQuestion(question)} title="Edit Question">
+                                                        <Button variant="outline" size="icon" className="h-8 w-8 shadow-sm border border-slate-200 rounded-lg bg-white hover:bg-slate-50" onClick={() => handleEditQuestion(question)} title="Edit Question">
                                                             <Pencil className="w-4 h-4 text-slate-600" />
                                                         </Button>
-                                                        <Button variant="white" size="icon" className="h-8 w-8 shadow-sm border border-slate-200 rounded-lg hover:border-red-200 hover:bg-red-50" onClick={() => handleDeleteQuestion(question.id)} title="Delete Question">
+                                                        <Button variant="outline" size="icon" className="h-8 w-8 shadow-sm border border-slate-200 rounded-lg bg-white hover:border-red-200 hover:bg-red-50" onClick={() => handleDeleteQuestion(question.id)} title="Delete Question">
                                                             <Trash2 className="w-4 h-4 text-slate-400 group-hover/btn:text-red-500" />
                                                         </Button>
                                                     </div>
@@ -449,4 +449,3 @@ function InterviewSettings({ round, onSave }: { round: any, onSave: (metadata: a
     );
 }
 
-import { ShieldCheck, CheckCircle2, MonitorPlay, Timer } from 'lucide-react';

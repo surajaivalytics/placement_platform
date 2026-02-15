@@ -32,7 +32,7 @@ export async function POST(
                             subtopicId: subtopicId,
                             text: q.text,
                             type: q.type || 'multiple-choice',
-                            marks: q.marks || 1, // Default marks
+                            marks: Number(q.marks) || 1, // Default marks
                             metadata: q.metadata,
                             options: {
                                 create: q.options?.map((o: any) => ({
@@ -42,10 +42,7 @@ export async function POST(
                             }
                         }
                     })
-                ),
-                {
-                    timeout: 20000 // Increase timeout to 20s per batch just in case
-                }
+                )
             );
 
             successCount += batch.length;

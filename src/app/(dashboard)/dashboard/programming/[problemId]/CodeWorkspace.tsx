@@ -10,12 +10,12 @@ import {
   Lock, Trophy, ListChecks, Timer as TimerIcon, Layers
 } from 'lucide-react';
 import { Spinner } from "@/components/ui/loader";
-import { LANGUAGES, LangaugeKey } from '@/config/languages';
+import { LANGUAGES, LanguageKey } from '@/config/languages';
 import ReactMarkdown from 'react-markdown';
 
 export default function CodeWorkspace({ problem }: any) {
   const router = useRouter();
-  const [language, setLanguage] = useState<LangaugeKey>("cpp");
+  const [language, setLanguage] = useState<LanguageKey>("cpp");
   const [code, setCode] = useState("");
   const [results, setResults] = useState<any[] | null>(null);
   const [executionMeta, setExecutionMeta] = useState<any>(null);
@@ -160,7 +160,7 @@ export default function CodeWorkspace({ problem }: any) {
         <div className="flex items-center gap-3">
           <select
             value={language}
-            onChange={(e) => setLanguage(e.target.value as LangaugeKey)}
+            onChange={(e) => setLanguage(e.target.value as LanguageKey)}
             className="px-2.5 py-1 text-xs font-bold rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-transparent outline-none cursor-pointer"
           >
             {Object.entries(LANGUAGES).map(([key, lang]) => <option key={key} value={key}>{lang.label}</option>)}

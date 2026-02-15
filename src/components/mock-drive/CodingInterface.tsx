@@ -522,7 +522,7 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
                                     const saved = userCodeMap[q.id];
                                     if (saved) {
                                         setCode(saved.code);
-                                        setLanguage(saved.language);
+                                        setLanguage(saved.language as LanguageKey);
                                     } else {
                                         // Fallback
                                         const qLang = (q.codingMetadata as any)?.language || 'python';

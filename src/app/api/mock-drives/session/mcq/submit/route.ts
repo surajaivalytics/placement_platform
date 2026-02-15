@@ -62,6 +62,10 @@ export async function POST(req: Request) {
         const normalizedScore = percentage;
         const isPassed = percentage >= 70;
 
+        const categoryResults: Record<string, { correct: number; total: number }> = {};
+        // Simplified category results for evaluation
+        categoryResults['General'] = { correct: score, total: totalScore };
+
         // Generate AI Evaluation
         const aiEvaluation = await generateMCQEvaluation(
             percentage,

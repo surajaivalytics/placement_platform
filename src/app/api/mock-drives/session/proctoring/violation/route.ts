@@ -6,7 +6,8 @@ import { prisma } from '@/lib/prisma';
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const userId = (session?.user as any)?.id;
+        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const { enrollmentId, roundId, type, message } = await req.json();
 
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
         if (progress) {
             // Append to feedback or just increment a count if we had one.
             // For now, let's just log it. In a real system, we'd have a ProctoringViolation model.
-            console.log(`[PROCTORING VIOLATION] User ${session.user.id}, Type: ${type}, Msg: ${message}`);
+            console.log(`[PROCTORING VIOLATION] User ${userId}, Type: ${type}, Msg: ${message}`);
 
             // We could potentially update the progress with a warning count if the schema allowed.
             // As of now, schema has: status, score, totalQuestions, answeredQuestions, aiFeedback.
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
             await prisma.mockRoundProgress.update({
                 where: { id: progress.id },
                 data: {
-                    proctoringLogs: (progress.proctoringLogs ? progress.proctoringLogs + '\n' : '') + `[${new Date().toISOString()}] ${type}: ${message}`
+                    proctoringLogs: `${progress.proctoringLogs || ''}\n[${new Date().toISOString()}] ${type}: ${message}`.trim()
                 }
             });
         }
