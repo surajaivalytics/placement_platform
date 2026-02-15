@@ -126,7 +126,7 @@ const SidebarContent = ({
   const userLinks = [
     { href: "/dashboard", label: "Home", icon: LayoutDashboard },
     { href: "/dashboard/topics", label: "Curriculum", icon: BookOpen },
-    { href: "/dashboard/mock-tests", label: "Simulations", icon: MonitorPlay },
+    { href: "/placement/mock-drives", label: "Simulations", icon: MonitorPlay },
     { href: "/dashboard/interview-suite", label: "AI Interview", icon: Mic },
     { href: "/dashboard/voice-assessment", label: "Voice Engine", icon: AudioLines },
     { href: "/dashboard/programming", label: "Compiler", icon: Code },
@@ -141,7 +141,7 @@ const SidebarContent = ({
     { href: "/admin/problems", label: "Registry", icon: FileQuestion },
     { href: "/admin/tests", label: "Curriculum", icon: GraduationCap },
     { href: "/admin/subtopics", label: "Modules", icon: BookOpen },
-    { href: "/admin/mock-tests", label: "Drives", icon: MonitorPlay },
+    { href: "/admin/mock-drives", label: "Drives", icon: MonitorPlay },
     { href: "/admin/users", label: "Members", icon: Users },
     { href: "/admin/analytics", label: "Intelligence", icon: BarChart3 },
     { href: "/dashboard/profile", label: "Settings", icon: Settings },
