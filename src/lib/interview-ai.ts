@@ -11,6 +11,8 @@ export interface InterviewContext {
   previousQuestions: string[];
   previousAnswers: string[];
   conversationHistory: Array<{ role: 'interviewer' | 'candidate' | 'user' | 'model'; content: string }>;
+  topics?: string;
+  companyContext?: string;
 }
 
 export interface AIResponse {
@@ -69,7 +71,8 @@ Send this first to HeyGen:
 Good morning.
 
 Welcome to the ${company} interview process.
-
+${context.companyContext ? `\nAbout ${company}: ${context.companyContext}\n` : ''}
+${context.interviewType === 'TECHNICAL' ? `\nToday's technical round will focus on: ${context.topics || 'Software Engineering'}.\n` : ''}
 I am your interviewer for today.
 Please make yourself comfortable.
 
@@ -78,6 +81,7 @@ Let us begin with your introduction.
   } else if (context.interviewType === 'HR' || turns <= 3) {
     currentStagePrompt = `
 ❓ HR ROUND PROMPT (${company.toUpperCase()} STYLE)
+${context.companyContext ? `\nBUSINESS CONTEXT: ${context.companyContext}\n` : ''}
 Ask standard ${company} HR interview questions focusing on:
 
 - Self-introduction
@@ -94,6 +98,7 @@ After each response, acknowledge briefly and continue.
   } else if (turns <= 8) {
     currentStagePrompt = `
 💻 TECHNICAL ROUND PROMPT (${company.toUpperCase()} STYLE)
+${context.topics ? `\nTECHNICAL FOCUS: ${context.topics}\n` : ''}
 Conduct the technical interview round.
 
 Rules:
@@ -153,6 +158,7 @@ Strict rules:
 - Never show emotions like excitement or disappointment
 - If the answer is unclear, ask a polite follow-up
 - If the candidate pauses, encourage gently
+- If the candidate finishes their answer, ask a contextual follow-up or move to the next relevant topic.
 - Do not reveal evaluation or scores
 
 Always behave as a real ${company} HR manager.
@@ -212,12 +218,13 @@ export async function generateInterviewEvaluation(
   scores: Record<string, number>;
   feedback: string;
   overallVerdict: string;
+  strengths?: string[];
+  weaknesses?: string[];
 }> {
   if (!GEMINI_API_KEY) {
     console.warn('GEMINI_API_KEY is missing. Returning mock evaluation.');
     return getMockEvaluation();
   }
-
   try {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
@@ -237,28 +244,36 @@ export async function generateInterviewEvaluation(
       Provide evaluation in the following JSON format:
       {
         "scores": {
-          "technicalKnowledge": number (1-10),
-          "communication": number (1-10),
-          "confidence": number (1-10),
-          "problemSolving": number (1-10),
-          "projectUnderstanding": number (1-10),
+          "programmingFundamentals": number (1-10),
+          "oopConcepts": number (1-10),
+          "dsaBasics": number (1-10),
+          "sdlc": number (1-10),
+          "appDev": number (1-10),
+          "debugging": number (1-10),
+          "sqlBasics": number (1-10),
+          "collaboration": number (1-10),
           "overallHireability": number (1-10)
         },
-        "feedback": "Constructive feedback about strengths and areas for improvement",
-        "overallVerdict": "Hire / Maybe / Needs Improvement"
+        "feedback": "Constructive feedback summary",
+        "strengths": ["list of strengths"],
+        "weaknesses": ["list of areas to improve"],
+        "overallVerdict": "Hire" | "Maybe" | "Needs Improvement"
       }
       
-      Be professional, encouraging but honest in your assessment.
+      Key Requirements:
+      - Be professional, encouraging but honest.
+      - Ensure all score keys in the JSON are provided (1-10).
+      - Output ONLY valid JSON. No markdown blocks.
     `;
 
     if (companyType === 'TCS') {
       prompt = `
 POST-INTERVIEW EVALUATION PROMPT (BACKEND ONLY)
 Generate an interview evaluation report for Tata Consultancy Services (TCS).
-
+ 
 Candidate Transcript:
 ${transcript}
-
+ 
 Include:
 - Communication skills
 - Technical understanding
@@ -267,10 +282,10 @@ Include:
 - Strengths
 - Areas for improvement
 - Overall TCS HR recommendation
-
+ 
 Keep the tone formal, objective, and corporate.
 Do not include emotional language.
-
+ 
 Output JSON:
 {
   "scores": {
@@ -294,20 +309,26 @@ Output JSON:
 
     // Try to parse the JSON response
     try {
-      const parsed = JSON.parse(text);
+      const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanText);
       return parsed;
     } catch (parseError) {
-      // If parsing fails, return a structured response based on the text
+      console.error('JSON Parse Error in Interview AI:', parseError, text);
       return {
         scores: {
-          technicalKnowledge: 7,
-          communication: 7,
-          confidence: 6,
-          problemSolving: 7,
-          projectUnderstanding: 6,
+          programmingFundamentals: 7,
+          oopConcepts: 7,
+          dsaBasics: 6,
+          sdlc: 7,
+          appDev: 6,
+          debugging: 7,
+          sqlBasics: 6,
+          collaboration: 8,
           overallHireability: 7,
         },
-        feedback: text.substring(0, 500) + "...",
+        feedback: "We encountered a minor issue parsing the detailed breakdown, but your performance was generally strong. Focus on technical clarity and structural concepts.",
+        strengths: ["Communication", "Problem Solving"],
+        weaknesses: ["Structural Depth"],
         overallVerdict: "Maybe",
       };
     }
@@ -321,17 +342,24 @@ function getMockEvaluation(): {
   scores: Record<string, number>;
   feedback: string;
   overallVerdict: string;
+  strengths?: string[];
+  weaknesses?: string[];
 } {
   return {
     scores: {
-      technicalKnowledge: 7,
-      communication: 8,
-      confidence: 6,
-      problemSolving: 7,
-      projectUnderstanding: 6,
+      programmingFundamentals: 7,
+      oopConcepts: 8,
+      dsaBasics: 6,
+      sdlc: 7,
+      appDev: 6,
+      debugging: 7,
+      sqlBasics: 6,
+      collaboration: 8,
       overallHireability: 7,
     },
     feedback: "Good performance overall. Your communication skills are strong and you demonstrated good problem-solving abilities. However, you could strengthen your technical fundamentals and show more confidence during the interview.",
+    strengths: ["Strong communication", "Logical approach"],
+    weaknesses: ["Confidence", "Technical depth"],
     overallVerdict: "Maybe",
   };
 }

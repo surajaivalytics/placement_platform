@@ -12,23 +12,56 @@ interface ProctoringConfig {
     forceFullScreen?: boolean;
     onViolation?: (type: string, message: string) => void;
     onExitFullScreen?: () => void;
+    enrollmentId?: string;
+    roundId?: string;
+    disabled?: boolean;
 }
 
-export function useProctoring(config: ProctoringConfig = {}) {
-    const router = useRouter();
+// ... imports
+
+export function useProctoring({
+    preventTabSwitch,
+    preventContextMenu,
+    preventCopyPaste,
+    forceFullScreen,
+    onViolation,
+    onExitFullScreen,
+    enrollmentId,
+    roundId,
+    disabled
+}: ProctoringConfig = {}) {
     const [warnings, setWarnings] = useState<number>(0);
     const [isFullScreen, setIsFullScreen] = useState<boolean>(true);
 
     const hasEnteredFullScreen = useRef(false);
 
+    // Store callbacks in refs to avoid restarting effects when they change
+    const onViolationRef = useRef(onViolation);
+    const onExitFullScreenRef = useRef(onExitFullScreen);
+
+    useEffect(() => {
+        onViolationRef.current = onViolation;
+        onExitFullScreenRef.current = onExitFullScreen;
+    }, [onViolation, onExitFullScreen]);
+
     const logViolation = useCallback((type: string, message: string) => {
+        if (disabled) return;
         setWarnings((prev) => prev + 1);
-        config.onViolation?.(type, message);
-    }, [config]);
+        onViolationRef.current?.(type, message);
+
+        // Remote logging
+        if (enrollmentId && roundId) {
+            fetch('/api/mock-drives/session/proctoring/violation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enrollmentId, roundId, type, message })
+            }).catch(err => console.error("Failed to log violation remotely", err));
+        }
+    }, [enrollmentId, roundId]);
 
     // Tab Switching / Visibility Change
     useEffect(() => {
-        if (!config.preventTabSwitch) return;
+        if (!preventTabSwitch || disabled) return;
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
@@ -38,7 +71,6 @@ export function useProctoring(config: ProctoringConfig = {}) {
 
         const handleBlur = () => {
             // Optional: strict focus check
-            // logViolation("WINDOW_BLUR", "Focus lost from the test window.");
         };
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -48,11 +80,11 @@ export function useProctoring(config: ProctoringConfig = {}) {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
             window.removeEventListener("blur", handleBlur);
         };
-    }, [config.preventTabSwitch, logViolation]);
+    }, [preventTabSwitch, logViolation]);
 
     // Context Menu (Right Click)
     useEffect(() => {
-        if (!config.preventContextMenu) return;
+        if (!preventContextMenu || disabled) return;
 
         const handleContextMenu = (e: MouseEvent) => {
             e.preventDefault();
@@ -61,22 +93,19 @@ export function useProctoring(config: ProctoringConfig = {}) {
 
         document.addEventListener("contextmenu", handleContextMenu);
         return () => document.removeEventListener("contextmenu", handleContextMenu);
-    }, [config.preventContextMenu, logViolation]);
+    }, [preventContextMenu, logViolation]);
 
     // Copy / Paste / Select
     useEffect(() => {
-        if (!config.preventCopyPaste) return;
+        if (!preventCopyPaste || disabled) return;
 
         const handleCopyPaste = (e: ClipboardEvent) => {
             e.preventDefault();
             logViolation("COPY_PASTE", "Copy/Paste is disabled.");
         };
 
-        // Prevent selection
         const handleSelectStart = (e: Event) => {
             e.preventDefault();
-            // Optional: Silent block or warn
-            // logViolation("SELECTION", "Text selection is disabled.");
         }
 
         document.addEventListener("copy", handleCopyPaste);
@@ -90,20 +119,20 @@ export function useProctoring(config: ProctoringConfig = {}) {
             document.removeEventListener("cut", handleCopyPaste);
             document.removeEventListener("selectstart", handleSelectStart);
         };
-    }, [config.preventCopyPaste, logViolation]);
+    }, [preventCopyPaste, logViolation]);
 
     // Full Screen Enforcement
     useEffect(() => {
-        if (!config.forceFullScreen) return;
+        if (!forceFullScreen || disabled) return;
 
         const checkFullScreen = () => {
             if (!document.fullscreenElement) {
                 setIsFullScreen(false);
 
-                // ONLY trigger violation if we have previously successfully entered fullscreen AND prevent violations on initial load
+                // ONLY trigger violation if we have previously successfully entered fullscreen
                 if (hasEnteredFullScreen.current) {
-                    if (config.onExitFullScreen) {
-                        config.onExitFullScreen();
+                    if (onExitFullScreenRef.current) {
+                        onExitFullScreenRef.current();
                     } else {
                         logViolation("FULLSCREEN_EXIT", "Exited full-screen mode.");
                     }
@@ -120,7 +149,7 @@ export function useProctoring(config: ProctoringConfig = {}) {
         checkFullScreen();
 
         return () => document.removeEventListener("fullscreenchange", checkFullScreen);
-    }, [config.forceFullScreen, logViolation, config.onExitFullScreen]);
+    }, [forceFullScreen, logViolation]);
 
     const enterFullScreen = async () => {
         try {

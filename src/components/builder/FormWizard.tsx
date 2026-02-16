@@ -12,6 +12,7 @@ import StepExperience from "./steps/StepExperience";
 import StepEducation from "./steps/StepEducation";
 import StepSkills from "./steps/StepSkills";
 import StepSummary from "./steps/StepSummary";
+import StepExtras from "./steps/StepExtras";
 import StepFinalReview from "./steps/StepFinalReview";
 import WizardNav from "./WizardNav";
 
@@ -36,27 +37,26 @@ export default function FormWizard({ data, onChange, onDownload }: FormWizardPro
         }
     };
 
-    // Validation per step
-    const canGoNext = (): boolean => {
+    // Validation per step (REWRITTEN AS REQUESTED)
+    const isCurrentStepValid = () => {
+        console.log("Validating Step:", currentStep, "Fresher:", data.isFresher, "Exp Length:", data.experience?.length); // DEBUG LOG
+
         switch (currentStep) {
             case 0: // Personal
-                return !!(
-                    data.personal.firstName &&
-                    data.personal.lastName &&
-                    data.personal.email &&
-                    data.personal.phone &&
-                    data.personal.city &&
-                    data.personal.country
-                );
+                return !!(data.personal.firstName && data.personal.lastName && data.personal.email);
+
             case 1: // Experience
-                // Fresher is valid, or must have at least one experience entry
-                return data.isFresher || data.experience.length > 0;
+                return true; // <--- ALWAYS ALLOW NEXT (User can skip if Fresher)
+
             case 2: // Education
                 return data.education.length > 0;
+
             case 3: // Skills
                 return data.skills.length > 0;
+
             case 4: // Summary
                 return data.summary.length > 20;
+
             default:
                 return true;
         }
@@ -74,9 +74,7 @@ export default function FormWizard({ data, onChange, onDownload }: FormWizardPro
             case 1:
                 return (
                     <StepExperience
-                        isFresher={data.isFresher}
                         experience={data.experience}
-                        onFresherChange={(isFresher) => onChange({ ...data, isFresher })}
                         onExperienceChange={(experience) => onChange({ ...data, experience })}
                     />
                 );
@@ -104,6 +102,13 @@ export default function FormWizard({ data, onChange, onDownload }: FormWizardPro
                 );
             case 5:
                 return (
+                    <StepExtras
+                        data={data}
+                        onChange={onChange}
+                    />
+                );
+            case 6:
+                return (
                     <StepFinalReview
                         data={data}
                         onDownload={onDownload}
@@ -119,7 +124,7 @@ export default function FormWizard({ data, onChange, onDownload }: FormWizardPro
             {/* Step Header */}
             <div className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
-                    <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                    <span className="text-sm font-medium text-white bg-teal-500 px-3 py-1 rounded-full shadow-sm">
                         Step {currentStep + 1} of {WIZARD_STEPS.length}
                     </span>
                     <span className="text-sm text-slate-400">
@@ -128,7 +133,7 @@ export default function FormWizard({ data, onChange, onDownload }: FormWizardPro
                 </div>
                 <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                        className="h-full bg-teal-500 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(20,184,166,0.5)]"
                         style={{ width: `${((currentStep + 1) / WIZARD_STEPS.length) * 100}%` }}
                     />
                 </div>
@@ -144,7 +149,7 @@ export default function FormWizard({ data, onChange, onDownload }: FormWizardPro
             {/* Navigation */}
             <WizardNav
                 currentStep={currentStep}
-                canGoNext={canGoNext()}
+                canGoNext={isCurrentStepValid()}
                 onBack={handleBack}
                 onNext={handleNext}
             />

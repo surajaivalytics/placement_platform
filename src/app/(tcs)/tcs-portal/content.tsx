@@ -353,6 +353,23 @@ export function TCSWelcomeContent({ userName, eligibility, user }: TCSWelcomeCon
                                 >
                                     DEV: Force 100% Pass & Skip to Result
                                 </Button>
+                                <Button
+                                    variant="ghost"
+                                    className="w-full mt-2 text-xs text-blue-300 hover:text-blue-500 hover:bg-blue-50"
+                                    onClick={() => {
+                                        const perfectAnswers: Record<number, string> = {};
+                                        tcsQuestions.forEach(q => {
+                                            perfectAnswers[q.id] = q.correctAnswer;
+                                        });
+                                        localStorage.setItem('tcsAptitudeAnswers', JSON.stringify(perfectAnswers));
+                                        localStorage.setItem('tcsCodingVerdict', 'Pass');
+                                        localStorage.removeItem('tcsInterviewCompleted');
+                                        toast.success("DEV: Skipped to Interview Round!");
+                                        window.location.reload();
+                                    }}
+                                >
+                                    DEV: Skip to Interview (Bypass Coding)
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>

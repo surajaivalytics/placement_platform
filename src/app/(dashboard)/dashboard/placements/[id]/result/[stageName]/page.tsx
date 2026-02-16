@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { StageResult } from '@/components/placements/stage-result';
-import { Loader2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/loader';
 
 export default function StageResultPage() {
   const params = useParams();
@@ -75,7 +75,7 @@ export default function StageResultPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Spinner size={32} className="text-blue-600" />
       </div>
     );
   }

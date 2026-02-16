@@ -18,7 +18,7 @@ const slides = [
     {
         src: "/images/students_seminar.png",
         title: "Expert Seminars",
-        subtitle: "Attend high-impact seminars that bridge the gap between academia and industry."
+        subtitle: "Attend high-impact seminars that bridge the gap between AiValytics and industry."
     }
 ];
 

@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { executeCode, mapPistonToStatus } from "@/lib/piston";
 
 export async function POST(req: Request) {
   try {
-    const { problemId, userCode, language } = await req.json();
+    const { problemId, userCode, language, languageId } = await req.json();
 
     const problem = await prisma.problem.findUnique({
       where: { id: problemId },
@@ -11,62 +12,56 @@ export async function POST(req: Request) {
 
     if (!problem) return NextResponse.json({ error: "Not Found" }, { status: 404 });
 
-    const testCases = typeof problem.testCases === 'string' ? JSON.parse(problem.testCases) : problem.testCases;
-    const drivers = typeof problem.driverCode === 'string' ? JSON.parse(problem.driverCode as string) : (problem.driverCode as any);
+    const testCases = typeof problem.testCases === "string"
+      ? JSON.parse(problem.testCases)
+      : problem.testCases;
 
-    // Prepare Batch Submissions
-    const submissions = testCases.map((tc: any) => {
+    const drivers = typeof problem.driverCode === "string"
+      ? JSON.parse(problem.driverCode)
+      : problem.driverCode;
 
+    let fullcode = drivers[language];
+    fullcode = fullcode.replace("{{USER_CODE}}", userCode);
 
-      let fullcode = drivers[language];
-      // Inject code and specific test case input
-      fullcode = fullcode.replace("{{USER_CODE}}", userCode);
+    const formattedStdin = testCases.map((tc: any) => tc.input?.toString().trim() || "").join("\n");
 
-      Object.keys(tc.input).forEach((key)=>{
-        const value= tc.input[key];
+    // Execute with Piston
+    const pistonResult = await executeCode(fullcode, languageId || language, formattedStdin);
+    const status = mapPistonToStatus(pistonResult);
 
+    if (pistonResult.run.stdout || pistonResult.run.code === 0) {
+      const decodedOutput = pistonResult.run.stdout.trim().replace(/\r/g, "");
+      const actualOutputs = decodedOutput.split("\n");
 
-        const formattedValue= Array.isArray(value) ? value.join(","):value;
-
-        const placeholder  = new RegExp(`{{${key}}}`,"g");
-
-        fullcode=fullcode.replace(placeholder,formattedValue);
-
-        console.log(fullcode);
-
+      const results = testCases.map((tc: any, index: number) => {
+        const actual = actualOutputs[index]?.trim();
+        const expected = tc.output.toString().trim();
+        return {
+          id: tc.id,
+          passed: actual === expected,
+          actual: actual,
+          expected: expected
+        };
       });
 
-     
-
-      return {
-        language_id: language === "cpp" ? 54 : 71,
-        source_code: Buffer.from(fullcode).toString('base64'),
-        stdin: Buffer.from(JSON.stringify(tc.input)).toString('base64'),
-        expected_output: Buffer.from(tc.output).toString('base64'),
-      };
-    });
-
-    // Send to Judge0
-    const response = await fetch("http://135.235.192.49:2358/submissions/batch?base64_encoded=true&wait=true", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ submissions }),
-    });
-
-    let result = await response.json();
-
-    // If wait=true didn't return stdout, poll using tokens
-    if (Array.isArray(result) && result.length > 0 && !result[0].stdout) {
-      const tokens = result.map((s: any) => s.token).join(",");
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const poll = await fetch(`http://135.235.192.49:2358/submissions/batch?tokens=${tokens}&base64_encoded=true`);
-      const polledData = await poll.json();
-      result = polledData.submissions;
+      return NextResponse.json({
+        success: results.every((r: any) => r.passed),
+        results: results,
+        time: "0.1",
+        memory: "1024",
+        status: status
+      });
     }
 
-    return NextResponse.json(result);
-  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      status: status,
+      compile_output: pistonResult.compile?.stderr || null,
+      stderr: pistonResult.run.stderr || null,
+    });
+
+  } catch (error: any) {
     console.error(error);
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Server Error", details: error.message }, { status: 500 });
   }
 }

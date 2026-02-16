@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { importQuestionsFromContext } from "@/app/actions/import-questions";
 
 interface Subtopic {
@@ -64,6 +64,10 @@ export function TestStructureEditor({ testId, testTitle }: TestStructureEditorPr
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [uploadResult, setUploadResult] = useState<any>(null);
+
+    // Preview State
+    const [previewQuestions, setPreviewQuestions] = useState<any[]>([]);
+    const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
 
     useEffect(() => {
         fetchSubtopics();
@@ -313,8 +317,8 @@ export function TestStructureEditor({ testId, testTitle }: TestStructureEditorPr
         updateOrder(reorderedAll);
     };
 
-    // Upload Logic
-    const handleSmartUpload = async () => {
+    // Upload Logic - 1. Parse File
+    const handleParseFile = async () => {
         if (!uploadFile || !selectedSubtopic) {
             toast.error("Please select a file and round");
             return;
@@ -327,7 +331,6 @@ export function TestStructureEditor({ testId, testTitle }: TestStructureEditorPr
             const formData = new FormData();
             formData.append("file", uploadFile);
 
-            // 1. Analyze File
             const result = await importQuestionsFromContext(formData);
 
             if (result.error) {
@@ -342,57 +345,68 @@ export function TestStructureEditor({ testId, testTitle }: TestStructureEditorPr
                 return;
             }
 
-            // 2. Save to Subtopic
-            // We need an API endpoint on the subtopic to validly save these questions.
-            // Existing endpoint from legacy upload might be specific to CSV?
-            // Checking: /api/admin/subtopics/upload might be usable if updated or we use a general bulk route.
-            // Let's assume we need to POST to /api/tests/{testId}/subtopics/{subtopicId}/questions
-            // Or reuse the existing /api/admin/subtopics/upload but with JSON body?
-            // Actually, let's keep it simple and POST to the subtopic questions route.
-
-            // Wait, checking the file structure, maybe there is no dedicated subtopic questions route yet?
-            // The file uses `/api/admin/subtopics/upload` which took formData.
-            // Let's modify that to simply take the PARSED list if we want to follow the "Smart Import" pattern 
-            // OR checks if the backend `admin/subtopics/upload` can be updated.
-            // Since I cannot easily verify the backend `admin/subtopics/upload` right now without checking another file,
-            // I will implement the client-side parsing here and send the JSON to a new/updated endpoint.
-
-            // Let's send to: /api/tests/${testId}/subtopics/${selectedSubtopic.id}/questions/bulk
-            // Or just reuse existing `questions/bulk` logic? 
-            // Probably safer to stick to the pattern I just made for the main test:
-            // But this is for a SUBTOPIC. 
-            // Let's look at the implementation of `handleUploadCSV` again. It posted to `/api/admin/subtopics/upload`.
-            // I should probably update THAT route to handle the smart logic? 
-            // OR just parse here and send JSON. Sending JSON is cleaner as I have the parser client-side (via server action).
-
-            const response = await fetch(`/api/tests/${testId}/subtopics/${selectedSubtopic.id}/questions/bulk`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ questions: result.questions })
-            });
-
-            const saveResult = await response.json();
-
-            if (response.ok) {
-                toast.success(`Successfully added ${result.questions.length} questions.`);
-                setUploadResult({ created: result.questions.length });
-                fetchSubtopics();
-                setTimeout(() => {
-                    setIsUploadDialogOpen(false);
-                    setUploadFile(null);
-                    setSelectedSubtopic(null);
-                    setUploadResult(null);
-                }, 2000);
-            } else {
-                setUploadResult({ error: saveResult.error || "Failed to save questions" });
-                toast.error(saveResult.error || "Failed to save");
-            }
+            setPreviewQuestions(result.questions);
+            setIsUploadDialogOpen(false);
+            setIsPreviewDialogOpen(true);
+            toast.success(`Found ${result.questions.length} questions. Review before importing.`);
 
         } catch (error) {
             console.error('Upload error:', error);
             setUploadResult({ error: 'Failed to process file' });
         } finally {
             setUploading(false);
+        }
+    };
+
+    // Upload Logic - 2. Confirm Save
+    const handleConfirmImport = async () => {
+        if (!selectedSubtopic || previewQuestions.length === 0) return;
+
+        setUploading(true);
+        try {
+            const response = await fetch(`/api/tests/${testId}/subtopics/${selectedSubtopic.id}/questions/bulk`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ questions: previewQuestions })
+            });
+
+            const saveResult = await response.json();
+
+            if (response.ok) {
+                toast.success(`Successfully added ${previewQuestions.length} questions.`);
+                setUploadResult({ created: previewQuestions.length });
+                fetchSubtopics();
+                setIsPreviewDialogOpen(false);
+                setUploadFile(null);
+                setSelectedSubtopic(null);
+                setPreviewQuestions([]);
+            } else {
+                toast.error(saveResult.error || "Failed to save");
+            }
+        } catch (error) {
+            toast.error("Failed to save questions");
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleDiscardImport = () => {
+        if (confirm("Are you sure you want to discard these questions?")) {
+            setIsPreviewDialogOpen(false);
+            setPreviewQuestions([]);
+            setUploadFile(null);
+            setSelectedSubtopic(null);
+            toast.info("Import discarded");
+        }
+    };
+
+    const handleDeletePreviewQuestion = (index: number) => {
+        const newQuestions = [...previewQuestions];
+        newQuestions.splice(index, 1);
+        setPreviewQuestions(newQuestions);
+        if (newQuestions.length === 0) {
+            toast.warning("All questions removed. Import cancelled.");
+            setIsPreviewDialogOpen(false);
         }
     };
 
@@ -657,9 +671,72 @@ export function TestStructureEditor({ testId, testTitle }: TestStructureEditorPr
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>Close</Button>
-                        <Button onClick={handleSmartUpload} disabled={!uploadFile || uploading} className="min-w-[120px]">
-                            {uploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</> : "Import Questions"}
+                        <Button onClick={handleParseFile} disabled={!uploadFile || uploading} className="min-w-[120px]">
+                            {uploading ? <><Spinner size={16} className="mr-2" /> Processing...</> : "Preview Questions"}
                         </Button>
+                    </DialogFooter>
+                </DialogContent>
+
+            </Dialog>
+
+            {/* Review Dialog */}
+            <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+                <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Review Questions</DialogTitle>
+                        <DialogDescription>
+                            Review the {previewQuestions.length} questions found in your file. Remove any unwanted questions before importing.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-4 py-4">
+                        {previewQuestions.map((q, idx) => (
+                            <Card key={idx} className="relative group border-slate-200">
+                                <Button
+                                    variant="ghost" size="icon"
+                                    className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 z-10"
+                                    onClick={() => handleDeletePreviewQuestion(idx)}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                                <CardContent className="p-4 pt-5">
+                                    <div className="flex gap-3">
+                                        <Badge variant="outline" className="h-6 shrink-0">{q.type === 'coding' ? 'Coding' : 'MCQ'}</Badge>
+                                        <div className="space-y-2 flex-1">
+                                            <p className="font-medium text-sm text-gray-900 line-clamp-2" title={q.text}>{q.text}</p>
+
+                                            {q.type === 'mcq' && (
+                                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                                    {q.options?.map((opt: any, oIdx: number) => (
+                                                        <div key={oIdx} className={`text-xs p-2 rounded border ${opt.isCorrect ? 'bg-green-50 border-green-200 text-green-700 font-medium' : 'bg-slate-50 border-slate-100 text-gray-600'}`}>
+                                                            {opt.text}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {q.type === 'coding' && (
+                                                <div className="text-xs text-muted-foreground mt-1 bg-slate-50 p-2 rounded">
+                                                    Coding Format Detected
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="ghost" onClick={handleDiscardImport} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                            Discard All
+                        </Button>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>Edit File</Button>
+                            <Button onClick={handleConfirmImport} disabled={uploading}>
+                                {uploading ? <><Spinner size={16} className="mr-2" /> Saving...</> : `Import ${previewQuestions.length} Questions`}
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

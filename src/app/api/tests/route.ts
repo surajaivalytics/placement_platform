@@ -88,22 +88,20 @@ export async function POST(req: Request) {
 
         if (!title || !duration || !difficulty) {
             return NextResponse.json(
-                { error: 'Missing required fields', details: 'Title, duration, and difficulty are required' },
+                { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
 
-        console.log('Creating test:', { title, type, hasQuestions: !!questions?.length });
-
         // Create test payload
         const testData: any = {
             title,
-            description: description || '',
+            description,
             duration: parseInt(duration),
             difficulty,
             type: type || 'topic',
-            company: company || null,
-            topic: topic || null,
+            company,
+            topic,
         };
 
         // Only add questions if they exist and are not empty
@@ -119,7 +117,7 @@ export async function POST(req: Request) {
                         create: q.options?.map((opt: { text: string; isCorrect: boolean }) => ({
                             text: opt.text,
                             isCorrect: opt.isCorrect || false,
-                        })) || [],
+                        })),
                     },
                 })),
             };
@@ -138,8 +136,6 @@ export async function POST(req: Request) {
         });
         console.log("Test Created in DB:", test.id);
 
-        console.log('Test created successfully:', test.id);
-
         return NextResponse.json(
             { message: 'Test created successfully', test },
             { status: 201 }
@@ -149,8 +145,7 @@ export async function POST(req: Request) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         const errorDetails = process.env.NODE_ENV === 'development' ? {
             message: errorMessage,
-            stack: error instanceof Error ? error.stack : undefined,
-            name: error instanceof Error ? error.name : undefined,
+            stack: error instanceof Error ? error.stack : undefined
         } : undefined;
 
         return NextResponse.json(

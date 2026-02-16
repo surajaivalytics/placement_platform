@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 
 interface User {
   id: string;
@@ -42,8 +42,8 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <Spinner size={40} className="text-emerald-600" />
       </div>
     );
   }

@@ -21,6 +21,7 @@ interface MockTest {
     difficulty: string;
     duration: number;
     type: string;
+    createdAt: string;
     _count: {
         questions: number;
     };
@@ -80,7 +81,7 @@ export default function MockTestsManagementPage() {
                     duration: 90,
                 });
                 fetchMockTests();
-                router.push(`/admin/tests/${data.test.id}/questions`);
+                router.push(`/admin/tests/${data.test.id}`);
             }
         } catch (error) {
             console.error('Error creating test:', error);
@@ -103,11 +104,26 @@ export default function MockTestsManagementPage() {
         }
     };
 
-    // Filter tests based on search
-    const filteredTests = tests.filter(test =>
-        test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        test.company?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const [sortBy, setSortBy] = useState('Newest First');
+
+    // Filter and sort tests
+    const filteredTests = tests
+        .filter(test =>
+            test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            test.company?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => {
+            if (sortBy === 'Newest First') {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+            if (sortBy === 'Oldest First') {
+                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            }
+            if (sortBy === 'Most Questions') {
+                return (b._count?.questions || 0) - (a._count?.questions || 0);
+            }
+            return 0;
+        });
 
     if (loading) {
         return (
@@ -118,7 +134,7 @@ export default function MockTestsManagementPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50/50 p-4 md:p-6 space-y-6 md:space-y-8 font-sans pb-20">
+        <div className="min-h-screen bg-slate-50/50 rounded-3xl p-4 md:p-6 space-y-6 md:space-y-8 font-sans pb-20">
             {/* Command Center Header */}
             <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-slate-900 to-black transition-all" />
@@ -171,7 +187,7 @@ export default function MockTestsManagementPage() {
                         >
                             <Button
                                 onClick={() => setShowCreateForm(!showCreateForm)}
-                                className="w-full md:w-auto h-12 md:h-14 px-8 bg-white text-slate-900 hover:bg-indigo-50 font-bold text-base rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all hover:scale-105 active:scale-95 group border-2 border-transparent hover:border-indigo-100"
+                                className="w-full md:w-auto h-12 md:h-14 px-8 bg-white text-slate-900 hover:bg-indigo-50 font-bold text-base rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all hover:scale-105 active:scale-95 group border-2 border-transparent hover:border-indigo-100"
                             >
                                 <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300 text-indigo-600" />
                                 New Simulation
@@ -192,7 +208,7 @@ export default function MockTestsManagementPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 + (i * 0.1) }}
-                                className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-colors group cursor-default"
+                                className="bg-white/5 backdrop-blur-md rounded-3xl p-4 border border-white/10 hover:bg-white/10 transition-colors group cursor-default"
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">{stat.label}</p>
@@ -220,7 +236,7 @@ export default function MockTestsManagementPage() {
                         exit={{ opacity: 0, height: 0, y: -20 }}
                         className="overflow-hidden"
                     >
-                        <div className="bg-white border rounded-2xl shadow-xl overflow-hidden ring-1 ring-slate-900/5 px-6 md:px-8 py-8 mb-8 relative">
+                        <div className="bg-white border rounded-3xl shadow-xl overflow-hidden ring-1 ring-slate-900/5 px-6 md:px-8 py-8 mb-8 relative">
                             <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2.5 bg-indigo-100 rounded-xl text-indigo-600">
@@ -312,17 +328,21 @@ export default function MockTestsManagementPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                         placeholder="Search simulations..."
-                        className="pl-10 bg-white border-slate-200 shadow-sm rounded-xl h-11"
+                        className="pl-10 bg-white border-slate-200 shadow-sm rounded-2xl h-11"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
                 <div className="flex gap-2 text-sm text-slate-500 font-medium w-full md:w-auto justify-end">
                     <span>Sort by:</span>
-                    <select className="bg-transparent border-none p-0 text-slate-900 font-bold focus:ring-0 cursor-pointer">
-                        <option>Newest First</option>
-                        <option>Oldest First</option>
-                        <option>Most Questions</option>
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="bg-transparent border-none p-0 text-slate-900 font-bold focus:ring-0 cursor-pointer"
+                    >
+                        <option value="Newest First">Newest First</option>
+                        <option value="Oldest First">Oldest First</option>
+                        <option value="Most Questions">Most Questions</option>
                     </select>
                 </div>
             </div>
@@ -339,7 +359,7 @@ export default function MockTestsManagementPage() {
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ delay: index * 0.05 }}
                         >
-                            <Card className="group h-full flex flex-col border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:ring-2 hover:ring-indigo-500/20 bg-white overflow-hidden rounded-2xl">
+                            <Card className="group h-full flex flex-col border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:ring-2 hover:ring-indigo-500/20 bg-white overflow-hidden rounded-3xl">
                                 <div className="h-2 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                                 <CardHeader className="pb-4">
                                     <div className="flex justify-between items-start mb-3">
@@ -362,14 +382,14 @@ export default function MockTestsManagementPage() {
 
                                 <CardContent className="flex-grow">
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-center items-center text-center">
+                                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-center items-center text-center">
                                             <span className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Time</span>
                                             <div className="flex items-center gap-1 font-semibold text-slate-700">
                                                 <Clock className="w-3.5 h-3.5 text-amber-500" />
                                                 {test.duration}m
                                             </div>
                                         </div>
-                                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-center items-center text-center">
+                                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-center items-center text-center">
                                             <span className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Questions</span>
                                             <div className="flex items-center gap-1 font-semibold text-slate-700">
                                                 <Layers className="w-3.5 h-3.5 text-indigo-500" />
@@ -381,19 +401,11 @@ export default function MockTestsManagementPage() {
 
                                 <CardFooter className="pt-0 p-6 grid grid-cols-2 gap-3">
                                     <Button
-                                        className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg"
-                                        onClick={() => router.push(`/admin/tests/${test.id}/questions`)}
+                                        className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg col-span-2 rounded-xl"
+                                        onClick={() => router.push(`/admin/tests/${test.id}`)}
                                     >
                                         <Settings className="w-4 h-4 mr-2" />
-                                        Manage
-                                    </Button>
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => router.push(`/admin/tests/${test.id}/questions`)}
-                                        className="w-full bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100"
-                                    >
-                                        <Upload className="w-4 h-4 mr-2" />
-                                        Add Qs
+                                        Manage & Structure
                                     </Button>
                                 </CardFooter>
                             </Card>
@@ -414,7 +426,7 @@ export default function MockTestsManagementPage() {
                     </div>
                     <h3 className="text-2xl font-bold text-slate-900 mb-2">System Initialized</h3>
                     <p className="text-slate-500 max-w-sm mx-auto mb-8">No active simulations detected. Launch your first recruitment drive to begin data collection.</p>
-                    <Button size="lg" onClick={() => setShowCreateForm(true)} className="bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200">
+                    <Button size="lg" onClick={() => setShowCreateForm(true)} className="bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 rounded-full">
                         <Plus className="w-5 h-5 mr-2" />
                         Launch Simulation
                     </Button>

@@ -192,3 +192,96 @@ export async function DELETE(
         );
     }
 }
+// PUT - Update a question
+export async function PUT(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user || session.user.role !== 'admin') {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        const { id: testId } = await params;
+        const body = await req.json();
+        const { id, text, type, marks, options, metadata } = body;
+
+        if (!id) {
+            return NextResponse.json(
+                { error: 'Question ID is required' },
+                { status: 400 }
+            );
+        }
+
+        // Verify question exists
+        const existingQuestion = await prisma.question.findUnique({
+            where: { id },
+        });
+
+        if (!existingQuestion) {
+            return NextResponse.json(
+                { error: 'Question not found' },
+                { status: 404 }
+            );
+        }
+
+        // Prepare update data
+        const updateData: any = {
+            text,
+            type,
+            marks: Number(marks),
+            metadata,
+        };
+
+        // Transaction to update question and options
+        await prisma.$transaction(async (tx) => {
+            // Update question basic details
+            await tx.question.update({
+                where: { id },
+                data: updateData,
+            });
+
+            // If MCQ, handle options
+            if (type === 'mcq' || type === 'multiple-choice') {
+                if (Array.isArray(options) && options.length > 0) {
+                    // Delete existing options
+                    await tx.option.deleteMany({
+                        where: { questionId: id },
+                    });
+
+                    // Create new options
+                    await tx.option.createMany({
+                        data: options.map((opt: { text: string; isCorrect: boolean }) => ({
+                            text: opt.text,
+                            isCorrect: opt.isCorrect || false,
+                            questionId: id,
+                        })),
+                    });
+                }
+            }
+        });
+
+        // Fetch updated question with options to return
+        const updatedQuestion = await prisma.question.findUnique({
+            where: { id },
+            include: { options: true },
+        });
+
+        return NextResponse.json(
+            { message: 'Question updated successfully', question: updatedQuestion },
+            { status: 200 }
+        );
+
+    } catch (error) {
+        console.error('Question update error:', error);
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        );
+    }
+}

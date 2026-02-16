@@ -24,8 +24,13 @@ interface PlacementMCQTestProps {
   questions: Question[];
   duration: number; // in minutes
   testTitle: string;
-  onSubmit: (answers: Record<string, string>) => void;
+  onSubmit: (answers: Record<string, string>, proctoringData?: {
+    violations: ViolationLog[];
+    warningCount: number;
+    isMaxViolations: boolean;
+  }) => void;
   onTimeUp?: () => void;
+  applicationId?: string;
 }
 
 type CameraStatus = 'idle' | 'checking' | 'ready' | 'denied' | 'error';
@@ -37,6 +42,7 @@ export function PlacementMCQTest({
   testTitle,
   onSubmit,
   onTimeUp,
+  applicationId,
 }: PlacementMCQTestProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -54,6 +60,7 @@ export function PlacementMCQTest({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [identityStatus, setIdentityStatus] = useState<IdentityStatus>('loading');
   const [identityReason, setIdentityReason] = useState<string | null>(null);
+  const [verifiedUser, setVerifiedUser] = useState<{ name?: string | null; email?: string | null; image?: string | null } | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [violation, setViolation] = useState<string | null>(null);
   const [examStarted, setExamStarted] = useState(false);
@@ -98,20 +105,12 @@ export function PlacementMCQTest({
     
     setIsSubmitting(true);
     
-    // TODO: Send violation logs to backend API
-    // Example API call:
-    // await fetch(`/api/placements/${applicationId}/violations`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     violations: violationLogs,
-    //     warningCount: warningCountRef.current,
-    //     autoSubmitted: isMaxViolations,
-    //   }),
-    // });
-    
-    // Include monitoring events in submission if needed
-    onSubmit(answers);
+    // Include proctoring data in submission
+    onSubmit(answers, {
+      violations: violationLogs,
+      warningCount: warningCountRef.current,
+      isMaxViolations: isMaxViolations,
+    });
   }, [answers, onSubmit, stream, violationLogs, isMaxViolations]);
 
   const handleAutoSubmit = useCallback(() => {
@@ -125,19 +124,12 @@ export function PlacementMCQTest({
     }
     setIsSubmitting(true);
     
-    // TODO: Send violation logs to backend API
-    // Example API call:
-    // await fetch(`/api/placements/${applicationId}/violations`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     violations: violationLogs,
-    //     warningCount: warningCountRef.current,
-    //     autoSubmitted: true,
-    //   }),
-    // });
-    
-    onSubmit(answers);
+    // Include proctoring data in auto-submission
+    onSubmit(answers, {
+      violations: violationLogs,
+      warningCount: warningCountRef.current,
+      isMaxViolations: true,
+    });
   }, [onTimeUp, onSubmit, answers, stream, violationLogs]);
 
   const handleMaxViolations = useCallback(async (violations: ViolationLog[]) => {
@@ -179,13 +171,16 @@ export function PlacementMCQTest({
   const fetchIdentityStatus = async () => {
     setIdentityStatus('loading');
     try {
-      const res = await fetch('/api/identity');
+      const res = await fetch('/api/identity', { cache: 'no-store' });
       if (!res.ok) {
         throw new Error('Failed to fetch identity status');
       }
       const data = await res.json();
       setIdentityStatus(data.status ?? 'pending');
       setIdentityReason(data.reason ?? null);
+      if (data.user) {
+        setVerifiedUser(data.user);
+      }
     } catch (err) {
       console.error('Identity status error:', err);
       setIdentityStatus('failed');
@@ -219,6 +214,9 @@ export function PlacementMCQTest({
       const data = await res.json();
       setIdentityStatus(data.status ?? 'verified');
       setIdentityReason(null);
+      if (data.user) {
+        setVerifiedUser(data.user);
+      }
     } catch (err) {
       console.error('Force verify error:', err);
       setIdentityStatus('failed');
@@ -430,14 +428,14 @@ export function PlacementMCQTest({
                 }
               >
                 <div className="mt-3 rounded border bg-black/70 aspect-video overflow-hidden">
-                  <video ref={videoRef} className="h-full w-full object-cover" autoPlay playsInline muted />
+                   <video ref={videoRef} className="h-full w-full object-cover" autoPlay playsInline muted />
                 </div>
               </StatusTile>
 
               <StatusTile
                 title="Identity verification"
                 status={identityStatus === 'verified' ? 'pass' : identityStatus === 'failed' ? 'fail' : 'pending'}
-                description={identityReason || 'We verify your account email before starting.'}
+                description={identityReason || (identityStatus === 'verified' ? 'Identity confirmed.' : 'We verify your account email before starting.')}
                 actions={
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={fetchIdentityStatus} disabled={identityStatus === 'loading'}>
@@ -450,7 +448,23 @@ export function PlacementMCQTest({
                     )}
                   </div>
                 }
-              />
+              >
+                {identityStatus === 'verified' && verifiedUser && (
+                  <div className="mt-3 flex items-center gap-3 p-2 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                    {verifiedUser.image ? (
+                      <img src={verifiedUser.image} alt={verifiedUser.name || 'User'} className="w-10 h-10 rounded-full" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-800 flex items-center justify-center text-emerald-700 dark:text-emerald-200 font-bold">
+                        {verifiedUser.name?.[0] || verifiedUser.email?.[0] || '?'}
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">{verifiedUser.name || 'Authenticated User'}</p>
+                      <p className="text-xs text-emerald-700/70 dark:text-emerald-300/60 truncate max-w-[150px]">{verifiedUser.email}</p>
+                    </div>
+                  </div>
+                )}
+              </StatusTile>
 
               <StatusTile
                 title="Full-screen lock"
@@ -477,45 +491,57 @@ export function PlacementMCQTest({
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F7FF] flex flex-col font-sans p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex flex-col font-sans p-4 md:p-6">
       {/* Test Banner */}
-      <div className="max-w-7xl mx-auto w-full mb-8">
-        <div className="relative overflow-hidden bg-gradient-to-r from-[#5D5FEF] via-[#7879F1] to-[#A5A6F6] rounded-[32px] p-8 text-white shadow-xl">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{testTitle}</h1>
-              <p className="opacity-90 font-medium">Question {currentQuestion + 1} of {questions.length}</p>
+      <div className="max-w-7xl mx-auto w-full mb-6 md:mb-8">
+        <div className="relative overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-none p-6 md:p-8 text-white shadow-xl border-b-4 border-primary">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-1 h-8 bg-primary"></div>
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter">{testTitle}</h1>
+              </div>
+              <p className="opacity-90 font-bold text-sm md:text-base ml-4">Question {currentQuestion + 1} of {questions.length}</p>
             </div>
             
-            <div className="flex flex-col items-center">
-              <div className="bg-white/95 backdrop-blur-sm rounded-[24px] px-8 py-4 flex items-center gap-3 shadow-lg">
-                <Clock className="w-8 h-8 text-[#5D5FEF]" />
-                <span className="text-4xl font-bold text-slate-800 font-mono">
+            <div className="flex flex-col items-center md:items-end">
+              <div className={`
+                bg-white/95 backdrop-blur-sm rounded-none px-6 md:px-8 py-3 md:py-4 flex items-center gap-3 shadow-lg
+                ${timeLeft <= 60 ? 'animate-pulse ring-2 ring-red-500' : ''}
+              `}>
+                <Clock className={`w-6 h-6 md:w-8 md:h-8 ${getTimeColor()}`} />
+                <span className={`text-3xl md:text-4xl font-black font-mono ${getTimeColor()}`}>
                   {formatTime(timeLeft)}
                 </span>
               </div>
-              <p className="mt-2 text-sm font-bold opacity-90 tracking-wider">Time Remaining</p>
+              <p className="mt-2 text-xs md:text-sm font-bold opacity-90 tracking-wider">Time Remaining</p>
             </div>
           </div>
           
           {/* Decorative elements */}
-          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         </div>
       </div>
 
       {/* Progress Bar Container */}
-      <div className="max-w-7xl mx-auto w-full mb-8">
-        <div className="bg-white rounded-[24px] p-6 shadow-sm border border-slate-100">
+      <div className="max-w-7xl mx-auto w-full mb-6 md:mb-8">
+        <div className="bg-white rounded-none p-5 md:p-6 shadow-lg border border-gray-100">
           <div className="flex justify-between items-center mb-4">
-            <span className="text-slate-500 font-bold tracking-tight">Progress</span>
-            <span className="text-slate-800 font-bold">{answeredCount} / {questions.length} answered</span>
+            <span className="text-sm md:text-base text-slate-600 font-black tracking-tight uppercase">Progress</span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm md:text-base text-slate-800 font-black">{answeredCount} / {questions.length}</span>
+              <span className="text-xs text-slate-500 font-bold hidden sm:inline">answered</span>
+            </div>
           </div>
-          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner ring-1 ring-slate-200/50">
             <div 
-              className="h-full bg-slate-300 transition-all duration-500 ease-out rounded-full"
-              style={{ width: `${(answeredCount / questions.length) * 100}%` }}
+              className="h-full bg-gradient-to-r from-primary to-purple-600 transition-all duration-700 ease-out rounded-full shadow-[0_0_12px_rgba(93,95,239,0.5)]"
+              style={{ width: `${progress}%` }}
             />
+          </div>
+          <div className="mt-2 text-right">
+            <span className="text-xs text-slate-500 font-bold">{Math.round(progress)}% Complete</span>
           </div>
         </div>
       </div>
@@ -523,10 +549,10 @@ export function PlacementMCQTest({
       <main className="max-w-7xl mx-auto w-full flex-1">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Sidebar - Question Map */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 h-full">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Questions</h2>
+          {/* Left Sidebar - Question Map & Camera */}
+          <div className="lg:col-span-3 space-y-6 sticky top-6">
+            <div className="bg-white rounded-none p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+              <h2 className="text-xl font-black text-slate-800 mb-6 font-sans tracking-tighter">Questions</h2>
               <div className="grid grid-cols-4 gap-3">
                 {questions.map((q, idx) => {
                   const isAnswered = answers[q.id];
@@ -537,37 +563,68 @@ export function PlacementMCQTest({
                       key={q.id}
                       onClick={() => handleJumpToQuestion(idx)}
                       className={`
-                        aspect-square rounded-[12px] text-lg font-bold transition-all duration-200
+                        aspect-square rounded-none text-lg font-black transition-all duration-300 transform relative overflow-hidden
                         ${isCurrent 
-                          ? 'bg-white text-[#5D5FEF] ring-2 ring-[#5D5FEF] shadow-md z-10' 
+                          ? 'bg-white text-primary ring-2 ring-primary shadow-md scale-110 z-10' 
                           : isAnswered 
-                          ? 'bg-green-500 text-white shadow-sm' 
-                          : 'bg-[#E2E8F0] text-slate-500 hover:bg-slate-300'
+                          ? 'bg-emerald-500 text-white shadow-md hover:bg-emerald-600 hover:shadow-xl hover:scale-105' 
+                          : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 hover:shadow-md hover:scale-105'
                         }
                       `}
                     >
-                      {idx + 1}
+                      {/* Shimmer effect on hover */}
+                      {!isCurrent && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+                      )}
+                      <span className="relative z-10">{idx + 1}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
+
+            {/* Camera Preview in Sidebar */}
+            {cameraStatus === 'ready' && stream && (
+              <div className="bg-white rounded-none p-4 shadow-sm border border-gray-100 overflow-hidden group">
+                <div className="relative aspect-video rounded-none overflow-hidden bg-slate-900 shadow-lg ring-1 ring-gray-200">
+                  <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md text-white text-[10px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest flex items-center gap-2 border border-white/10">
+                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                    Live Feed
+                  </div>
+                  <video 
+                    ref={previewVideoRef} 
+                    className="h-full w-full object-cover transform scale-x-[-1] transition-transform duration-500 group-hover:scale-110" 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                </div>
+                <div className="mt-4 flex items-center justify-center gap-2 py-1">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Proctoring Active</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Main Question Area */}
           <div className="lg:col-span-9">
-            <div className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 flex flex-col min-h-[500px]">
+            <div className="bg-white rounded-none p-8 shadow-sm border border-gray-100 flex flex-col min-h-[500px]">
               {/* Question Header */}
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-bold text-slate-800">Question {currentQuestion + 1}</h3>
-                <span className="bg-[#F3E8FF] text-[#A855F7] px-4 py-1.5 rounded-full text-sm font-bold lowercase">
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tighter">Question {currentQuestion + 1}</h3>
+                  <div className="h-1 w-12 bg-primary rounded-full" />
+                </div>
+                <span className="bg-[#F3E8FF] text-[#A855F7] px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider border border-[#E9D5FF]">
                   {currentQ.category || 'numerical'}
                 </span>
               </div>
 
               {/* Question Text Box */}
-              <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-[24px] p-8 mb-8">
-                <p className="text-xl text-slate-700 leading-relaxed font-medium">
+              <div className="bg-[#F8FAFC] border border-gray-100 rounded-none p-10 mb-10 shadow-inner">
+                <p className="text-2xl text-slate-700 leading-relaxed font-bold">
                   {currentQ.text}
                 </p>
               </div>
@@ -583,25 +640,29 @@ export function PlacementMCQTest({
                       key={idx}
                       onClick={() => handleAnswer(option.text)}
                       className={`
-                        group w-full text-left p-6 rounded-[24px] border-2 transition-all duration-200
+                        group w-full text-left p-6 rounded-none border-2 transition-all duration-300 transform
                         ${isSelected
-                          ? 'border-[#3B82F6] bg-white shadow-md'
-                          : 'border-slate-100 bg-white hover:border-slate-200'
+                          ? 'border-primary bg-primary/5 shadow-md -translate-y-0.5'
+                          : 'border-slate-50 bg-white hover:border-slate-200 hover:bg-slate-50/50'
                         }
                       `}
                     >
                       <div className="flex items-center gap-6">
                         <div className={`
-                          flex-none flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-200
+                          flex-none flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300
                           ${isSelected 
-                            ? 'border-[#3B82F6] bg-[#3B82F6]' 
-                            : 'border-slate-300'
+                            ? 'border-primary bg-primary shadow-md shadow-purple-200' 
+                            : 'border-slate-200 bg-white group-hover:border-slate-300'
                           }
                         `}>
-                          {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
+                          {isSelected ? (
+                            <div className="w-3.5 h-3.5 bg-white rounded-full scale-in-center" />
+                          ) : (
+                            <span className="text-sm font-black text-slate-400 group-hover:text-slate-500">{label}</span>
+                          )}
                         </div>
-                        <div className="flex-1 text-lg font-bold text-slate-700">
-                          {label}. {option.text}
+                        <div className={`flex-1 text-lg font-black transition-colors duration-300 ${isSelected ? 'text-primary' : 'text-slate-600'}`}>
+                          {option.text}
                         </div>
                       </div>
                     </button>
@@ -615,25 +676,25 @@ export function PlacementMCQTest({
                   onClick={handlePrevious}
                   disabled={currentQuestion === 0}
                   variant="ghost"
-                  className="text-slate-500 font-bold hover:bg-slate-100 h-12 px-8 rounded-xl"
+                  className="text-slate-400 font-bold hover:bg-slate-100 hover:text-slate-700 h-14 px-8 rounded-2xl transition-all"
                 >
-                  Previous
+                  ← Previous
                 </Button>
 
                 <div className="flex items-center gap-4">
                   {currentQuestion === questions.length - 1 ? (
                     <Button
                       onClick={() => setShowSubmitConfirm(true)}
-                      className="bg-[#10B981] hover:bg-[#059669] text-white h-12 px-12 rounded-xl font-bold text-lg shadow-lg"
+                      className="bg-[#10B981] hover:bg-[#059669] text-white h-14 px-12 rounded-none font-black text-lg shadow-sm shadow-emerald-100 transition-all transform hover:-translate-y-0.5 active:scale-95"
                     >
-                      Submit Test
+                      Finish & Submit Test
                     </Button>
                   ) : (
                     <Button
                       onClick={handleNext}
-                      className="bg-[#5D5FEF] hover:bg-[#4A4CCF] text-white h-12 px-12 rounded-xl font-bold text-lg shadow-lg"
+                      className="bg-primary hover:bg-primary/90 text-white h-14 px-12 rounded-none font-black text-lg shadow-sm shadow-purple-100 transition-all transform hover:-translate-y-0.5 active:scale-95"
                     >
-                      Save & Next
+                      Save & Next →
                     </Button>
                   )}
                 </div>
@@ -645,45 +706,46 @@ export function PlacementMCQTest({
 
       {/* Confirmation Modal */}
       {showSubmitConfirm && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <Card className="max-w-md w-full rounded-[32px] border-none shadow-2xl overflow-hidden scale-in-center">
-            <CardHeader className="text-center pt-8">
-              <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-10 h-10 text-amber-600" />
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+          <Card className="max-w-lg w-full rounded-none border-none shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden scale-in-center">
+            <CardHeader className="text-center pt-12 pb-6 bg-white">
+              <div className="w-28 h-28 bg-amber-50 rounded-none flex items-center justify-center mx-auto mb-8 border-4 border-amber-200 shadow-2xl">
+                <AlertCircle className="w-16 h-16 text-amber-500" strokeWidth={3} />
               </div>
-              <CardTitle className="text-3xl font-bold text-slate-800">Submit Test?</CardTitle>
+              <CardTitle className="text-4xl font-black text-slate-900 tracking-tighter">Submit Test?</CardTitle>
             </CardHeader>
-            <CardContent className="px-8 pb-8 space-y-8">
-              <p className="text-center text-slate-500 font-medium text-lg leading-relaxed">
-                You&apos;re about to submit your test. Once submitted, you cannot change your answers.
+            <CardContent className="px-12 pb-12 space-y-8 bg-white">
+              <p className="text-center text-slate-600 font-bold text-lg leading-relaxed">
+                You&apos;re about to submit your test. Once submitted, your score will be final and cannot be modified.
               </p>
               
-              <div className="flex justify-center gap-12 py-4 bg-slate-50 rounded-[24px]">
+              <div className="flex justify-center gap-12 py-8 bg-slate-50 rounded-none border-l-4 border-primary shadow-lg">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-[#3B82F6]">{answeredCount}</div>
-                  <div className="text-xs uppercase font-bold text-slate-400 tracking-wider">Answered</div>
+                  <div className="text-5xl font-black text-primary mb-2">{answeredCount}</div>
+                  <div className="text-[10px] uppercase font-black text-slate-500 tracking-[0.3em]">Answered</div>
                 </div>
+                <div className="w-[2px] bg-slate-200 my-2" />
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-300">{questions.length - answeredCount}</div>
-                  <div className="text-xs uppercase font-bold text-slate-400 tracking-wider">Remaining</div>
+                  <div className="text-5xl font-black text-slate-300 mb-2">{questions.length - answeredCount}</div>
+                  <div className="text-[10px] uppercase font-black text-slate-500 tracking-[0.3em]">Remaining</div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 <Button
                   onClick={handleSubmit}
-                  className="w-full h-14 rounded-2xl bg-[#10B981] hover:bg-[#059669] text-white font-bold text-xl shadow-lg"
+                  className="w-full h-16 rounded-none bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl uppercase tracking-wider border-b-4 border-primary/80"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Submitting...' : 'Yes, Submit Now'}
+                  {isSubmitting ? 'Submitting...' : 'Yes, Submit Test'}
                 </Button>
                 <Button
                   onClick={() => setShowSubmitConfirm(false)}
                   variant="ghost"
-                  className="w-full h-12 rounded-2xl font-bold text-slate-400 hover:text-slate-600"
+                  className="w-full h-14 rounded-none font-black text-slate-500 hover:text-slate-700 hover:bg-slate-100 uppercase tracking-wider transition-all duration-300"
                   disabled={isSubmitting}
                 >
-                  Back to Test
+                  No, Keep Working
                 </Button>
               </div>
             </CardContent>
@@ -691,22 +753,6 @@ export function PlacementMCQTest({
         </div>
       )}
 
-      {/* Camera Preview */}
-      {cameraStatus === 'ready' && stream && (
-        <div className="fixed bottom-8 right-8 z-[60] w-72 aspect-video rounded-[24px] border-4 border-white shadow-2xl overflow-hidden proctoring-feed">
-          <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 rounded-full font-bold uppercase tracking-widest flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-            Camera
-          </div>
-          <video 
-            ref={previewVideoRef} 
-            className="h-full w-full object-cover grayscale-[0.1]" 
-            autoPlay 
-            playsInline 
-            muted 
-          />
-        </div>
-      )}
       {/* Violation Warning Modal */}
       <ViolationWarningModal
         isOpen={showWarningModal}

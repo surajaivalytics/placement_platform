@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, AlertTriangle, ArrowRight, Loader2, Play, Cpu, Code, MessageSquare } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ArrowRight, Play, Cpu, Code, MessageSquare } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { createMockDrive } from "@/app/actions/mock-drive";
 import { toast } from "sonner";
 
@@ -145,7 +146,7 @@ export default function WiproMockDriveIntro() {
                                     onClick={handleStartDrive}
                                     disabled={loading}
                                 >
-                                    {loading ? <Loader2 className="animate-spin mr-2" /> : "Start Examination"}
+                                    {loading ? <Spinner size={24} className="mr-2" /> : "Start Examination"}
                                 </Button>
                             </CardContent>
                         </Card>

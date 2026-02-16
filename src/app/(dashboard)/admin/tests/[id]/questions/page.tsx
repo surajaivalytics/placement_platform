@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ArrowLeft, Plus, Trash2, Download, Upload, Code, FileText, CheckCircle2, MoreVertical, Search, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Download, Upload, Code, FileText, CheckCircle2, MoreVertical, Search, Check, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { QuestionForm } from '@/components/admin/question-form';
 
 interface Question {
   id: string;
@@ -43,6 +44,7 @@ export default function ManageTestQuestionsPage() {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form state for adding a new question
   const [newQuestion, setNewQuestion] = useState({
@@ -77,6 +79,35 @@ export default function ManageTestQuestionsPage() {
     }
   };
 
+  const handleEditQuestion = (question: Question) => {
+    // Determine editing inline, so we don't open the top form.
+    // Close top form if open
+    setShowAddForm(false);
+    setEditingId(question.id);
+    let codingMetadata = {
+      inputFormat: '',
+      outputFormat: '',
+      testCases: [{ input: '', output: '' }]
+    };
+
+    if (question.type === 'coding' && question.metadata) {
+      try {
+        codingMetadata = JSON.parse(question.metadata);
+      } catch (e) {
+        console.error("Error parsing metadata", e);
+      }
+    }
+
+    setNewQuestion({
+      text: question.text,
+      type: question.type,
+      options: question.options.length > 0 ? question.options.map(o => o.text) : ['', '', '', ''],
+      correctOptionIndex: question.options.findIndex(o => o.isCorrect) !== -1 ? question.options.findIndex(o => o.isCorrect) : 0,
+      marks: question.marks || 1,
+      codingMetadata: codingMetadata
+    });
+  };
+
   const handleAddQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -97,17 +128,33 @@ export default function ManageTestQuestionsPage() {
         payload.metadata = JSON.stringify(newQuestion.codingMetadata);
       }
 
-      const response = await fetch(`/api/tests/${testId}/questions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      let response;
+      if (editingId) {
+        // Update existing question
+        payload.id = editingId;
+        response = await fetch(`/api/tests/${testId}/questions`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // Create new question
+        response = await fetch(`/api/tests/${testId}/questions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
 
       if (response.ok) {
         const data = await response.json();
-        setQuestions([...questions, data.question]);
+        if (editingId) {
+          setQuestions(questions.map(q => q.id === editingId ? data.question : q));
+        } else {
+          setQuestions([...questions, data.question]);
+        }
+
+        // Reset form
         setNewQuestion({
           text: '',
           type: 'mcq',
@@ -120,13 +167,14 @@ export default function ManageTestQuestionsPage() {
           },
           marks: 1,
         });
+        setEditingId(null);
         setShowAddForm(false);
       } else {
-        alert('Failed to add question');
+        alert(editingId ? 'Failed to update question' : 'Failed to add question');
       }
     } catch (error) {
-      console.error('Error adding question:', error);
-      alert('Error adding question');
+      console.error('Error saving question:', error);
+      alert('Error saving question');
     }
   };
 
@@ -256,172 +304,22 @@ export default function ManageTestQuestionsPage() {
       <div className="max-w-5xl mx-auto p-6 space-y-8 mt-4">
 
         {/* Designer / Add Form */}
+        {/* Designer / Add Form (Only show if not editing, to avoid confusion?) Or allow both. For simplicity, hide top form if editing inline, or just keep it. */}
         <AnimatePresence>
-          {showAddForm && (
+          {showAddForm && !editingId && (
             <motion.div
               initial={{ opacity: 0, height: 0, y: -20 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
               exit={{ opacity: 0, height: 0, y: -20 }}
               className="overflow-hidden"
             >
-              <Card className="border-indigo-100 shadow-xl shadow-indigo-50/50 bg-white/80 backdrop-blur-sm ring-1 ring-indigo-50 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500" />
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-                  <CardTitle className="text-lg flex items-center gap-2 text-slate-800">
-                    <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
-                      <Plus className="w-4 h-4" />
-                    </div>
-                    Question Designer
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <form onSubmit={handleAddQuestion} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Type Selection */}
-                      <div className="space-y-3">
-                        <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Question Type</Label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <label className={`relative flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all ${newQuestion.type === 'mcq' ? 'border-indigo-500 bg-indigo-50/50 text-indigo-700' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'}`}>
-                            <input type="radio" className="peer sr-only" name="type" checked={newQuestion.type === 'mcq'} onChange={() => setNewQuestion({ ...newQuestion, type: 'mcq', marks: 1 })} />
-                            <FileText className="w-6 h-6" />
-                            <span className="font-medium text-sm">Multiple Choice</span>
-                            {newQuestion.type === 'mcq' && <div className="absolute top-2 right-2 text-indigo-500"><CheckCircle2 className="w-4 h-4" /></div>}
-                          </label>
-                          <label className={`relative flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all ${newQuestion.type === 'coding' ? 'border-purple-500 bg-purple-50/50 text-purple-700' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'}`}>
-                            <input type="radio" className="peer sr-only" name="type" checked={newQuestion.type === 'coding'} onChange={() => setNewQuestion({ ...newQuestion, type: 'coding', marks: 15 })} />
-                            <Code className="w-6 h-6" />
-                            <span className="font-medium text-sm">Coding Problem</span>
-                            {newQuestion.type === 'coding' && <div className="absolute top-2 right-2 text-purple-500"><CheckCircle2 className="w-4 h-4" /></div>}
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Marks Input */}
-                      <div className="space-y-3">
-                        <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Points & Scoring</Label>
-                        <div className="relative">
-                          <Input
-                            type="number"
-                            min="1"
-                            value={newQuestion.marks}
-                            onChange={(e) => setNewQuestion({ ...newQuestion, marks: parseInt(e.target.value) || 1 })}
-                            className="pl-9 font-semibold text-lg"
-                          />
-                          <div className="absolute left-3 top-2.5 text-slate-400 font-bold text-sm">#</div>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Default marks: {newQuestion.type === 'coding' ? '15' : '1'}</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Problem Statement</Label>
-                      <textarea
-                        className="flex min-h-[120px] w-full rounded-xl border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 shadow-sm resize-y"
-                        placeholder="Type your question or problem description here..."
-                        value={newQuestion.text}
-                        onChange={(e) => setNewQuestion({ ...newQuestion, text: e.target.value })}
-                        required
-                      />
-                    </div>
-
-                    {newQuestion.type === 'mcq' ? (
-                      <div className="space-y-4 bg-slate-50/80 p-5 rounded-xl border border-dashed border-slate-200">
-                        <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">Answer Options</Label>
-                        <div className="grid gap-3">
-                          {newQuestion.options.map((option, index) => (
-                            <div key={index} className="flex gap-3 items-center group">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border transition-colors ${newQuestion.correctOptionIndex === index ? 'bg-green-500 text-white border-green-600 ring-2 ring-green-100' : 'bg-white text-slate-500 border-slate-200'}`}>
-                                {String.fromCharCode(65 + index)}
-                              </div>
-                              <Input
-                                placeholder={`Option ${index + 1}`}
-                                value={option}
-                                onChange={(e) => {
-                                  const newOptions = [...newQuestion.options];
-                                  newOptions[index] = e.target.value;
-                                  setNewQuestion({ ...newQuestion, options: newOptions });
-                                }}
-                                required
-                                className="flex-1 bg-white"
-                              />
-                              <div
-                                onClick={() => setNewQuestion({ ...newQuestion, correctOptionIndex: index })}
-                                className={`cursor-pointer px-3 py-1.5 rounded-full text-xs font-medium border transition-all select-none ${newQuestion.correctOptionIndex === index ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
-                              >
-                                {newQuestion.correctOptionIndex === index ? 'Correct Answer' : 'Mark Correct'}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-5 bg-slate-50/80 p-5 rounded-xl border border-dashed border-slate-200">
-                        <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">Coding Configuration</Label>
-                        <div className="grid grid-cols-2 gap-5">
-                          <div>
-                            <Label className="text-xs mb-1.5 block text-slate-600">Input Format</Label>
-                            <Input
-                              className="bg-white"
-                              placeholder="e.g. Two integers N and M"
-                              value={newQuestion.codingMetadata.inputFormat}
-                              onChange={(e) => setNewQuestion({
-                                ...newQuestion,
-                                codingMetadata: { ...newQuestion.codingMetadata, inputFormat: e.target.value }
-                              })}
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs mb-1.5 block text-slate-600">Output Format</Label>
-                            <Input
-                              className="bg-white"
-                              placeholder="e.g. The sum of N and M"
-                              value={newQuestion.codingMetadata.outputFormat}
-                              onChange={(e) => setNewQuestion({
-                                ...newQuestion,
-                                codingMetadata: { ...newQuestion.codingMetadata, outputFormat: e.target.value }
-                              })}
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <Label className="text-xs mb-1.5 block text-slate-600">Sample Test Case</Label>
-                          <div className="grid grid-cols-2 gap-3 font-mono text-sm">
-                            <div className="relative">
-                              <div className="absolute top-2 left-2 text-[10px] text-slate-400 uppercase font-bold tracking-wider">Input</div>
-                              <textarea
-                                className="w-full p-2 pt-6 border rounded-lg bg-slate-900 text-slate-50 min-h-[80px]"
-                                value={newQuestion.codingMetadata.testCases[0].input}
-                                onChange={(e) => {
-                                  const newTC = [...newQuestion.codingMetadata.testCases];
-                                  newTC[0].input = e.target.value;
-                                  setNewQuestion({ ...newQuestion, codingMetadata: { ...newQuestion.codingMetadata, testCases: newTC } });
-                                }}
-                              />
-                            </div>
-                            <div className="relative">
-                              <div className="absolute top-2 left-2 text-[10px] text-slate-400 uppercase font-bold tracking-wider">Output</div>
-                              <textarea
-                                className="w-full p-2 pt-6 border rounded-lg bg-slate-900 text-slate-50 min-h-[80px]"
-                                value={newQuestion.codingMetadata.testCases[0].output}
-                                onChange={(e) => {
-                                  const newTC = [...newQuestion.codingMetadata.testCases];
-                                  newTC[0].output = e.target.value;
-                                  setNewQuestion({ ...newQuestion, codingMetadata: { ...newQuestion.codingMetadata, testCases: newTC } });
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex gap-3 pt-2">
-                      <Button type="submit" size="lg" className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-200">Save Question</Button>
-                      <Button type="button" variant="outline" size="lg" className="flex-1" onClick={() => setShowAddForm(false)}>Cancel</Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
+              <QuestionForm
+                formData={newQuestion}
+                setFormData={setNewQuestion}
+                onSubmit={handleAddQuestion}
+                onCancel={() => setShowAddForm(false)}
+                isEditing={false}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -468,7 +366,7 @@ export default function ManageTestQuestionsPage() {
                       exit={{ opacity: 0, scale: 0.95 }}
                       className="group"
                     >
-                      <Card className="border-slate-100 hover:border-indigo-200 hover:shadow-lg transition-all duration-300 bg-white/50 hover:bg-white overflow-hidden">
+                      <Card className="relative border-slate-100 hover:border-indigo-200 hover:shadow-lg transition-all duration-300 bg-white/50 hover:bg-white overflow-hidden">
                         <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 group-hover:bg-gradient-to-b group-hover:from-indigo-500 group-hover:to-purple-500 transition-colors" />
                         <CardContent className="p-0">
                           <div className="flex flex-col md:flex-row">
@@ -526,11 +424,48 @@ export default function ManageTestQuestionsPage() {
 
                         {/* Actions */}
                         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                          <Button variant="outline" size="icon" className="h-8 w-8 bg-white hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 shadow-sm" onClick={() => handleEditQuestion(question)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
                           <Button variant="outline" size="icon" className="h-8 w-8 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 shadow-sm" onClick={() => handleDeleteQuestion(question.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </Card>
+
+                      {/* Inline Edit Form */}
+                      <AnimatePresence>
+                        {editingId === question.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                            animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <QuestionForm
+                              formData={newQuestion}
+                              setFormData={setNewQuestion}
+                              onSubmit={handleAddQuestion}
+                              onCancel={() => {
+                                setEditingId(null);
+                                setNewQuestion({
+                                  text: '',
+                                  type: 'mcq',
+                                  options: ['', '', '', ''],
+                                  correctOptionIndex: 0,
+                                  codingMetadata: {
+                                    inputFormat: '',
+                                    outputFormat: '',
+                                    testCases: [{ input: '', output: '' }]
+                                  },
+                                  marks: 1,
+                                });
+                              }}
+                              isEditing={true}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </motion.div>
                   );
                 })

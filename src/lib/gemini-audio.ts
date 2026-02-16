@@ -10,9 +10,9 @@ export async function analyzeVoiceRecording(audioBuffer: Buffer, mimeType: strin
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-    try {
-        console.log(`Analyzing audio: ${audioBuffer.length} bytes, type: ${mimeType}`);
-        const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const tryGenerate = async (modelName: string) => {
+        console.log(`Analyzing audio with model: ${modelName}, size: ${audioBuffer.length} bytes`);
+        const model = genAI.getGenerativeModel({ model: modelName });
 
         const prompt = `
       Act as a professional Speech Assessor for Wipro/TCS placement interviews.
@@ -57,18 +57,35 @@ export async function analyzeVoiceRecording(audioBuffer: Buffer, mimeType: strin
         ]);
 
         const response = await result.response;
-        const text = response.text();
+        return response.text();
+    };
 
-        // Clean and parse JSON
-        const jsonStr = text.replace(/```json|```/g, "").trim();
-        return JSON.parse(jsonStr);
+    // Try primary model then fallback with proper model names
+    try {
+        try {
+            // Primary: Use gemini-2.0-flash-exp (experimental)
+            const text = await tryGenerate("gemini-2.0-flash-exp");
+            const jsonStr = text.replace(/```json|```/g, "").trim();
+            return JSON.parse(jsonStr);
+        } catch (e: any) {
+            console.warn("gemini-2.0-flash-exp failed, trying gemini-1.5-flash...", e.message);
 
-    } catch (error) {
-        console.error("Error analyzing voice with Gemini:", error);
-        if (error instanceof Error) {
-            console.error("Error message:", error.message);
-            console.error("Error stack:", error.stack);
+            // Fallback 1: gemini-1.5-flash
+            try {
+                const text = await tryGenerate("gemini-1.5-flash");
+                const jsonStr = text.replace(/```json|```/g, "").trim();
+                return JSON.parse(jsonStr);
+            } catch (innerE: any) {
+                console.warn("gemini-1.5-flash failed, trying gemini-1.5-pro...", innerE.message);
+
+                // Fallback 2: gemini-1.5-pro (most reliable)
+                const text = await tryGenerate("gemini-1.5-pro");
+                const jsonStr = text.replace(/```json|```/g, "").trim();
+                return JSON.parse(jsonStr);
+            }
         }
-        throw new Error("Failed to analyze voice recording. Please check backend logs.");
+    } catch (finalErr: any) {
+        console.error("All Gemini models failed:", finalErr);
+        throw new Error(`Voice analysis failed: ${finalErr.message || 'Unknown error'}. Please check your GEMINI_API_KEY.`);
     }
 }

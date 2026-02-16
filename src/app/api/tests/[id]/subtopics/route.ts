@@ -50,6 +50,9 @@ export async function GET(
                 id: subtopic.id,
                 name: subtopic.name,
                 description: subtopic.description,
+                order: subtopic.order,
+                roundTitle: subtopic.roundTitle,
+                type: subtopic.type,
                 totalQuestions: subtopic._count.questions,
                 progress: userProgress
                     ? {

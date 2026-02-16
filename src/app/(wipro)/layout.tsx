@@ -1,5 +1,6 @@
 import React from 'react';
 import { Poppins } from 'next/font/google';
+import { Building2 } from 'lucide-react';
 
 const poppins = Poppins({
     subsets: ['latin'],
@@ -31,12 +32,8 @@ export default async function WiproLayout({
                 <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
                     {/* Wipro Branding */}
                     <div className="flex items-center gap-4">
-                        <div className="relative w-32 h-10">
-                            <img
-                                src="/logos/Wipro_Secondary-Logo_Color_RGB.png"
-                                alt="Wipro Logo"
-                                className="w-full h-full object-contain object-left"
-                            />
+                        <div className="relative w-10 h-10 flex items-center justify-center">
+                            <Building2 className="w-8 h-8 text-purple-600" />
                         </div>
                         <div className="hidden md:flex flex-col border-l border-slate-300 pl-3">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-tight">Digital</span>

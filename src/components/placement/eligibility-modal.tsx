@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle2, FileText, Loader2, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, FileText, Upload } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { toast } from "sonner";
 import { updateAcademicDetails } from "@/app/actions/placement";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -108,7 +109,7 @@ export function EligibilityModal({ company, defaultValues, onSuccess }: Eligibil
                     <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors relative">
                         {parsing ? (
                             <div className="flex flex-col items-center gap-2">
-                                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                                <Spinner size={32} className="text-blue-600" />
                                 <span className="text-sm text-gray-500">Analyzing Resume...</span>
                             </div>
                         ) : (
@@ -180,7 +181,7 @@ export function EligibilityModal({ company, defaultValues, onSuccess }: Eligibil
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                     <Button onClick={handleSubmit} disabled={loading || parsing}>
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                        {loading ? <Spinner size={16} className="mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
                         Verify & Update
                     </Button>
                 </DialogFooter>

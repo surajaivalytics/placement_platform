@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlacementMCQTest } from '@/components/placements/placement-mcq-test';
-import { Loader2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { parseJsonSafely } from '@/lib/fetch-utils';
 
 interface Question {
@@ -18,10 +18,10 @@ interface Question {
   }[];
 }
 
-export default function SubtopicTestPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string; subtopicId: string }> 
+export default function SubtopicTestPage({
+  params
+}: {
+  params: Promise<{ id: string; subtopicId: string }>
 }) {
   const router = useRouter();
   const [testId, setTestId] = useState<string>('');
@@ -55,10 +55,10 @@ export default function SubtopicTestPage({
     });
   }, [params]);
 
-  const handleSubmit = async (answers: Record<string, string>) => {
+  const handleSubmit = async (answers: Record<string, string>, proctoringData?: any) => {
     try {
       const startTime = Date.now();
-      
+
       const response = await fetch(`/api/tests/${testId}/subtopics/${subtopicId}/submit`, {
         method: 'POST',
         headers: {
@@ -67,6 +67,7 @@ export default function SubtopicTestPage({
         body: JSON.stringify({
           answers,
           timeSpent: Math.floor((Date.now() - startTime) / 1000),
+          proctoringData,
         }),
       });
 
@@ -86,10 +87,32 @@ export default function SubtopicTestPage({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-          <p className="text-gray-500 font-medium animate-pulse">Loading Test...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center p-6">
+        <div className="text-center space-y-8">
+          {/* Animated loader */}
+          <div className="relative">
+            <div className="w-24 h-24 mx-auto">
+              <div className="absolute inset-0 border-4 border-gray-100 rounded-none"></div>
+              <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-none animate-spin"></div>
+            </div>
+          </div>
+          
+          {/* Loading text */}
+          <div className="space-y-3">
+            <h3 className="text-2xl font-black text-gray-900 tracking-tighter">Preparing Your Test</h3>
+            <p className="text-sm text-gray-500 font-bold uppercase tracking-wider animate-pulse">Loading questions...</p>
+          </div>
+
+          {/* Progress dots */}
+          <div className="flex items-center justify-center gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 bg-primary rounded-full animate-pulse"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -97,16 +120,30 @@ export default function SubtopicTestPage({
 
   if (error || questions.length === 0) {
     return (
-      <div className="flex justify-center items-center h-screen bg-slate-50">
-        <div className="max-w-md text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">No Questions Available</h2>
-          <p className="text-gray-600 mb-6">{error || 'This subtopic has no questions yet.'}</p>
-          <button
-            onClick={() => router.push(`/dashboard/test/${testId}/subtopics`)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
-          >
-            Back to Subtopics
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center p-6">
+        <div className="max-w-lg w-full">
+          <div className="bg-white rounded-none shadow-xl border border-gray-100 overflow-hidden">
+            {/* Error icon */}
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 p-12 text-center border-b border-gray-100">
+              <div className="w-20 h-20 bg-red-100 rounded-none flex items-center justify-center mx-auto mb-6 border-4 border-red-200">
+                <AlertCircle className="w-10 h-10 text-red-600" strokeWidth={2.5} />
+              </div>
+              <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tighter">No Questions Available</h2>
+              <p className="text-gray-600 font-medium leading-relaxed">
+                {error || 'This subtopic doesn\'t have any questions yet. Please check back later or contact support.'}
+              </p>
+            </div>
+
+            {/* Action button */}
+            <div className="p-8 bg-gray-50">
+              <button
+                onClick={() => router.push(`/dashboard/test/${testId}/subtopics`)}
+                className="w-full bg-gray-900 hover:bg-black text-white px-8 py-4 rounded-none font-black text-sm uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 shadow-lg hover:shadow-xl border-b-4 border-primary"
+              >
+                ← Back to Subtopics
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -118,6 +155,7 @@ export default function SubtopicTestPage({
       duration={15} // 15 minutes per subtopic
       testTitle={subtopicName}
       onSubmit={handleSubmit}
+      applicationId={testId}
     />
   );
 }

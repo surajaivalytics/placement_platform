@@ -46,6 +46,7 @@ export default function InterviewInterface({ company, type }: InterviewInterface
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
+  const startTimeRef = useRef<number>(0);
 
   // Initialize interview
   useEffect(() => {
@@ -207,6 +208,7 @@ export default function InterviewInterface({ company, type }: InterviewInterface
 
     setIsInterviewActive(true);
     setInterviewStarted(true);
+    startTimeRef.current = Date.now();
     setIsProcessing(true); // Show loading while fetching first question
 
     try {
@@ -325,7 +327,7 @@ export default function InterviewInterface({ company, type }: InterviewInterface
           questions,
           answers,
           transcript,
-          duration: 0, // Calculate actual duration if needed
+          duration: Math.round((Date.now() - (startTimeRef.current || Date.now())) / 1000),
         }),
       });
 

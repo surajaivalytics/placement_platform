@@ -1,39 +1,39 @@
 import { getGeminiModel } from "./gemini";
 
 export interface GeneratedMCQ {
-    question: string;
-    options: {
-        text: string;
-        label: string; // A, B, C, D
-    }[];
-    correct_answer: string; // The text of the correct answer
-    difficulty: "Easy" | "Medium" | "Hard";
-    blooms_level: string;
-    reference_excerpt?: string; // Short snippet from content proving the answer
+  question: string;
+  options: {
+    text: string;
+    label: string; // A, B, C, D
+  }[];
+  correct_answer: string; // The text of the correct answer
+  difficulty: "Easy" | "Medium" | "Hard";
+  blooms_level: string;
+  reference_excerpt?: string; // Short snippet from content proving the answer
 }
 
 export interface MCQResponse {
-    keyword: string;
-    questions: GeneratedMCQ[];
+  keyword: string;
+  questions: GeneratedMCQ[];
 }
 
 export interface MCQRequest {
-    content: string;
-    keywords?: string[];
-    difficulty?: "Easy" | "Medium" | "Hard";
-    bloomsLevel?: "Remember" | "Understand" | "Apply" | "Analyze";
-    count?: number; // Questions per keyword
+  content: string;
+  keywords?: string[];
+  difficulty?: "Easy" | "Medium" | "Hard";
+  bloomsLevel?: "Remember" | "Understand" | "Apply" | "Analyze";
+  count?: number; // Questions per keyword
 }
 
 export async function generateMCQs(request: MCQRequest): Promise<MCQResponse[]> {
-    const model = getGeminiModel();
-    if (!model) {
-        throw new Error("Gemini API key is not configured.");
-    }
+  const model = getGeminiModel();
+  if (!model) {
+    throw new Error("Gemini API key is not configured.");
+  }
 
-    const { content, keywords, difficulty = "Medium", bloomsLevel = "Understand", count = 5 } = request;
+  const { content, keywords, difficulty = "Medium", bloomsLevel = "Understand", count = 5 } = request;
 
-    const prompt = `
+  const prompt = `
 You are an AI engine inside the AIVALYTICS platform.
 Your task is to generate high-quality, syllabus-aligned Multiple Choice Questions (MCQs) based on the provided content.
 
@@ -84,25 +84,40 @@ ${keywords && keywords.length > 0 ? JSON.stringify(keywords) : "AUTO_EXTRACT_FRO
 ]
 `;
 
-    try {
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text();
+  try {
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
 
-        console.log("--- RAW AI RESPONSE ---");
-        console.log(responseText.substring(0, 500) + "..."); // log start
-        console.log("------------------------");
+    console.log("--- RAW AI RESPONSE ---");
+    console.log(responseText.substring(0, 500) + "..."); // log start
+    console.log("------------------------");
 
-        // Clean up markdown code blocks if present
-        const cleanedText = responseText.replace(/```json\n?|\n?```/g, "").trim();
+    // Clean up markdown code blocks if present
+    const cleanedText = responseText.replace(/```json\n?|\n?```/g, "").trim();
 
-        if (!cleanedText) {
-            throw new Error("AI returned an empty response.");
-        }
-
-        const data = JSON.parse(cleanedText) as MCQResponse[];
-        return data;
-    } catch (error: any) {
-        console.error("Error generating MCQs:", error);
-        throw new Error(`Failed to generate MCQs from AI service: ${error.message || String(error)}`);
+    if (!cleanedText) {
+      throw new Error("AI returned an empty response.");
     }
+
+    const data = JSON.parse(cleanedText) as MCQResponse[];
+    return data;
+  } catch (error: any) {
+    console.error("Error generating MCQs:", error);
+
+    // Check if it's a quota/rate limit error
+    const errorMessage = error.message || String(error);
+    if (errorMessage.includes("429") ||
+      errorMessage.includes("quota") ||
+      errorMessage.includes("rate limit") ||
+      errorMessage.includes("Too Many Requests")) {
+
+      throw new Error(
+        "⚠️ AI Quota Exceeded - The Gemini API free tier limit has been reached. " +
+        "Please enable MOCK_AI mode in your .env file by adding: MOCK_AI=true " +
+        "This will generate sample questions for testing. Alternatively, wait for the quota to reset or upgrade your API plan."
+      );
+    }
+
+    throw new Error(`Failed to generate MCQs from AI service: ${errorMessage}`);
+  }
 }

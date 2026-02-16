@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertTriangle, Clock, Play, GraduationCap, FileText, Check, Terminal } from "lucide-react";
 
-import { Loader2 } from "lucide-react";
-import { Loader } from "@/components/ui/loader";
+import { Spinner } from "@/components/ui/loader";
+
 
 import { toast } from "sonner";
 
-export default function DashboardClient({ test, session, isEligible }: { test: any, session: any, isEligible: boolean }) {
+export default function DashboardClient({ test, session, isEligible, history = [] }: { test: any, session: any, isEligible: boolean, history?: any[] }) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 
@@ -94,7 +94,10 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
         if (loading) return "Processing...";
         if (!session) return "Start " + (sortedRoundTitles[0] || "Assessment");
 
-        if (currentRoundIndex >= sortedRoundTitles.length) return "View Results";
+        // FIX: Check COMPLETED status prominently
+        if (session.status === 'COMPLETED' || currentRoundIndex >= sortedRoundTitles.length) return "View Results";
+
+        if (session.status === 'FAILED') return "Retake Assessment";
 
         // Logic based on Type or Title
         if (currentRoundTitle.toLowerCase().includes('technical')) return "Start Technical Interview";
@@ -108,7 +111,8 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
     const handleStart = async () => {
         setLoading(true);
 
-        if (session && currentRoundIndex >= sortedRoundTitles.length) {
+        // FIX: Check COMPLETED status
+        if (session && (session.status === 'COMPLETED' || (session.status !== 'FAILED' && currentRoundIndex >= sortedRoundTitles.length))) {
             toast.success("You have completed this drive!");
             router.push(`/exam/${test.id}/result?status=Completed`);
             return;
@@ -129,7 +133,8 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
     // UI Helper for Status Badge
     const getStatusText = () => {
         if (!session) return "Ready to Start";
-        if (session.currentRound > sortedRoundTitles.length) return "Completed";
+        if (session.status === 'COMPLETED' || (session.status !== 'FAILED' && session.currentRound > sortedRoundTitles.length)) return "Completed";
+        if (session.status === 'FAILED') return "Failed";
         return "In Progress";
     };
 
@@ -147,8 +152,15 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
             {/* Header Banner */}
-            <div className="bg-[#181C2E] text-white py-8 px-4 md:px-10 shadow-md">
-                <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="bg-[#181C2E] text-white py-8 px-4 md:px-10 shadow-md relative">
+                <Button
+                    variant="ghost"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white hover:bg-white/10"
+                    onClick={() => router.push('/dashboard')}
+                >
+                    &larr; Back to Dashboard
+                </Button>
+                <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-6">
                     <div>
                         <div className="flex gap-2 mb-2">
                             <Badge className="bg-green-500 text-white border-0">Live Simulation</Badge>
@@ -262,6 +274,44 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
                             </CardContent>
                         </Card>
 
+                        {/* Recent History Section */}
+                        {history && history.length > 0 && (
+                            <Card className="border-0 shadow-sm overflow-hidden">
+                                <CardHeader className="bg-white border-b border-gray-100">
+                                    <CardTitle className="text-[#181C2E] flex items-center gap-2">
+                                        <CheckCircle2 className="w-5 h-5 text-emerald-600" /> Past Attempts
+                                    </CardTitle>
+                                    <CardDescription>History of your performance in this drive.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    <div className="divide-y divide-gray-100">
+                                        {history.map((attempt: any, idx: number) => (
+                                            <div key={attempt.id} className="p-6 flex items-center justify-between hover:bg-gray-50">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="bg-gray-100 p-2 rounded-lg text-gray-500 font-mono text-sm">
+                                                        #{history.length - idx}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">Attempt {history.length - idx}</div>
+                                                        <div className="text-sm text-gray-500">{new Date(attempt.createdAt).toLocaleDateString()} &bull; {new Date(attempt.createdAt).toLocaleTimeString()}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="text-right">
+                                                        <div className="font-bold text-gray-900">{attempt.score} / {attempt.total}</div>
+                                                        <div className="text-xs text-gray-500">Score</div>
+                                                    </div>
+                                                    <Button size="sm" variant="outline" onClick={() => router.push(`/exam/${test.id}/result?id=${attempt.id}`)}>
+                                                        View Result
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         <Card className="border-l-4 border-l-amber-500 bg-amber-50/50 shadow-sm">
                             <CardContent className="p-4 flex items-start gap-4">
                                 <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
@@ -288,7 +338,7 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
                                     <div className="flex justify-between text-sm py-2 border-b border-gray-100">
                                         <span className="text-gray-500">Status</span>
                                         <span className="font-semibold text-amber-600 flex items-center gap-1">
-                                            <span className={`w-2 h-2 rounded-full ${session ? 'bg-green-500' : 'bg-amber-500'} animate-pulse`} /> {getStatusText()}
+                                            <span className={`w-2 h-2 rounded-full ${session && session.status !== 'COMPLETED' ? 'bg-green-500' : 'bg-gray-400'} animate-pulse`} /> {getStatusText()}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-sm py-2 border-b border-gray-100">
@@ -309,7 +359,7 @@ export default function DashboardClient({ test, session, isEligible }: { test: a
                                         onClick={handleStart}
                                         disabled={loading}
                                     >
-                                        {loading ? <Loader size="sm" className="min-h-0 w-auto" text="" /> : <span className="flex items-center gap-2">{getButtonText()} <ArrowRight className="w-5 h-5" /></span>}
+                                        {loading ? <Spinner size={20} /> : <span className="flex items-center gap-2">{getButtonText()} <ArrowRight className="w-5 h-5" /></span>}
                                     </Button>
                                     <p className="text-xs text-center text-gray-400 mt-3 px-4 leading-normal">
                                         By clicking Launch, you agree to the Terms of Simulation.

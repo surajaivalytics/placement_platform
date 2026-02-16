@@ -12,7 +12,8 @@ import { tcsCodingProblems } from '@/lib/question-banks/tcs-coding';
 import { wiproAptitudeQuestions } from '@/lib/question-banks/wipro-aptitude';
 import { wiproCodingProblems } from '@/lib/question-banks/wipro-coding';
 import { wiproEssayPrompts } from '@/lib/question-banks/wipro-essay';
-import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Spinner } from '@/components/ui/loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -170,7 +171,7 @@ export default function PlacementTestPage() {
       const words = essay.trim().split(/\s+/).filter(w => w.length > 0);
       const wordCount = words.length;
       let score = 0;
-      
+
       if (wordCount >= 200 && wordCount <= 300) score += 40;
       const paragraphs = essay.split('\n\n').filter(p => p.trim().length > 0);
       if (paragraphs.length >= 3) score += 30;
@@ -305,11 +306,11 @@ export default function PlacementTestPage() {
                       onClick={() => setCurrentProblem(idx)}
                       className={`
                         w-10 h-10 rounded-lg font-semibold transition-all
-                        ${idx === currentProblem 
-                          ? 'bg-blue-600 text-white ring-2 ring-blue-300' 
+                        ${idx === currentProblem
+                          ? 'bg-blue-600 text-white ring-2 ring-blue-300'
                           : codingSolutions[idx]
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-200 text-gray-700'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-200 text-gray-700'
                         }
                       `}
                     >

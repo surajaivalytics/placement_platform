@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { PlacementMCQTest } from '@/components/placements/placement-mcq-test';
 import { fetchPlacementQuestions } from '@/lib/placement-questions';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Spinner } from "@/components/ui/loader";
+import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Question {
@@ -37,7 +38,7 @@ export default function TCSFoundationTestPage() {
       }
       const appData = await appRes.json();
       setApplication(appData);
-      
+
       // Check if already completed this stage
       const foundationStage = appData.assessmentStages?.find(
         (s: { stageName: string; submittedAt?: string | Date }) => s.stageName === 'foundation'
@@ -64,7 +65,7 @@ export default function TCSFoundationTestPage() {
     loadTestData();
   }, [loadTestData]);
 
-  const handleSubmit = async (answers: Record<string, string>) => {
+  const handleSubmit = async (answers: Record<string, string>, proctoringData?: any) => {
     try {
       // Calculate score by checking answers
       // Note: We don't have correct answers on client side, backend will validate
@@ -78,6 +79,7 @@ export default function TCSFoundationTestPage() {
             score: 0, // Backend will calculate actual score
             total: questions.length,
             timeSpent: testDuration * 60,
+            proctoringData,
           }),
         }
       );
@@ -101,7 +103,7 @@ export default function TCSFoundationTestPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Spinner size={32} className="text-blue-600" />
       </div>
     );
   }
@@ -151,6 +153,7 @@ export default function TCSFoundationTestPage() {
         testTitle="TCS Foundation Test"
         onSubmit={handleSubmit}
         onTimeUp={handleTimeUp}
+        applicationId={applicationId}
       />
     </div>
   );

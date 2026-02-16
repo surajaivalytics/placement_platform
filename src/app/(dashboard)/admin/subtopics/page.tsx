@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Upload, Trash2, BookOpen, FileText, Download, Search } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import {
   Dialog,
   DialogContent,
@@ -49,7 +50,7 @@ export default function AdminSubtopicsPage() {
   const [selectedTest, setSelectedTest] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -195,7 +196,7 @@ export default function AdminSubtopicsPage() {
   const downloadCsvTemplate = () => {
     const headers = ["question", "option_1", "option_2", "option_3", "option_4", "correct_option", "explanation", "difficulty", "category"];
     const sampleRow = ["What is 2+2?", "2", "3", "4", "5", "C", "Basic arithmetic", "Easy", "Mathematics"];
-    
+
     const csvContent = "data:text/csv;charset=utf-8,"
       + headers.join(",") + "\n"
       + sampleRow.join(",");
@@ -217,7 +218,7 @@ export default function AdminSubtopicsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        <Spinner size={48} />
       </div>
     );
   }

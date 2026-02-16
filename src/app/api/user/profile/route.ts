@@ -22,6 +22,9 @@ export async function GET() {
                 accountType: true,
                 autoPayout: true,
                 role: true,
+                graduationCGPA: true,
+                tenthPercentage: true,
+                twelfthPercentage: true,
             }
         });
 
@@ -47,12 +50,15 @@ export async function PUT(req: Request) {
             where: { email: session.user.email },
             data: {
                 name: data.name,
-                email: data.email, // Note: Changing email might require re-verification in a real app
+                email: data.email,
                 phone: data.phone,
                 accountType: data.accountType,
                 image: data.image,
                 coverImage: data.coverImage,
-                autoPayout: data.autoPayout
+                autoPayout: data.autoPayout,
+                graduationCGPA: data.graduationCGPA ? parseFloat(data.graduationCGPA) : undefined,
+                tenthPercentage: data.tenthPercentage ? parseFloat(data.tenthPercentage) : undefined,
+                twelfthPercentage: data.twelfthPercentage ? parseFloat(data.twelfthPercentage) : undefined,
             }
         });
 

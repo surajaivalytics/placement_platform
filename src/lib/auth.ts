@@ -1,11 +1,18 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
+    adapter: PrismaAdapter(prisma) as any,
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        }),
         CredentialsProvider({
             name: "Credentials",
             credentials: {
@@ -49,6 +56,7 @@ export const authOptions: NextAuthOptions = {
                         id: user.id,
                         name: user.name,
                         email: user.email,
+                        image: user.image,
                         role: user.role as "admin" | "user",
                     };
                 } catch (error) {
@@ -60,15 +68,7 @@ export const authOptions: NextAuthOptions = {
                     };
                     console.error('❌ Authorization error details:', errorDetails);
 
-                    // Direct file logging
-                    try {
-                        const fs = require('fs');
-                        const path = require('path');
-                        const logFile = path.join(process.cwd(), 'auth_debug.log');
-                        fs.appendFileSync(logFile, JSON.stringify(errorDetails, null, 2) + '\n');
-                    } catch (fsError) {
-                        console.error('Failed to write to log file', fsError);
-                    }
+                    console.error('❌ Authorization error details:', errorDetails);
 
                     // Return null to trigger CredentialsSignin error
                     return null;
@@ -81,16 +81,44 @@ export const authOptions: NextAuthOptions = {
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger, session }) {
             if (user) {
                 token.role = user.role;
+                token.isProfileComplete = false; // Default
             }
+
+            // If user is logged in, fetch latest data to check profile completion
+            if (token.sub) {
+                const dbUser = await prisma.user.findUnique({
+                    where: { id: token.sub },
+                    select: {
+                        phone: true,
+                        graduationCGPA: true,
+                        tenthPercentage: true,
+                        twelfthPercentage: true,
+                        role: true
+                    }
+                });
+
+                if (dbUser) {
+                    token.role = dbUser.role as "admin" | "user";
+                    const isComplete = !!(
+                        dbUser.phone &&
+                        dbUser.graduationCGPA !== null &&
+                        dbUser.tenthPercentage !== null &&
+                        dbUser.twelfthPercentage !== null
+                    );
+                    token.isProfileComplete = isComplete;
+                }
+            }
+
             return token;
         },
         async session({ session, token }) {
             if (session.user) {
                 session.user.role = token.role;
                 session.user.id = token.sub!;
+                session.user.isProfileComplete = token.isProfileComplete;
             }
             return session;
         }

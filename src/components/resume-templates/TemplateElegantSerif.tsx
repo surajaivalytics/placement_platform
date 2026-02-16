@@ -124,6 +124,24 @@ export default function TemplateElegantSerif({ data }: TemplateProps) {
                     </div>
                 </section>
 
+                {/* Certifications */}
+                {data.certifications && data.certifications.length > 0 && (
+                    <section>
+                        <h2 className="flex items-center gap-4 text-sm uppercase tracking-[0.2em] text-slate-700 mb-4">
+                            <span className="flex-1 border-t border-slate-300" />
+                            <span>Certifications</span>
+                            <span className="flex-1 border-t border-slate-300" />
+                        </h2>
+                        <div className="text-center space-y-2">
+                            {data.certifications.map((cert, index) => (
+                                <p key={index} className="text-slate-600 text-sm">
+                                    {cert}
+                                </p>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
                 {/* Languages */}
                 {data.languages && data.languages.length > 0 && (
                     <section>
@@ -162,6 +180,24 @@ export default function TemplateElegantSerif({ data }: TemplateProps) {
                         <p className="text-center text-slate-600 italic">
                             {data.interests.join(" • ")}
                         </p>
+                    </section>
+                )}
+
+                {/* Awards & Honors */}
+                {data.awards && data.awards.length > 0 && (
+                    <section>
+                        <h2 className="flex items-center gap-4 text-sm uppercase tracking-[0.2em] text-slate-700 mb-4">
+                            <span className="flex-1 border-t border-slate-300" />
+                            <span>Awards & Honors</span>
+                            <span className="flex-1 border-t border-slate-300" />
+                        </h2>
+                        <div className="text-center space-y-2">
+                            {data.awards.map((award, index) => (
+                                <p key={index} className="text-slate-600 text-sm">
+                                    {award}
+                                </p>
+                            ))}
+                        </div>
                     </section>
                 )}
 

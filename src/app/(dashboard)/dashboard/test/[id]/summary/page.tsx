@@ -6,9 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Loader2, Trophy, TrendingUp, TrendingDown,
+  Trophy, TrendingUp, TrendingDown,
   ArrowLeft, RotateCcw, Sparkles, BrainCircuit, ChevronRight
 } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SubtopicProgress {
@@ -60,7 +61,7 @@ export default function TopicSummaryPage({ params }: { params: Promise<{ id: str
         const res = await fetch("/api/ai-feedback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ score: totalScore, total: totalQuestions, percentage: overallPercentage, testTitle,subtopics: subtopics  })
+          body: JSON.stringify({ score: totalScore, total: totalQuestions, percentage: overallPercentage, testTitle, subtopics: subtopics })
         });
         const data = await res.json();
         if (data.success) setAiFeedback(data.feedback);
@@ -72,8 +73,7 @@ export default function TopicSummaryPage({ params }: { params: Promise<{ id: str
   if (loading) return (
     <div className="flex flex-col justify-center items-center h-screen bg-white">
       <div className="relative flex items-center justify-center">
-        <div className="absolute h-16 w-16 border-4 border-indigo-100 rounded-full" />
-        <Loader2 className="h-16 w-16 animate-spin text-indigo-600 relative z-10" />
+        <Spinner size={64} />
       </div>
       <p className="mt-4 text-slate-400 font-medium tracking-wide italic">Analyzing your growth...</p>
     </div>
@@ -114,7 +114,7 @@ export default function TopicSummaryPage({ params }: { params: Promise<{ id: str
                 <div className="relative flex items-center justify-center w-40 h-40">
                   <svg className="w-full h-full -rotate-90">
                     <circle cx="80" cy="80" r="70" fill="transparent" stroke="#F1F5F9" strokeWidth="12" />
-                    <motion.circle 
+                    <motion.circle
                       cx="80" cy="80" r="70" fill="transparent" stroke="url(#scoreGradient)" strokeWidth="12" strokeLinecap="round"
                       initial={{ strokeDasharray: "0 1000" }} animate={{ strokeDasharray: `${(overallPercentage / 100) * 440} 1000` }} transition={{ duration: 1.5, ease: "easeOut" }}
                     />
@@ -141,9 +141,9 @@ export default function TopicSummaryPage({ params }: { params: Promise<{ id: str
                     <p className="text-2xl font-black text-slate-800">{subtopics.length}</p>
                   </div>
                   <div className="col-span-2">
-                     <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-50 border-none px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">
-                       Status: {overallPercentage >= 70 ? 'Mastered' : 'Growing'}
-                     </Badge>
+                    <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-50 border-none px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">
+                      Status: {overallPercentage >= 70 ? 'Mastered' : 'Growing'}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -155,7 +155,7 @@ export default function TopicSummaryPage({ params }: { params: Promise<{ id: str
                   <h3 className="text-sm font-black uppercase tracking-tighter text-slate-700">AI Tutor Analysis</h3>
                 </div>
                 {aiLoading ? (
-                  <div className="flex gap-2 items-center"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs text-slate-400">Processing insights...</span></div>
+                  <div className="flex gap-2 items-center"><Spinner size={16} /><span className="text-xs text-slate-400">Processing insights...</span></div>
                 ) : (
                   <div className="grid md:grid-cols-2 gap-6">
                     <p className="text-sm text-slate-600 leading-relaxed italic md:col-span-2">"{aiFeedback?.summary}"</p>
@@ -198,28 +198,28 @@ export default function TopicSummaryPage({ params }: { params: Promise<{ id: str
 
           {/* Topic List */}
           <div className="mt-6">
-             <h2 className="text-slate-900 font-black text-xl mb-6 flex items-center gap-2 px-2">
-               <Sparkles className="w-5 h-5 text-indigo-500" />
-               Detailed Breakdown
-             </h2>
-             <div className="space-y-3">
-               {subtopics.map((s, i) => (
-                 <motion.div key={s.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
-                   <div className="bg-white hover:bg-slate-50 transition-colors p-5 rounded-3xl border border-slate-100 flex items-center group cursor-default">
-                     <div className="flex-1">
-                       <h5 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{s.name}</h5>
-                       <div className="flex gap-4 mt-1">
-                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{s.progress?.score} / {s.progress?.total} Correct</p>
-                       </div>
-                     </div>
-                     <div className="text-right flex items-center gap-4">
-                        <span className="text-sm font-black text-slate-900">{Math.round(s.progress?.percentage || 0)}%</span>
-                        <ChevronRight className="w-4 h-4 text-slate-200" />
-                     </div>
-                   </div>
-                 </motion.div>
-               ))}
-             </div>
+            <h2 className="text-slate-900 font-black text-xl mb-6 flex items-center gap-2 px-2">
+              <Sparkles className="w-5 h-5 text-indigo-500" />
+              Detailed Breakdown
+            </h2>
+            <div className="space-y-3">
+              {subtopics.map((s, i) => (
+                <motion.div key={s.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
+                  <div className="bg-white hover:bg-slate-50 transition-colors p-5 rounded-3xl border border-slate-100 flex items-center group cursor-default">
+                    <div className="flex-1">
+                      <h5 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{s.name}</h5>
+                      <div className="flex gap-4 mt-1">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{s.progress?.score} / {s.progress?.total} Correct</p>
+                      </div>
+                    </div>
+                    <div className="text-right flex items-center gap-4">
+                      <span className="text-sm font-black text-slate-900">{Math.round(s.progress?.percentage || 0)}%</span>
+                      <ChevronRight className="w-4 h-4 text-slate-200" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
 
           {/* Primary Actions */}
@@ -227,7 +227,7 @@ export default function TopicSummaryPage({ params }: { params: Promise<{ id: str
             <Button onClick={() => router.push('/dashboard/topics')} className="h-14 px-10 rounded-full bg-slate-900 text-white font-bold hover:scale-105 transition-transform shadow-xl shadow-slate-200">
               Continue Learning
             </Button>
-            
+
           </div>
         </div>
       </div>

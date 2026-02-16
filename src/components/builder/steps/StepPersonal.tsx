@@ -27,10 +27,10 @@ export default function StepPersonal({ data, onChange }: StepPersonalProps) {
         >
             {/* Header */}
             <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-slate-900/20">
                     <User className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-800">Personal Details</h2>
+                <h2 className="text-2xl font-bold text-slate-900">Personal Details</h2>
                 <p className="text-slate-500 mt-1">Let&apos;s start with your basic information</p>
             </div>
 
@@ -45,7 +45,7 @@ export default function StepPersonal({ data, onChange }: StepPersonalProps) {
                         value={data.firstName}
                         onChange={(e) => handleChange("firstName", e.target.value)}
                         placeholder="John"
-                        className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                        className="h-12 border-slate-200 focus:border-teal-500 focus:ring-teal-500"
                     />
                 </div>
                 <div className="space-y-2">
@@ -57,7 +57,7 @@ export default function StepPersonal({ data, onChange }: StepPersonalProps) {
                         value={data.lastName}
                         onChange={(e) => handleChange("lastName", e.target.value)}
                         placeholder="Doe"
-                        className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                        className="h-12 border-slate-200 focus:border-teal-500 focus:ring-teal-500"
                     />
                 </div>
             </div>
@@ -74,7 +74,7 @@ export default function StepPersonal({ data, onChange }: StepPersonalProps) {
                     value={data.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                     placeholder="john.doe@example.com"
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="h-12 border-slate-200 focus:border-teal-500 focus:ring-teal-500"
                 />
             </div>
 
@@ -90,7 +90,7 @@ export default function StepPersonal({ data, onChange }: StepPersonalProps) {
                     value={data.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
                     placeholder="+1 (555) 123-4567"
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="h-12 border-slate-200 focus:border-teal-500 focus:ring-teal-500"
                 />
             </div>
 
@@ -106,7 +106,7 @@ export default function StepPersonal({ data, onChange }: StepPersonalProps) {
                         value={data.city}
                         onChange={(e) => handleChange("city", e.target.value)}
                         placeholder="San Francisco"
-                        className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                        className="h-12 border-slate-200 focus:border-teal-500 focus:ring-teal-500"
                     />
                 </div>
                 <div className="space-y-2">
@@ -118,7 +118,7 @@ export default function StepPersonal({ data, onChange }: StepPersonalProps) {
                         value={data.country}
                         onChange={(e) => handleChange("country", e.target.value)}
                         placeholder="USA"
-                        className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                        className="h-12 border-slate-200 focus:border-teal-500 focus:ring-teal-500"
                     />
                 </div>
             </div>
@@ -135,7 +135,7 @@ export default function StepPersonal({ data, onChange }: StepPersonalProps) {
                     value={data.linkedin || ""}
                     onChange={(e) => handleChange("linkedin", e.target.value)}
                     placeholder="linkedin.com/in/johndoe"
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="h-12 border-slate-200 focus:border-teal-500 focus:ring-teal-500"
                 />
             </div>
         </motion.div>

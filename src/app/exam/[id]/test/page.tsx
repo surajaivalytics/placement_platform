@@ -21,7 +21,11 @@ export default async function MockTestRunnerPage(props: { params: Promise<{ id: 
     const test = await prisma.test.findUnique({
         where: { id },
         include: {
-            questions: true, // Fetch questions for the runner
+            questions: {
+                include: {
+                    options: true
+                }
+            }, // Fetch questions for the runner
             subtopics: {
                 orderBy: { order: 'asc' }
             }

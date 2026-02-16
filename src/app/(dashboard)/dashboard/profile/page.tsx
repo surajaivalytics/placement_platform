@@ -5,11 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, Upload, CreditCard, Bell, Lock, User, Camera, Loader2, Save, CheckCircle, Smartphone, Mail } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Copy, Upload, CreditCard, Bell, Lock, User, Camera, Loader2, Save, CheckCircle, Smartphone, Mail, GraduationCap, AlertCircle, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useSession, signOut } from "next-auth/react";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface UserProfile {
   name: string;
@@ -20,9 +25,13 @@ interface UserProfile {
   accountType: string;
   role: string;
   autoPayout: boolean;
+  graduationCGPA: number | null;
+  tenthPercentage: number | null;
+  twelfthPercentage: number | null;
 }
 
 export default function ProfilePage() {
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
@@ -35,10 +44,17 @@ export default function ProfilePage() {
     accountType: 'Regular',
     role: 'user',
     autoPayout: false,
+    graduationCGPA: null,
+    tenthPercentage: null,
+    twelfthPercentage: null,
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const isIncomplete = searchParams.get('incomplete') === 'true';
 
   useEffect(() => {
     fetchProfile();
@@ -51,14 +67,17 @@ export default function ProfilePage() {
         const data = await res.json();
         setUser({
           ...data,
-          name: data.name || '',
-          email: data.email || '',
-          image: data.image || '',
+          name: data.name || session?.user?.name || '',
+          email: data.email || session?.user?.email || '',
+          image: data.image || session?.user?.image || '',
           phone: data.phone || '',
           accountType: data.accountType || 'Regular',
           role: data.role || 'user',
           autoPayout: data.autoPayout || false,
-          coverImage: data.coverImage || '/images/default-cover.png'
+          coverImage: data.coverImage || '/images/default-cover.png',
+          graduationCGPA: data.graduationCGPA ?? null,
+          tenthPercentage: data.tenthPercentage ?? null,
+          twelfthPercentage: data.twelfthPercentage ?? null,
         });
       }
     } catch (error) {
@@ -69,6 +88,11 @@ export default function ProfilePage() {
   };
 
   const handleUpdate = async () => {
+    if (!user.phone || !user.graduationCGPA || !user.tenthPercentage || !user.twelfthPercentage) {
+      toast.error("Please fill in all required fields (Phone, Grades)!");
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await fetch('/api/user/profile', {
@@ -79,6 +103,9 @@ export default function ProfilePage() {
 
       if (res.ok) {
         toast.success("Profile updated successfully");
+        if (isIncomplete) {
+          window.location.href = '/dashboard';
+        }
       } else {
         throw new Error("Failed update");
       }
@@ -117,26 +144,37 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+    return (
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const renderContent = () => {
     switch (activeTab) {
       case 'personal':
         return (
-          <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm space-y-8 animate-in fade-in duration-300">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-none p-8 border border-gray-100 shadow-sm space-y-6 aivalytics-card"
+          >
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">Personal Info</h3>
-              <p className="text-gray-500 text-sm">Update your personal details here.</p>
+               <p className="text-primary text-[11px] font-bold uppercase tracking-wider mb-2">User Profile</p>
+               <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Personal Information</h3>
+               <p className="text-base text-gray-500 mt-2 leading-relaxed">Manage your account details and contact information.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Full Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <label className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Full Name</label>
+                <div className="relative group">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors group-focus-within:text-primary" />
                   <Input
-                    className="pl-10 h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all"
+                    className="pl-10 h-11 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium text-gray-900 focus:ring-0 focus:border-primary"
+                    placeholder="Enter full name"
                     value={user.name}
                     onChange={(e) => setUser({ ...user, name: e.target.value })}
                   />
@@ -144,11 +182,12 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Email Address</label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 flex items-center justify-center">@</div>
+                <label className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Email Address</label>
+                <div className="relative group">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors group-focus-within:text-primary" />
                   <Input
-                    className="pl-10 h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all"
+                    className="pl-10 h-11 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium text-gray-900 focus:ring-0 focus:border-primary"
+                    placeholder="example@edu.com"
                     value={user.email}
                     onChange={(e) => setUser({ ...user, email: e.target.value })}
                   />
@@ -156,12 +195,15 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Phone Number</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">🇮🇳 +91</span>
+                <label className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Phone Number <span className="text-primary">*</span></label>
+                <div className="relative group">
+                  <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors group-focus-within:text-primary" />
                   <Input
-                    className="pl-16 h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all"
-                    placeholder="9876543210"
+                    className={cn(
+                        "pl-10 h-11 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium text-gray-900 focus:ring-0 focus:border-primary",
+                        (!user.phone && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
+                    )}
+                    placeholder="+91 9876543210"
                     value={user.phone}
                     onChange={(e) => setUser({ ...user, phone: e.target.value })}
                   />
@@ -169,148 +211,174 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Account Type</label>
-                <Select value={user.accountType} onValueChange={(val) => setUser({ ...user, accountType: val })}>
-                  <SelectTrigger className="h-12 rounded-xl border-gray-200 bg-gray-50/50 hover:bg-white">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Regular">Regular</SelectItem>
-                    <SelectItem value="Pro">Pro</SelectItem>
-                    <SelectItem value="Enterprise">Enterprise</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Account Type</label>
+                <Input className="h-11 rounded-none border-gray-200 bg-gray-50 font-medium text-gray-500 cursor-not-allowed" value={user.accountType} disabled />
               </div>
             </div>
 
-            <div className="pt-6 border-t border-gray-100">
-              <h4 className="text-sm font-semibold text-gray-900 mb-4">Change Avatar</h4>
-              <div className="flex items-center gap-6 p-6 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/30">
-                <Avatar className="w-16 h-16">
-                  <AvatarImage src={user.image || ''} />
-                  <AvatarFallback>{user.name?.[0]}</AvatarFallback>
-                </Avatar>
-
-                <div className="flex-1">
-                  <div
-                    className="flex flex-col items-center justify-center w-full h-32 bg-white rounded-xl border border-gray-200 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                      <Upload className="w-5 h-5" />
-                    </div>
-                    <p className="text-sm font-semibold text-gray-700">Click to upload</p>
-                    <p className="text-xs text-gray-400">SVG, PNG, JPG or GIF (max. 5MB)</p>
-                  </div>
+            <div className="pt-5 border-t border-gray-100">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 bg-primary/10 rounded-none text-primary">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                   <p className="text-[11px] text-primary font-bold uppercase tracking-wider">Academic Records</p>
+                   <h3 className="text-base font-bold text-gray-900">Educational Performance</h3>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="space-y-2">
+                  <label className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Graduation CGPA <span className="text-primary">*</span></label>
+                  <Input
+                    type="number" step="0.01" max="10"
+                    className={cn(
+                        "h-11 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium focus:ring-0 focus:border-primary",
+                        (!user.graduationCGPA && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
+                    )}
+                    placeholder="8.5"
+                    value={user.graduationCGPA ?? ''}
+                    onChange={(e) => setUser({ ...user, graduationCGPA: parseFloat(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-caption text-gray-500 font-semibold uppercase tracking-wide">12th Percentage <span className="text-primary">*</span></label>
+                  <Input
+                    type="number" step="0.01" max="100"
+                    className={cn(
+                        "h-12 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium focus:ring-0 focus:border-primary",
+                        (!user.twelfthPercentage && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
+                    )}
+                    placeholder="85.5"
+                    value={user.twelfthPercentage ?? ''}
+                    onChange={(e) => setUser({ ...user, twelfthPercentage: parseFloat(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-caption text-gray-500 font-semibold uppercase tracking-wide">10th Percentage <span className="text-primary">*</span></label>
+                  <Input
+                    type="number" step="0.01" max="100"
+                    className={cn(
+                        "h-12 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium focus:ring-0 focus:border-primary",
+                        (!user.tenthPercentage && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
+                    )}
+                    placeholder="90.0"
+                    value={user.tenthPercentage ?? ''}
+                    onChange={(e) => setUser({ ...user, tenthPercentage: parseFloat(e.target.value) })}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="pt-6 border-t border-gray-100">
-              <div className="flex items-center justify-between">
+              <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider mb-3">Profile Picture</p>
+              <div className="flex flex-col lg:flex-row items-center gap-5 p-5 border border-gray-200 rounded-none bg-gray-50 hover:bg-white hover:border-primary/30 transition-all group">
+                <Avatar className="w-20 h-20 rounded-none border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
+                  <AvatarImage src={user.image || ''} />
+                  <AvatarFallback className="bg-primary text-white text-xl font-bold">{user.name?.[0]}</AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 w-full">
+                  <div
+                    className="flex flex-col items-center justify-center w-full h-28 bg-white rounded-none border border-gray-200 cursor-pointer hover:border-primary hover:shadow-md transition-all relative overflow-hidden group/upload"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover/upload:opacity-100 transition-opacity" />
+                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-none flex items-center justify-center mb-2 group-hover/upload:scale-110 transition-transform relative z-10">
+                      <Upload className="w-4 h-4" />
+                    </div>
+                    <p className="text-[11px] text-gray-900 font-bold uppercase tracking-wider relative z-10">Upload New Photo</p>
+                    <p className="text-[10px] text-gray-400 mt-1 relative z-10">JPG, PNG or GIF (Max 5MB)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-5 border-t border-gray-100">
+              <div className="flex items-center justify-between p-5 bg-primary/5 border border-primary/20 rounded-none">
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900">Enable Auto Payout</h4>
-                  <p className="text-xs text-gray-500">Automatically withdraw earnings to your account</p>
+                   <h4 className="text-base font-bold text-gray-900">Auto Payout</h4>
+                   <p className="text-[11px] text-gray-500 mt-1">Enable automatic payouts to your account</p>
                 </div>
                 <Switch
                   checked={user.autoPayout}
                   onCheckedChange={(checked) => setUser({ ...user, autoPayout: checked })}
+                  className="data-[state=checked]:bg-primary"
                 />
               </div>
             </div>
-          </div>
-        );
-      case 'subscription':
-        return (
-          <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm space-y-8 animate-in fade-in duration-300">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">Subscription Plan</h3>
-              <p className="text-gray-500 text-sm">Manage your billing and subscription details.</p>
-            </div>
-
-            <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-600 font-bold mb-1">CURRENT PLAN</p>
-                <h2 className="text-2xl font-bold text-gray-900">Pro Member</h2>
-                <p className="text-sm text-gray-600">$10/month • Renews on Aug 12, 2026</p>
-              </div>
-              <Badge className="bg-blue-600 text-white hover:bg-blue-700 h-8 px-4 rounded-lg">Active</Badge>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {['Free', 'Pro', 'Enterprise'].map((plan) => (
-                <div key={plan} className={`p-6 rounded-2xl border ${plan === 'Pro' ? 'border-blue-500 bg-blue-50/30 ring-4 ring-blue-50' : 'border-gray-200'} cursor-pointer hover:border-blue-300 transition-all`}>
-                  <h4 className="font-bold text-lg mb-2">{plan}</h4>
-                  <p className="text-2xl font-bold mb-4">{plan === 'Free' ? '$0' : plan === 'Pro' ? '$10' : '$99'} <span className="text-sm font-normal text-gray-500">/mo</span></p>
-                  <ul className="space-y-2 text-sm text-gray-600 mb-6">
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" /> Access to basic tests</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" /> Limited reports</li>
-                  </ul>
-                  <Button variant={plan === 'Pro' ? 'default' : 'outline'} className="w-full rounded-xl">
-                    {plan === 'Pro' ? 'Current Plan' : 'Upgrade'}
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
+          </motion.div>
         );
       case 'security':
         return (
-          <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm space-y-8 animate-in fade-in duration-300">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-none p-8 border border-gray-100 shadow-sm space-y-6 aivalytics-card"
+          >
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">Security Settings</h3>
-              <p className="text-gray-500 text-sm">Update your password and security preferences.</p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Current Password</label>
-                <Input type="password" className="h-12 rounded-xl border-gray-200 bg-gray-50/50" placeholder="••••••••" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">New Password</label>
-                <Input type="password" className="h-12 rounded-xl border-gray-200 bg-gray-50/50" placeholder="••••••••" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Confirm Password</label>
-                <Input type="password" className="h-12 rounded-xl border-gray-200 bg-gray-50/50" placeholder="••••••••" />
-              </div>
-            </div>
-
-            <div className="pt-6 border-t border-gray-100 flex justify-end">
-              <Button className="rounded-xl px-8" variant="destructive">Update Password</Button>
-            </div>
-          </div>
-        );
-      case 'notifications':
-        return (
-          <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm space-y-8 animate-in fade-in duration-300">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">Notifications</h3>
-              <p className="text-gray-500 text-sm">Choose what notifications you want to receive.</p>
+               <p className="text-red-500 text-[11px] font-bold uppercase tracking-wider mb-2">Security Settings</p>
+               <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Password & Security</h3>
+               <p className="text-base text-gray-500 mt-2 leading-relaxed">Manage your password and security preferences.</p>
             </div>
 
             <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Current Password</label>
+                <Input type="password" className="h-11 rounded-none border-gray-200 bg-white font-medium focus:ring-0 focus:border-primary" placeholder="••••••••" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">New Password</label>
+                <Input type="password" className="h-11 rounded-none border-gray-200 bg-white font-medium focus:ring-0 focus:border-primary" placeholder="••••••••" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Confirm New Password</label>
+                <Input type="password" className="h-11 rounded-none border-gray-200 bg-white font-medium focus:ring-0 focus:border-primary" placeholder="••••••••" />
+              </div>
+            </div>
+
+            <div className="pt-5 border-t border-gray-100 flex justify-end">
+              <Button className="h-11 px-6 rounded-none bg-red-600 text-white hover:bg-red-700 text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" variant="destructive">
+                Update Password
+              </Button>
+            </div>
+          </motion.div>
+        );
+      case 'notifications':
+        return (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-none p-8 border border-gray-100 shadow-sm space-y-6 aivalytics-card"
+          >
+            <div>
+               <p className="text-primary text-[11px] font-bold uppercase tracking-wider mb-2">Notifications</p>
+               <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Communication Preferences</h3>
+               <p className="text-base text-gray-500 mt-2 leading-relaxed">Manage how you receive notifications and updates.</p>
+            </div>
+
+            <div className="space-y-4">
               {[
-                { title: 'Email Notifications', desc: 'Receive emails about your account activity.', icon: Mail },
-                { title: 'Push Notifications', desc: 'Receive push notifications on your device.', icon: Smartphone },
-                { title: 'Marketing Emails', desc: 'Receive emails about new features and offers.', icon: Bell }
+                { title: 'Email Notifications', desc: 'Receive updates and announcements via email', icon: Mail },
+                { title: 'Push Notifications', desc: 'Get instant alerts on your device', icon: Smartphone },
+                { title: 'Newsletter', desc: 'Weekly digest of new content and features', icon: Bell }
               ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
-                      <item.icon className="w-5 h-5" />
+                <div key={i} className="flex items-center justify-between p-5 rounded-none border border-gray-200 hover:bg-gray-50 transition-all group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-none flex items-center justify-center group-hover:scale-105 transition-all group-hover:bg-primary group-hover:text-white">
+                      <item.icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-900">{item.title}</h4>
-                      <p className="text-sm text-gray-500">{item.desc}</p>
+                      <h4 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors">{item.title}</h4>
+                      <p className="text-[11px] text-gray-500 mt-0.5">{item.desc}</p>
                     </div>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch defaultChecked className="data-[state=checked]:bg-primary" />
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         );
       default:
         return null;
@@ -318,103 +386,137 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="min-h-screen bg-[#f8fcfb]">
+      <div className="max-w-7xl mx-auto space-y-6 pb-20 animate-in fade-in duration-1000">
 
-      {/* Cover Image */}
-      <div className="relative h-64 w-full rounded-[32px] overflow-hidden group">
-        <img
-          src={user.coverImage || '/images/default-cover.png'}
-          alt="Cover"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <Button variant="secondary" onClick={() => coverInputRef.current?.click()}>
-            <Camera className="w-4 h-4 mr-2" /> Change Cover
-          </Button>
-          <input
-            type="file"
-            ref={coverInputRef}
-            className="hidden"
-            accept="image/*"
-            onChange={(e) => handleFileUpload(e, 'coverImage')}
+        {isIncomplete && (
+          <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-600 rounded-none p-5 shadow-sm border-l-4 border-l-red-600">
+            <AlertCircle className="h-5 w-5" />
+            <div className="ml-4">
+                <AlertTitle className="text-[11px] font-bold uppercase tracking-wider">Profile Incomplete</AlertTitle>
+                <AlertDescription className="text-sm mt-1">
+                  Please complete all required fields to access the full platform.
+                </AlertDescription>
+            </div>
+          </Alert>
+        )}
+
+        {/* Cover Image */}
+        <div className="relative h-56 w-full rounded-none overflow-hidden group shadow-sm">
+          <img
+            src={user.coverImage || '/images/default-cover.png'}
+            alt="Cover"
+            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
           />
-        </div>
-      </div>
-
-      <div className="px-6 relative -mt-20 z-10 flex flex-col items-start gap-4">
-        {/* Profile Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-end gap-6 w-full">
-          <div className="relative group">
-            <Avatar className="w-32 h-32 border-4 border-white bg-white shadow-xl">
-              <AvatarImage src={user.image || ''} />
-              <AvatarFallback className="text-4xl">{user.name?.[0]}</AvatarFallback>
-            </Avatar>
-            <button
-              className="absolute bottom-1 right-1 p-2 bg-white rounded-full shadow-md text-gray-700 hover:text-blue-600 transition-colors"
-              onClick={() => fileInputRef.current?.click()}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm">
+            <Button 
+              variant="secondary" 
+              className="h-11 px-5 rounded-none text-[11px] font-bold uppercase tracking-wider bg-white text-gray-900 shadow-sm hover:bg-primary hover:text-white transition-all duration-300" 
+              onClick={() => coverInputRef.current?.click()}
             >
-              <Camera className="w-4 h-4" />
-            </button>
+              <Camera className="w-4 h-4 mr-2" /> Change Cover
+            </Button>
             <input
               type="file"
-              ref={fileInputRef}
+              ref={coverInputRef}
               className="hidden"
               accept="image/*"
-              onChange={(e) => handleFileUpload(e, 'image')}
+              onChange={(e) => handleFileUpload(e, 'coverImage')}
             />
           </div>
+        </div>
 
-          <div className="flex-1 mb-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
-              <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-0">{user.role === 'admin' ? 'Admin' : 'Pro'}</Badge>
+        <div className="px-6 relative -mt-16 z-10">
+          {/* Profile Header */}
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-5 w-full">
+            <div className="relative group">
+              <Avatar className="w-28 h-28 rounded-none border-4 border-white bg-white shadow-lg transition-all duration-300 group-hover:scale-105">
+                <AvatarImage src={user.image || ''} className="transition-transform duration-300 group-hover:scale-110" />
+                <AvatarFallback className="text-3xl font-bold bg-primary text-white">{user.name?.[0]}</AvatarFallback>
+              </Avatar>
+              <button
+                className="absolute -bottom-1 -right-1 p-2.5 bg-gray-900 text-white rounded-none shadow-md hover:bg-primary transition-all duration-300 z-20 transform hover:-translate-y-0.5 group/btn"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Camera className="w-4 h-4 transition-transform duration-300 group-hover/btn:scale-110" />
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => handleFileUpload(e, 'image')}
+              />
             </div>
-            <p className="text-gray-500 font-medium">{user.email}</p>
-          </div>
 
-          <div className="flex gap-3 mb-2">
-            <Button className="rounded-xl px-6 bg-gray-900 text-white hover:bg-gray-800" onClick={handleUpdate} disabled={saving}>
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Changes
+            <div className="flex-1 mb-3 text-center md:text-left">
+              <div className="flex flex-col md:flex-row items-center gap-3 justify-center md:justify-start">
+                <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tighter">{user.name}</h1>
+                <Badge className="bg-primary text-white border-0 px-3 py-1 rounded-none text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                  {user.role === 'admin' ? 'Admin' : 'Verified'}
+                </Badge>
+              </div>
+              <p className="text-base text-gray-500 mt-2">{user.email}</p>
+            </div>
+
+            <div className="flex gap-3 mb-3">
+              <Button 
+                className="h-11 px-6 rounded-none bg-gray-900 text-white hover:bg-black text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md border-b-2 border-primary flex items-center gap-2" 
+                onClick={handleUpdate} 
+                disabled={saving}
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8 px-6">
+
+          {/* Left Settings Navigation */}
+          <div className="lg:col-span-1 space-y-3">
+            <div className="bg-white rounded-none p-2 border border-gray-100 shadow-sm">
+              {[
+                { id: 'personal', icon: User, label: 'Personal Info' },
+                { id: 'security', icon: Lock, label: 'Security' },
+                { id: 'notifications', icon: Bell, label: 'Notifications' }
+              ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={cn(
+                        "w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-none transition-all duration-300 text-[11px] font-bold uppercase tracking-wider group",
+                        activeTab === item.id
+                          ? 'bg-primary text-white shadow-md'
+                          : 'text-gray-500 hover:bg-gray-50 hover:text-primary'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className={cn("w-4 h-4 transition-transform duration-300 group-hover:scale-110", activeTab === item.id ? 'text-white' : 'text-gray-400 group-hover:text-primary')} />
+                      {item.label}
+                    </div>
+                    {activeTab === item.id && <CheckCircle className="w-4 h-4 text-white/60" />}
+                  </button>
+                ))}
+            </div>
+
+            {/* Logout Button */}
+            <Button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="w-full justify-start gap-3 h-11 rounded-none text-gray-500 hover:bg-red-50 hover:text-red-600 text-[11px] font-bold uppercase tracking-wider transition-all duration-300 group bg-white border border-gray-100 hover:border-red-200"
+            >
+              <LogOut className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+              Sign Out
             </Button>
           </div>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-
-        {/* Left Settings Navigation */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-[24px] p-2 border border-gray-100 shadow-sm">
-            {[
-              { id: 'personal', icon: User, label: 'Personal Info' },
-              { id: 'subscription', icon: CreditCard, label: 'Subscription' },
-              { id: 'security', icon: Lock, label: 'Security' },
-              { id: 'notifications', icon: Bell, label: 'Notifications' }
-            ]
-              .filter(item => user.role !== 'admin' || item.id !== 'subscription')
-              .map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id
-                    ? 'bg-blue-50 text-blue-700 font-semibold'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.label}
-                </button>
-              ))}
+          {/* Main Form Content */}
+          <div className="lg:col-span-3">
+            {renderContent()}
           </div>
-
-          {/* Go Pro Card */}
-
-        </div>
-
-        {/* Main Form Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {renderContent()}
         </div>
       </div>
     </div>

@@ -101,15 +101,13 @@ export default function AuthLayout({
             <div className="relative z-10 w-full max-w-[1200px] mx-auto min-h-screen flex items-center justify-center p-4 md:p-8 origin-center md:scale-80">
                 <div className="bg-white w-full rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px]">
 
-                    {/* Left Panel (Yellow Decorative) */}
-                    <div className="w-full md:w-[45%] bg-[#FFD700] relative p-8 flex flex-col justify-between overflow-hidden">
+                    {/* Left Panel (AiValytics Decorative) */}
+                    <div className="w-full md:w-[45%] bg-primary relative p-12 flex flex-col justify-between overflow-hidden">
                         {/* Brand Logo Placeholder */}
                         <div className="relative z-20">
-                            <div className="flex items-center gap-2">
-                                {/* <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
-                                    A
-                                </div> */}
-                                <span className="font-bold text-2xl text-blue-900">Aivalytics</span>
+                            <div className="flex flex-col group">
+                                <span className="font-black text-2xl text-white leading-none tracking-tighter">AiValytics</span>
+                                <span className="text-[8px] font-bold text-white/60 uppercase tracking-[0.2em] mt-1">Online Education</span>
                             </div>
                         </div>
 
@@ -139,9 +137,9 @@ export default function AuthLayout({
                         </div>
 
                         {/* Bottom Card */}
-                        <div className="relative z-20 bg-white rounded-2xl p-4 shadow-xl mx-auto w-full max-w-[280px] text-center mb-8">
-                            <h3 className="text-xl font-bold text-blue-900 mb-1">Practice</h3>
-                            <p className="text-sm text-gray-500">easy to complex problems</p>
+                        <div className="relative z-20 bg-white/10 backdrop-blur-xl rounded-none border border-white/20 p-6 mx-auto w-full max-w-[320px] text-center mb-8">
+                            <h3 className="text-xl font-black text-white mb-2 uppercase tracking-widest text-xs">Join our community</h3>
+                            <p className="text-sm text-white/80 font-medium italic">"Education is the movement from darkness to light."</p>
                         </div>
                     </div>
 

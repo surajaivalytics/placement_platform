@@ -2,7 +2,7 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as XLSX from "xlsx";
-const pdf = require("pdf-parse");
+import { extractText } from "unpdf";
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -32,9 +32,17 @@ export async function importQuestionsFromContext(formData: FormData) {
             const rows = XLSX.utils.sheet_to_json(sheet);
 
             questions = rows.map((row: any) => {
-                const typeRaw = (row['Type'] || row['type'] || 'mcq').toLowerCase();
+                let typeRaw = (row['Type'] || row['type'] || '').toLowerCase();
+
+                // Heuristic: If Type is missing but coding columns exist, assume coding
+                if (!typeRaw && (row['Input Format'] || row['Output Format'] || row['Constraints'] || row['Sample Input'] || row['Input Format (Coding)'])) {
+                    typeRaw = 'coding';
+                }
+
+                if (!typeRaw) typeRaw = 'mcq';
+
                 const type = (typeRaw.includes('code') || typeRaw.includes('coding')) ? 'coding' : 'mcq';
-                const text = row['Question Text'] || row['Question'] || row['text'] || row['question'] || '';
+                const text = String(row['Question Text'] || row['Question'] || row['text'] || row['question'] || '');
 
                 if (type === 'coding') {
                     // Coding Question Structure
@@ -63,10 +71,10 @@ export async function importQuestionsFromContext(formData: FormData) {
                         text,
                         type: 'mcq',
                         options: [
-                            { text: row['Option A'] || row['A'] || '', isCorrect: (row['Correct Option (A/B/C/D)'] === 'A' || row['Answer'] === 'A' || row['Answer'] === row['Option A']) },
-                            { text: row['Option B'] || row['B'] || '', isCorrect: (row['Correct Option (A/B/C/D)'] === 'B' || row['Answer'] === 'B' || row['Answer'] === row['Option B']) },
-                            { text: row['Option C'] || row['C'] || '', isCorrect: (row['Correct Option (A/B/C/D)'] === 'C' || row['Answer'] === 'C' || row['Answer'] === row['Option C']) },
-                            { text: row['Option D'] || row['D'] || '', isCorrect: (row['Correct Option (A/B/C/D)'] === 'D' || row['Answer'] === 'D' || row['Answer'] === row['Option D']) },
+                            { text: String(row['Option A'] || row['A'] || ''), isCorrect: (row['Correct Option (A/B/C/D)'] === 'A' || String(row['Answer']) === 'A' || String(row['Answer']) === String(row['Option A'])) },
+                            { text: String(row['Option B'] || row['B'] || ''), isCorrect: (row['Correct Option (A/B/C/D)'] === 'B' || String(row['Answer']) === 'B' || String(row['Answer']) === String(row['Option B'])) },
+                            { text: String(row['Option C'] || row['C'] || ''), isCorrect: (row['Correct Option (A/B/C/D)'] === 'C' || String(row['Answer']) === 'C' || String(row['Answer']) === String(row['Option C'])) },
+                            { text: String(row['Option D'] || row['D'] || ''), isCorrect: (row['Correct Option (A/B/C/D)'] === 'D' || String(row['Answer']) === 'D' || String(row['Answer']) === String(row['Option D'])) },
                         ].filter((o: any) => o.text && o.text.trim() !== ''),
                         difficulty: row['Difficulty'] || 'Medium',
                         category: row['Category'] || 'General'
@@ -75,8 +83,8 @@ export async function importQuestionsFromContext(formData: FormData) {
             });
         } else if (fileType === 'pdf') {
             // PDF Parsing & AI Extraction
-            const data = await pdf(buffer);
-            const textContent = data.text;
+            const { text } = await extractText(arrayBuffer);
+            const textContent = Array.isArray(text) ? text.join('\n') : text;
 
             // Use Gemini to extract structured data from unstructured text
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });

@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Save } from "lucide-react";
+import { Save } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { toast } from "sonner";
 
 interface TestSettingsFormProps {
@@ -127,7 +128,7 @@ export function TestSettingsForm({ testId, initialCriteria }: TestSettingsFormPr
                     </div>
                     <div className="flex justify-end">
                         <Button type="submit" disabled={loading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {loading && <Spinner size={16} className="mr-2" />}
                             {loading ? "Saving..." : "Save Criteria"}
                         </Button>
                     </div>

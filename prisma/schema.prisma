@@ -53,14 +53,15 @@ model User {
   accountType           String?                @default("Regular")
   autoPayout            Boolean                @default(false)
   coverImage            String?
-  submissions           Submissions[]          @relation("userSubmissions")
   accounts              Account[]
   interviewSessions     InterviewSession[]
+  mockEnrollments       MockDriveEnrollment[]
   mockDrives            MockDriveSession[]
   monitoringEvents      MonitoringEvent[]
   placementApplications PlacementApplication[]
   results               Result[]
   sessions              Session[]
+  submissions           Submissions[]          @relation("userSubmissions")
   testEligibilities     TestEligibility[]      @relation("userTestEligibilities")
   subtopicProgress      UserSubtopicProgress[]
 }
@@ -71,6 +72,16 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model OneTimePassword {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }
 
 model Test {
@@ -307,19 +318,22 @@ model MockDriveSession {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-
 model Problem {
   id              Int           @id @default(autoincrement())
   slug            String        @unique
   title           String
   description     String
-  type           String
+  type            String
   difficulty      String
-  starterTemplate Json
-  testCases       Json
+  starterTemplate Json?
+  testCases       Json?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   driverCode      Json?
+  constraints     String?
+  examples        Json?
+  expectedSpace   String?
+  expectedTime    String?
   submissions     Submissions[]
 }
 
@@ -327,10 +341,146 @@ model Submissions {
   id        String   @id @default(cuid())
   problemId Int
   userId    String
-  code      String   @db.Text
+  code      String
   language  String
-  status    String
+  status    String   @default("Pending")
+  createdAt DateTime @default(now())
   problem   Problem  @relation(fields: [problemId], references: [id])
   user      User     @relation("userSubmissions", fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+
+  @@unique([userId, problemId, language])
+}
+
+model MockCompanyDrive {
+  id                  String                @id @default(cuid())
+  title               String
+  companyName         String
+  description         String?
+  isLive              Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  eligibilityCriteria Json?
+  enrollments         MockDriveEnrollment[]
+  rounds              MockRound[]
+}
+
+model MockRound {
+  id              String              @id @default(cuid())
+  driveId         String
+  roundNumber     Int
+  type            MockRoundType
+  title           String
+  description     String?
+  durationMinutes Int                 @default(60)
+  metadata        Json?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  questions       MockQuestion[]
+  drive           MockCompanyDrive    @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  roundProgress   MockRoundProgress[]
+
+  @@unique([driveId, roundNumber])
+}
+
+model MockQuestion {
+  id             String         @id @default(cuid())
+  roundId        String
+  text           String
+  type           String
+  options        Json?
+  codingMetadata Json?
+  points         Int            @default(1)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  round          MockRound      @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  responses      MockResponse[]
+}
+
+model MockDriveEnrollment {
+  id                 String              @id @default(cuid())
+  userId             String
+  driveId            String
+  status             MockDriveStatus     @default(IN_PROGRESS)
+  currentRoundNumber Int                 @default(1)
+  overallScore       Float               @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  drive              MockCompanyDrive    @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roundProgress      MockRoundProgress[]
+
+  @@unique([userId, driveId])
+}
+
+model MockRoundProgress {
+  id                    String                     @id @default(cuid())
+  enrollmentId          String
+  roundId               String
+  status                MockRoundStatus            @default(PENDING)
+  score                 Float                      @default(0)
+  totalQuestions        Int                        @default(0)
+  answeredQuestions     Int                        @default(0)
+  aiFeedback            String?
+  proctoringLogs        String?
+  startedAt             DateTime?
+  completedAt           DateTime?
+  interviewInteractions MockInterviewInteraction[]
+  responses             MockResponse[]
+  enrollment            MockDriveEnrollment        @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  round                 MockRound                  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, roundId])
+}
+
+model MockResponse {
+  id              String            @id @default(cuid())
+  roundProgressId String
+  questionId      String
+  answer          String?
+  language        String?
+  isCorrect       Boolean           @default(false)
+  score           Float             @default(0)
+  passedCases     Int               @default(0)
+  totalCases      Int               @default(0)
+  lastSavedAt     DateTime          @default(now())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  question        MockQuestion      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  roundProgress   MockRoundProgress @relation(fields: [roundProgressId], references: [id], onDelete: Cascade)
+
+  @@unique([roundProgressId, questionId])
+}
+
+model MockInterviewInteraction {
+  id              String            @id @default(cuid())
+  roundProgressId String
+  questionText    String
+  answerText      String?
+  audioUrl        String?
+  orderIndex      Int
+  aiFeedback      String?
+  score           Float?
+  sentiment       String?
+  createdAt       DateTime          @default(now())
+  roundProgress   MockRoundProgress @relation(fields: [roundProgressId], references: [id], onDelete: Cascade)
+}
+
+enum MockRoundType {
+  MCQ
+  CODING
+  TECH_INTERVIEW
+  HR_INTERVIEW
+}
+
+enum MockDriveStatus {
+  IN_PROGRESS
+  PASSED
+  FAILED
+}
+
+enum MockRoundStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
 }

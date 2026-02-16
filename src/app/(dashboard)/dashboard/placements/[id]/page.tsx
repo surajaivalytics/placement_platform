@@ -8,10 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  CheckCircle2, Circle, Clock, XCircle, Loader2, ArrowRight,
+  CheckCircle2, Circle, Clock, XCircle, ArrowRight,
   FileText, Code, Mic, MessageSquare, TrendingUp, ChevronRight,
   LayoutDashboard, Sparkles
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/loader';
 import Link from 'next/link';
 import { JobHeader } from '@/components/placements/job-header';
 import { JobSidebar } from '@/components/placements/job-sidebar';
@@ -128,7 +129,7 @@ export default function ApplicationDetailPage() {
     router.push(`/dashboard/placements/${applicationId}/${stageName}`);
   };
 
-  if (loading) return <div className="flex justify-center py-20 min-h-screen bg-slate-50/50 items-center"><Loader2 className="animate-spin text-blue-600 w-10 h-10" /></div>;
+  if (loading) return <div className="flex justify-center py-20 min-h-screen bg-slate-50/50 items-center"><Spinner size={40} className="text-blue-600" /></div>;
   if (!application) return null;
 
   const stages = getStageConfig(application.company);

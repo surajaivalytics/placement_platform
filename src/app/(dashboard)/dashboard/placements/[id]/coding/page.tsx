@@ -6,7 +6,8 @@ import { CodingEditor } from '@/components/placements/coding-editor';
 import { fetchPlacementQuestions } from '@/lib/placement-questions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, ChevronLeft, ChevronRight, Clock, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, AlertCircle } from 'lucide-react';
+import { Spinner } from "@/components/ui/loader";
 
 interface CodingProblem {
   id: string;
@@ -45,7 +46,7 @@ export default function TCSCodingTestPage() {
         throw new Error('Failed to load application');
       }
       const appData = await appRes.json();
-      
+
       // Check if already completed this stage
       const codingStage = appData.assessmentStages?.find(
         (s: { stageName: string; submittedAt?: string | Date }) => s.stageName === 'coding'
@@ -57,7 +58,7 @@ export default function TCSCodingTestPage() {
 
       // Fetch questions from database
       const questionsData = await fetchPlacementQuestions(applicationId, 'coding');
-      
+
       // Transform questions to coding problem format
       interface ApiQuestion {
         id: string;
@@ -80,14 +81,14 @@ export default function TCSCodingTestPage() {
         difficulty: (q.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
         inputFormat: q.metadata?.inputFormat || 'Standard input',
         outputFormat: q.metadata?.outputFormat || 'Standard output',
-        constraints: q.metadata?.constraints ? 
-          (Array.isArray(q.metadata.constraints) ? q.metadata.constraints : [q.metadata.constraints]) : 
+        constraints: q.metadata?.constraints ?
+          (Array.isArray(q.metadata.constraints) ? q.metadata.constraints : [q.metadata.constraints]) :
           ['No specific constraints'],
         sampleInput: q.metadata?.sampleInput || 'No sample input provided',
         sampleOutput: q.metadata?.sampleOutput || 'No sample output provided',
         explanation: q.metadata?.explanation || 'Solve the problem as described',
-        testCases: q.metadata?.testCases ? 
-          (Array.isArray(q.metadata.testCases) ? q.metadata.testCases : []) : 
+        testCases: q.metadata?.testCases ?
+          (Array.isArray(q.metadata.testCases) ? q.metadata.testCases : []) :
           [],
       }));
 
@@ -184,7 +185,7 @@ export default function TCSCodingTestPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Spinner size={32} className="text-blue-600" />
       </div>
     );
   }
@@ -270,11 +271,11 @@ export default function TCSCodingTestPage() {
                     onClick={() => setCurrentProblem(idx)}
                     className={`
                       w-10 h-10 rounded-lg font-semibold transition-all
-                      ${idx === currentProblem 
-                        ? 'bg-blue-600 text-white ring-2 ring-blue-300 ring-offset-2' 
+                      ${idx === currentProblem
+                        ? 'bg-blue-600 text-white ring-2 ring-blue-300 ring-offset-2'
                         : solutions[idx]
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }
                     `}
                   >

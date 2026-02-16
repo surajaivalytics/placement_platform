@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, BookOpen, CheckCircle2, Clock, ArrowLeft, Trophy } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
+import { BookOpen, CheckCircle2, Clock, ArrowLeft, Trophy } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { motion } from "framer-motion";
 import { parseJsonSafely } from "@/lib/fetch-utils";
@@ -82,22 +83,22 @@ export default function SubtopicsPage({ params }: { params: Promise<{ id: string
   const getStatusBadge = (subtopic: Subtopic) => {
     if (subtopic.progress?.completed) {
       return (
-        <Badge className="bg-green-500 hover:bg-green-600 text-white">
-          <CheckCircle2 className="w-3 h-3 mr-1" />
+        <Badge className="bg-primary hover:bg-primary/90 text-white rounded-none font-black uppercase tracking-wider text-[10px] px-4 py-2 shadow-lg">
+          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" strokeWidth={3} />
           Completed
         </Badge>
       );
     }
     if (subtopic.progress?.attempted) {
       return (
-        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">
-          <Clock className="w-3 h-3 mr-1" />
+        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-none font-black uppercase tracking-wider text-[10px] px-4 py-2 shadow-lg">
+          <Clock className="w-3.5 h-3.5 mr-1.5" strokeWidth={3} />
           In Progress
         </Badge>
       );
     }
     return (
-      <Badge variant="outline" className="border-gray-300 text-gray-600">
+      <Badge variant="outline" className="border-2 border-gray-300 text-gray-600 rounded-none font-black uppercase tracking-wider text-[10px] px-4 py-2">
         Not Started
       </Badge>
     );
@@ -110,7 +111,7 @@ export default function SubtopicsPage({ params }: { params: Promise<{ id: string
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+        <Spinner size={40} className="text-emerald-600" />
       </div>
     );
   }
@@ -133,7 +134,7 @@ export default function SubtopicsPage({ params }: { params: Promise<{ id: string
             Back to Topics
           </Button>
         </div>
-        
+
         <PageHeader
           title={test?.title || 'Select Subtopic'}
           description={test?.description || 'Choose a subtopic to practice'}
@@ -141,29 +142,29 @@ export default function SubtopicsPage({ params }: { params: Promise<{ id: string
 
         {/* Overall Progress Card */}
         {totalSubtopics > 0 && (
-          <Card className="mt-6 border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Trophy className="w-6 h-6 text-blue-600" />
+          <Card className="mt-6 border-0 bg-gradient-to-r from-primary/5 to-primary/10 rounded-none shadow-xl hover:shadow-2xl transition-shadow duration-500">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-none bg-primary/10 flex items-center justify-center border-4 border-primary/20 shadow-lg">
+                    <Trophy className="w-8 h-8 text-primary" strokeWidth={3} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900">Overall Progress</h3>
-                    <p className="text-sm text-gray-600">
+                    <h3 className="font-black text-gray-900 text-xl tracking-tight">Overall Progress</h3>
+                    <p className="text-sm text-gray-600 font-medium mt-1">
                       {completedCount} of {totalSubtopics} subtopics completed
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-blue-600">
+                  <div className="text-5xl font-black text-primary">
                     {Math.round(overallProgress)}%
                   </div>
                 </div>
               </div>
-              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-4 w-full bg-gray-200 rounded-none overflow-hidden shadow-inner">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-700"
                   style={{ width: `${overallProgress}%` }}
                 />
               </div>
@@ -191,31 +192,30 @@ export default function SubtopicsPage({ params }: { params: Promise<{ id: string
           {subtopics.map((subtopic) => (
             <Card
               key={subtopic.id}
-              className="group flex flex-col border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white rounded-3xl relative h-full"
+              className="group flex flex-col border-0 shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden bg-white rounded-none relative h-full hover:-translate-y-2"
             >
               {/* Status Indicator */}
-              <div className={`absolute top-0 left-0 w-full h-1.5 ${
-                subtopic.progress?.completed
-                  ? 'bg-green-500'
+              <div className={`absolute top-0 left-0 w-full h-2 ${subtopic.progress?.completed
+                  ? 'bg-primary'
                   : subtopic.progress?.attempted
-                  ? 'bg-yellow-500'
-                  : 'bg-gray-300'
-              }`} />
+                    ? 'bg-yellow-500'
+                    : 'bg-gray-300'
+                }`} />
 
-              <CardContent className="p-6 flex flex-col h-full">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
-                    <BookOpen className="w-6 h-6 text-blue-600" />
+              <CardContent className="p-8 flex flex-col h-full">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="w-16 h-16 rounded-none bg-gradient-to-br from-primary/10 to-primary/20 border-l-4 border-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+                    <BookOpen className="w-7 h-7 text-primary" strokeWidth={2.5} />
                   </div>
                   {getStatusBadge(subtopic)}
                 </div>
 
-                <div className="mb-4 flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-tight mb-2">
+                <div className="mb-6 flex-1">
+                  <h3 className="text-xl font-black text-gray-900 group-hover:text-primary transition-colors line-clamp-2 leading-tight mb-3 tracking-tight">
                     {subtopic.name}
                   </h3>
                   {subtopic.description && (
-                    <p className="text-sm text-gray-500 line-clamp-2">
+                    <p className="text-sm text-gray-500 line-clamp-2 font-medium">
                       {subtopic.description}
                     </p>
                   )}
@@ -223,25 +223,25 @@ export default function SubtopicsPage({ params }: { params: Promise<{ id: string
 
                 {/* Progress Info */}
                 {subtopic.progress?.completed && (
-                  <div className="mb-4 p-3 bg-green-50 rounded-xl border border-green-100">
+                  <div className="mb-6 p-4 bg-primary/5 rounded-none border-l-4 border-primary shadow-md">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600 font-medium">Score:</span>
-                      <span className="font-bold text-green-700">
+                      <span className="text-gray-600 font-black uppercase tracking-wider text-xs">Score:</span>
+                      <span className="font-black text-primary text-lg">
                         {subtopic.progress.score}/{subtopic.progress.total} ({Math.round(subtopic.progress.percentage)}%)
                       </span>
                     </div>
                   </div>
                 )}
 
-                <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
-                    <BookOpen className="w-3.5 h-3.5" />
+                <div className="mt-auto pt-6 border-t-2 border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-black text-gray-500 bg-gray-100 px-4 py-2 rounded-none uppercase tracking-wider">
+                    <BookOpen className="w-4 h-4" />
                     {subtopic.totalQuestions} Questions
                   </div>
 
                   <Button
                     onClick={() => router.push(`/dashboard/test/${testId}/subtopic/${subtopic.id}`)}
-                    className="bg-gray-900 hover:bg-blue-600 text-white rounded-xl shadow-lg shadow-gray-200 group-hover:shadow-blue-200 transition-all font-semibold h-10 text-sm px-6"
+                    className="bg-gray-900 hover:bg-primary text-white rounded-none shadow-xl group-hover:shadow-2xl transition-all duration-500 font-black h-12 text-xs px-8 uppercase tracking-wider hover:-translate-y-1"
                   >
                     {subtopic.progress?.completed ? 'Retry' : 'Start'}
                   </Button>

@@ -1,18 +1,5 @@
-"use client";
-
 import React from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import {
-    CheckCircle,
-    Download,
-    User,
-    Briefcase,
-    GraduationCap,
-    Lightbulb,
-    FileText,
-    Sparkles
-} from "lucide-react";
+import { Download, CheckCircle2, AlertCircle, FileText, Briefcase, GraduationCap, User, Zap } from "lucide-react";
 import { BuilderResumeData } from "@/lib/builder/builderTypes";
 
 interface StepFinalReviewProps {
@@ -21,137 +8,165 @@ interface StepFinalReviewProps {
 }
 
 export default function StepFinalReview({ data, onDownload }: StepFinalReviewProps) {
-    const sections = [
-        {
-            icon: User,
-            title: "Personal Details",
-            status: data.personal.firstName && data.personal.email ? "complete" : "incomplete",
-            detail: `${data.personal.firstName} ${data.personal.lastName}`,
-        },
-        {
-            icon: Briefcase,
-            title: "Experience",
-            status: data.isFresher ? "fresher" : data.experience.length > 0 ? "complete" : "incomplete",
-            detail: data.isFresher
-                ? "Fresher - No work experience"
-                : `${data.experience.length} position(s)`,
-        },
-        {
-            icon: GraduationCap,
-            title: "Education",
-            status: data.education.length > 0 ? "complete" : "incomplete",
-            detail: `${data.education.length} entry(ies)`,
-        },
-        {
-            icon: Lightbulb,
-            title: "Skills",
-            status: data.skills.length > 0 ? "complete" : "incomplete",
-            detail: `${data.skills.length} skill(s)`,
-        },
-        {
-            icon: FileText,
-            title: "Summary",
-            status: data.summary.length > 50 ? "complete" : "incomplete",
-            detail: data.summary.length > 0 ? `${data.summary.length} characters` : "Not added",
-        },
-    ];
 
-    const completedCount = sections.filter(s => s.status === "complete" || s.status === "fresher").length;
-    const isReady = completedCount >= 4;
+    // 1. CALCULATE PROGRESS SCORE
+    const calculateProgress = () => {
+        let score = 0;
+        if (data.personal.firstName && data.personal.email) score += 20;
+        if (data.education.length > 0) score += 20;
+        if (data.skills.length > 0) score += 20;
+        if (data.summary.length > 20) score += 20;
+        if (data.experience.length > 0) score += 20;
+        return score;
+    };
+
+    const progress = calculateProgress();
+
+    // 2. DOWNLOAD LOGIC (The Fix for Freshers)
+    // Allow download if score is at least 40% (Personal + Education).
+    // This ensures freshers can download even if Experience (20%) is missing.
+    const isDownloadEnabled = progress >= 40;
 
     return (
-        <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-        >
-            {/* Header */}
-            <div className="text-center mb-8">
-                <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                    className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-200"
-                >
-                    <CheckCircle className="w-10 h-10 text-white" />
-                </motion.div>
-                <h2 className="text-2xl font-bold text-slate-800">Ready to Download!</h2>
-                <p className="text-slate-500 mt-1">Review your resume and download when ready</p>
-            </div>
+        <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
 
-            {/* Summary Cards */}
-            <div className="space-y-3">
-                {sections.map((section, index) => (
-                    <motion.div
-                        key={section.title}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className={`flex items-center gap-4 p-4 rounded-xl border ${section.status === "complete" || section.status === "fresher"
-                                ? "bg-green-50 border-green-200"
-                                : "bg-slate-50 border-slate-200"
-                            }`}
-                    >
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${section.status === "complete" || section.status === "fresher"
-                                ? "bg-green-500 text-white"
-                                : "bg-slate-300 text-slate-600"
-                            }`}>
-                            <section.icon className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1">
-                            <p className="font-medium text-slate-700">{section.title}</p>
-                            <p className="text-sm text-slate-500">{section.detail}</p>
-                        </div>
-                        {(section.status === "complete" || section.status === "fresher") && (
-                            <CheckCircle className="w-5 h-5 text-green-500" />
-                        )}
-                    </motion.div>
-                ))}
-            </div>
-
-            {/* Progress */}
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-slate-700">Resume Completion</span>
-                    <span className="text-sm font-bold text-blue-600">{Math.round((completedCount / sections.length) * 100)}%</span>
+            {/* --- HEADER SECTION --- */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="flex justify-between items-end mb-4">
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900">Ready to Download</h2>
+                        <p className="text-slate-500 mt-1">
+                            Your resume is {progress}% complete and ready for export.
+                        </p>
+                    </div>
+                    <span className={`text-3xl font-bold ${progress === 100 ? 'text-teal-600' : 'text-teal-500'}`}>
+                        {progress}%
+                    </span>
                 </div>
-                <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(completedCount / sections.length) * 100}%` }}
-                        transition={{ delay: 0.5, duration: 0.8 }}
-                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+
+                {/* Progress Bar */}
+                <div className="h-4 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                        className={`h-full transition-all duration-1000 ease-out ${progress === 100 ? 'bg-teal-500' : 'bg-teal-400'}`}
+                        style={{ width: `${progress}%` }}
                     />
                 </div>
             </div>
 
-            {/* Download Button */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-            >
-                <Button
-                    type="button"
+            {/* --- ADVANCED GRID LAYOUT --- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <StatusCard
+                    icon={User}
+                    title="Personal Details"
+                    isComplete={!!data.personal.firstName}
+                />
+
+                {/* Experience Card: Handles "Skipped" state gracefully */}
+                <StatusCard
+                    icon={Briefcase}
+                    title="Experience"
+                    isComplete={data.experience.length > 0}
+                    optional={true}
+                />
+
+                <StatusCard
+                    icon={GraduationCap}
+                    title="Education"
+                    isComplete={data.education.length > 0}
+                />
+
+                <StatusCard
+                    icon={Zap}
+                    title="Skills"
+                    isComplete={data.skills.length > 0}
+                />
+
+                <StatusCard
+                    icon={FileText}
+                    title="Summary"
+                    isComplete={data.summary.length > 20}
+                    className="md:col-span-2"
+                />
+            </div>
+
+            {/* --- DOWNLOAD BUTTON --- */}
+            <div className="pt-6">
+                <button
                     onClick={onDownload}
-                    disabled={!isReady}
-                    className={`w-full h-14 text-lg font-semibold shadow-lg transition-all ${isReady
-                            ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-green-200"
-                            : "bg-slate-300 cursor-not-allowed"
-                        }`}
+                    disabled={!isDownloadEnabled}
+                    className={`
+            w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl
+            ${isDownloadEnabled
+                            ? 'bg-slate-900 text-white hover:bg-teal-600 hover:shadow-teal-500/20 transform hover:-translate-y-1'
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        }
+          `}
                 >
-                    <Download className="w-5 h-5 mr-2" />
-                    Download PDF
-                </Button>
-                {!isReady && (
-                    <p className="text-center text-sm text-amber-600 mt-2 flex items-center justify-center gap-1">
-                        <Sparkles className="w-4 h-4" />
-                        Complete at least 4 sections to download
-                    </p>
-                )}
-            </motion.div>
-        </motion.div>
+                    {isDownloadEnabled ? (
+                        <>
+                            <Download className="w-6 h-6" />
+                            Download PDF Resume
+                        </>
+                    ) : (
+                        <>
+                            <AlertCircle className="w-6 h-6" />
+                            Complete Basics to Download
+                        </>
+                    )}
+                </button>
+
+                {/* Helper Text */}
+                <p className="text-center text-sm text-slate-400 mt-4">
+                    {isDownloadEnabled
+                        ? "Your PDF will be generated instantly."
+                        : "Please add at least Personal Details and Education."}
+                </p>
+            </div>
+        </div>
+    );
+}
+
+// --- SUB-COMPONENT: PRO STATUS CARD ---
+function StatusCard({ icon: Icon, title, isComplete, optional = false, className = "" }: any) {
+    // Determine Visual Style based on State
+    let statusText = "Incomplete";
+    let statusColor = "text-red-500";
+    let cardBorder = "border-slate-200 bg-white";
+    let iconBg = "bg-slate-100 text-slate-400";
+
+    if (isComplete) {
+        statusText = "Complete";
+        statusColor = "text-teal-600";
+        cardBorder = "border-teal-200 bg-teal-50/30"; // Green tint
+        iconBg = "bg-teal-100 text-teal-600";
+    } else if (optional) {
+        statusText = "Skipped (Optional)";
+        statusColor = "text-slate-500";
+        cardBorder = "border-slate-200 bg-slate-50"; // Gray/Neutral
+    }
+
+    return (
+        <div className={`p-5 rounded-xl border flex items-center justify-between transition-all ${cardBorder} ${className}`}>
+            <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-lg ${iconBg}`}>
+                    <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                    <h4 className="font-bold text-slate-800">{title}</h4>
+                    <span className={`text-xs font-semibold uppercase tracking-wide ${statusColor}`}>
+                        {statusText}
+                    </span>
+                </div>
+            </div>
+
+            {isComplete ? (
+                <div className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center shadow-sm">
+                    <CheckCircle2 className="w-4 h-4 text-white" />
+                </div>
+            ) : (
+                <div className="w-6 h-6 rounded-full border-2 border-slate-200" />
+            )}
+        </div>
     );
 }

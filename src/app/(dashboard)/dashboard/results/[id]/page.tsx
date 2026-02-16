@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import {
-  CheckCircle, XCircle, Loader2, Sparkles,
-  ChevronLeft, Award, Target, BookOpen, Brain
+  ChevronLeft, Award, Target, BookOpen, Brain, Sparkles, CheckCircle, XCircle
 } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 
 interface ResultData {
   id: string;
@@ -89,7 +89,7 @@ export default function ResultDetailPage() {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-      <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+      <Spinner size={40} className="text-blue-600" />
       <p className="text-slate-500 font-medium">Loading your results...</p>
     </div>
   );
@@ -199,7 +199,7 @@ export default function ResultDetailPage() {
         <CardContent className="p-6">
           {ailoading ? (
             <div className="flex flex-col items-center py-12 gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <Spinner size={32} className="text-blue-600" />
               <p className="text-indigo-600/70 animate-pulse font-medium">Consulting AI Coach...</p>
             </div>
           ) : aiFeedback ? (

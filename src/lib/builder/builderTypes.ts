@@ -28,6 +28,25 @@ export interface BuilderEducation {
     fieldOfStudy: string;
     startDate: string;
     endDate: string;
+    score?: string; // CGPA or percentage
+}
+
+export interface BuilderLanguage {
+    language: string;
+    proficiency: "Native" | "Fluent" | "Intermediate" | "Beginner";
+}
+
+export interface BuilderCertification {
+    id: string;
+    name: string;
+    issuer: string;
+    year: string;
+}
+
+export interface BuilderCustomSection {
+    id: string;
+    title: string;
+    content: string;
 }
 
 export interface BuilderResumeData {
@@ -37,6 +56,12 @@ export interface BuilderResumeData {
     education: BuilderEducation[];
     skills: string[];
     summary: string;
+    // Optional additional details (Step 6)
+    languages: BuilderLanguage[];
+    certifications: BuilderCertification[];
+    interests: string[];
+    awards: string[]; // Separate from interests
+    customSections: BuilderCustomSection[];
 }
 
 // Initial empty state for the wizard
@@ -55,6 +80,12 @@ export const initialBuilderData: BuilderResumeData = {
     education: [],
     skills: [],
     summary: "",
+    // Additional details (Step 6)
+    languages: [],
+    certifications: [],
+    interests: [],
+    awards: [],
+    customSections: [],
 };
 
 // Generate unique ID for dynamic form entries
@@ -88,7 +119,8 @@ export const WIZARD_STEPS = [
     { id: 2, title: "Education", icon: "GraduationCap" },
     { id: 3, title: "Skills", icon: "Lightbulb" },
     { id: 4, title: "Summary", icon: "FileText" },
-    { id: 5, title: "Review", icon: "CheckCircle" },
+    { id: 5, title: "Extras", icon: "Sparkles" },
+    { id: 6, title: "Review", icon: "CheckCircle" },
 ] as const;
 
 export type WizardStepId = typeof WIZARD_STEPS[number]["id"];

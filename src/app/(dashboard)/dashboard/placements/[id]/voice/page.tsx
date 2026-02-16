@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { VoiceRecorder } from '@/components/placements/voice-recorder';
-import { Loader2 } from 'lucide-react';
+import { Spinner } from "@/components/ui/loader";
 
 const voicePrompts = [
   "Introduce yourself and explain why you want to work in the IT industry. Discuss your strengths and how they align with a career in technology.",
@@ -119,7 +119,7 @@ export default function WiproVoiceAssessmentPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Spinner size={32} className="text-blue-600" />
       </div>
     );
   }

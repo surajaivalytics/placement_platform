@@ -32,7 +32,7 @@ const getTestTheme = (title: string) => {
       primaryText: 'text-[#0067b1]',
       buttonBg: 'bg-[#0067b1] hover:bg-[#004d80]',
       buttonText: 'text-white',
-      logo: '/logos/tcs-1696999494.jpg',
+      logo: null,
       bgGradient: 'bg-slate-50', // TCS is corporate/clean
       accentColor: '#0067b1',
       questionPaletteActive: 'bg-[#0067b1] text-white ring-[#0067b1]',
@@ -48,7 +48,7 @@ const getTestTheme = (title: string) => {
       primaryText: 'text-[#E63312]',
       buttonBg: 'bg-gradient-to-r from-[#E63312] to-[#88B04B] hover:opacity-90',
       buttonText: 'text-white',
-      logo: '/logos/Wipro_Secondary-Logo_Color_RGB.png',
+      logo: null,
       bgGradient: 'bg-gradient-to-br from-gray-50 to-white', // Modern light
       accentColor: '#E63312',
       questionPaletteActive: 'bg-gradient-to-r from-[#E63312] to-[#88B04B] text-white',

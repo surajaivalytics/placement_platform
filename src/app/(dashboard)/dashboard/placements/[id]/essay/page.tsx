@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { EssayEditor } from '@/components/placements/essay-editor';
 import { fetchPlacementQuestions } from '@/lib/placement-questions';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Spinner } from "@/components/ui/loader";
+import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface EssayPrompt {
@@ -35,7 +36,7 @@ export default function WiproEssayTestPage() {
         throw new Error('Failed to load application');
       }
       const appData = await appRes.json();
-      
+
       // Check if already completed this stage
       const essayStage = appData.assessmentStages?.find(
         (s: { stageName: string; submittedAt?: string | Date }) => s.stageName === 'essay'
@@ -47,7 +48,7 @@ export default function WiproEssayTestPage() {
 
       // Fetch questions from database
       const questionsData = await fetchPlacementQuestions(applicationId, 'essay');
-      
+
       if (questionsData.questions.length === 0) {
         throw new Error('No essay prompts available');
       }
@@ -93,26 +94,26 @@ export default function WiproEssayTestPage() {
 
   const handleSubmit = async (essay: string) => {
     if (!selectedPrompt) return;
-    
+
     setIsSubmitting(true);
     try {
       // Simple scoring based on word count and basic criteria
       // In a real scenario, you'd use AI to evaluate grammar, coherence, etc.
       const words = essay.trim().split(/\s+/).filter(w => w.length > 0);
       const wordCount = words.length;
-      
+
       // Basic scoring (simplified)
       let score = 0;
       if (wordCount >= selectedPrompt.wordLimit.min && wordCount <= selectedPrompt.wordLimit.max) {
         score += 40; // Word count compliance
       }
-      
+
       // Check for basic structure (paragraphs)
       const paragraphs = essay.split('\n\n').filter(p => p.trim().length > 0);
       if (paragraphs.length >= 3) {
         score += 30; // Has introduction, body, conclusion
       }
-      
+
       // Check for sentence variety
       const sentences = essay.split(/[.!?]+/).filter(s => s.trim().length > 0);
       if (sentences.length >= 10) {
@@ -149,7 +150,7 @@ export default function WiproEssayTestPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Spinner size={32} className="text-blue-600" />
       </div>
     );
   }

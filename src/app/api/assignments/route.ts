@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 // GET - Get test assignments
 export async function GET(req: NextRequest) {
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
 
         // If admin, can view all assignments
         if (session.user.role === 'admin') {
-            const where: any = {};
+            const where: Prisma.TestAssignmentWhereInput = {};
             if (userId) where.userId = userId;
             if (testId) where.testId = testId;
 

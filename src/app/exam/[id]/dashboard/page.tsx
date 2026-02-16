@@ -55,5 +55,14 @@ export default async function DashboardPage(props: { params: Promise<{ id: strin
         isEligible = !!eligibilityRecord?.isEligible;
     }
 
-    return <DashboardClient test={test} session={driveSession} isEligible={isEligible} />;
+    // Fetch history (past attempts)
+    const history = userId ? await prisma.result.findMany({
+        where: {
+            userId: userId,
+            testId: id
+        },
+        orderBy: { createdAt: 'desc' }
+    }) : [];
+
+    return <DashboardClient test={test} session={driveSession} isEligible={isEligible} history={history} />;
 }

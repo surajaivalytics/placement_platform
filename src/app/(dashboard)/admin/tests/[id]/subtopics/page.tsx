@@ -322,7 +322,7 @@ export default function SubtopicsManagementPage() {
                     if (firstMissingStandard) {
                       // Check if all *prior* standard rounds exist
                       const idx = mcqOrder.indexOf(firstMissingStandard);
-                      const allPriorExist = mcqOrder.slice(0, idx).every(name => existingNames.includes(name));
+                      const allPriorExist = mcqOrder.slice(0, idx).every((name: string) => existingNames.includes(name));
 
                       if (allPriorExist) {
                         options.push(<option key={firstMissingStandard} value={firstMissingStandard}>{firstMissingStandard} (Standard Flow)</option>);

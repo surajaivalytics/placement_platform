@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { wrapCode } from "@/lib/code-execution";
 
 export async function POST(req: NextRequest) {
     try {
@@ -56,41 +57,65 @@ export async function POST(req: NextRequest) {
                         const metadata = question.metadata ? JSON.parse(question.metadata) : {};
                         const testCases = metadata.testCases || [];
 
-                        let allCasesPassed = true;
+                        const wrappedCode = wrapCode(userCode, language, {
+                            functionName: metadata.functionName,
+                            inputStructure: metadata.inputStructure || []
+                        });
+
                         let passedCount = 0;
 
                         // Execute ALL Test Cases against Piston
                         for (const testCase of testCases) {
-                            const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    language: language,
-                                    version: '3.10.0', // Basic version assumption
-                                    files: [{ content: userCode }],
-                                    stdin: testCase.input
-                                })
-                            });
+                            try {
+                                const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        language: language,
+                                        version: '3.10.0', // Basic version assumption
+                                        files: [{ content: wrappedCode }],
+                                        stdin: testCase.input
+                                    })
+                                });
 
-                            const data = await response.json();
-                            const output = data.run?.output?.trim();
-                            const expected = testCase.output?.trim();
+                                const data = await response.json();
+                                const output = data.run?.output?.trim();
+                                const expected = testCase.output?.trim();
 
-                            if (output === expected) {
-                                passedCount++;
-                            } else {
-                                allCasesPassed = false;
+                                if (output === expected) {
+                                    passedCount++;
+                                }
+                            } catch (e) {
+                                console.error("Test case execution error", e);
                             }
                         }
 
-                        if (allCasesPassed && testCases.length > 0) {
-                            questionScore = 15;
+                        if (testCases.length > 0) {
+                            // Partial Scoring Logic
+                            const percentagePassed = passedCount / testCases.length;
+                            questionScore = Math.round(questionTotal * percentagePassed); // e.g., 15 * 0.5 = 7.5 -> 8
+
+                            if (passedCount === testCases.length) {
+                                isCorrect = true;
+                                status = 'correct';
+                            } else if (passedCount > 0) {
+                                isCorrect = false; // Technically not fully correct
+                                status = 'partial';
+                                // We don't fail the whole coding section if partial marks are given?
+                                // For now, let's keep strict "codingPassed" only if 100%, OR allow partial to pass?
+                                // Let's scale: if score > 0, it contributes.
+                                // But "codingPassed" flag might be used for strict limits.
+                                // Let's say if > 50% passed, we consider it "passed" for flow?
+                                if (percentagePassed < 0.5) codingPassed = false;
+                            } else {
+                                codingPassed = false;
+                                status = 'incorrect';
+                            }
+                        } else {
+                            // No test cases? Manual review or full marks if runs?
+                            questionScore = questionTotal;
                             isCorrect = true;
                             status = 'correct';
-                        } else {
-                            // Partial or Fail
-                            codingPassed = false;
-                            status = 'incorrect';
                         }
                     } catch (e) {
                         console.error("Error executing code:", e);
@@ -107,7 +132,7 @@ export async function POST(req: NextRequest) {
                 const correctOption = question.options.find(o => o.isCorrect);
 
                 if (userAnswerId) {
-                    if (correctOption && userAnswerId === correctOption.id) {
+                    if (correctOption && String(userAnswerId) === String(correctOption.id)) {
                         questionScore = 1;
                         isCorrect = true;
                         status = 'correct';

@@ -127,6 +127,22 @@ export default function TemplateClassicFrame({ data }: TemplateProps) {
                             </div>
                         </section>
 
+                        {/* Certifications */}
+                        {data.certifications && data.certifications.length > 0 && (
+                            <section className="mb-6">
+                                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700 mb-3 border-b border-slate-200 pb-1">
+                                    Certifications
+                                </h2>
+                                <div className="space-y-1 text-sm">
+                                    {data.certifications.map((cert, index) => (
+                                        <p key={index} className="text-slate-600 text-xs">
+                                            {cert}
+                                        </p>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
                         {/* Education */}
                         <section className="mb-6">
                             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700 mb-3 border-b border-slate-200 pb-1">
@@ -171,13 +187,29 @@ export default function TemplateClassicFrame({ data }: TemplateProps) {
 
                         {/* Interests */}
                         {data.interests && data.interests.length > 0 && (
-                            <section>
+                            <section className="mb-6">
                                 <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700 mb-3 border-b border-slate-200 pb-1">
                                     Interests
                                 </h2>
                                 <p className="text-sm text-slate-600">
                                     {data.interests.join(", ")}
                                 </p>
+                            </section>
+                        )}
+
+                        {/* Awards & Honors */}
+                        {data.awards && data.awards.length > 0 && (
+                            <section>
+                                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700 mb-3 border-b border-slate-200 pb-1">
+                                    Awards & Honors
+                                </h2>
+                                <div className="space-y-1 text-sm">
+                                    {data.awards.map((award, index) => (
+                                        <p key={index} className="text-slate-600 text-xs">
+                                            {award}
+                                        </p>
+                                    ))}
+                                </div>
                             </section>
                         )}
 

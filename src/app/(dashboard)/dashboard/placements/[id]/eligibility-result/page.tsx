@@ -5,7 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, XCircle, Loader2, ArrowRight } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight } from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 
 interface Application {
   id: string;
@@ -61,7 +62,7 @@ export default function EligibilityResultPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Spinner size={32} className="text-primary" />
       </div>
     );
   }
@@ -193,7 +194,7 @@ export default function EligibilityResultPage() {
               <div className="bg-muted p-4 rounded-lg">
                 <h3 className="font-semibold mb-2">What&apos;s Next?</h3>
                 <p className="text-sm text-muted-foreground">
-                  We encourage you to improve your academic performance and apply again in the future. 
+                  We encourage you to improve your academic performance and apply again in the future.
                   You can explore other opportunities available on our platform.
                 </p>
               </div>

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { BuilderResumeData } from "@/lib/builder/builderTypes";
-import { ResumeData } from "@/components/resume-templates/types";
+import { ResumeData, SectionKey, DEFAULT_SECTION_ORDER } from "@/components/resume-templates/types";
 import {
     TemplateModernDark,
     TemplateElegantSerif,
@@ -14,10 +14,24 @@ import {
 interface LivePreviewProps {
     templateId: string;
     data: BuilderResumeData;
+    sectionOrder?: SectionKey[];
+    onMoveSection?: (sectionKey: SectionKey, direction: 'up' | 'down') => void;
+    onReorder?: (newOrder: SectionKey[]) => void;
 }
 
 // Transform BuilderResumeData to ResumeData for templates
 function transformToTemplateData(builder: BuilderResumeData): ResumeData {
+    // Helper to convert proficiency string to number
+    const proficiencyToNumber = (proficiency: string): number => {
+        switch (proficiency) {
+            case "Native": return 100;
+            case "Fluent": return 80;
+            case "Intermediate": return 50;
+            case "Beginner": return 30;
+            default: return 50;
+        }
+    };
+
     return {
         firstName: builder.personal.firstName || "Your",
         lastName: builder.personal.lastName || "Name",
@@ -48,13 +62,34 @@ function transformToTemplateData(builder: BuilderResumeData): ResumeData {
             institution: edu.school,
             location: "",
             date: edu.startDate && edu.endDate ? `${edu.startDate} - ${edu.endDate}` : "",
+            gpa: edu.score, // CGPA/Score from education form
         })),
         skills: builder.skills.length > 0 ? builder.skills : ["Add your skills"],
+        // Additional details from Step 6
+        languages: builder.languages?.map(l => ({
+            name: l.language,
+            proficiency: proficiencyToNumber(l.proficiency),
+        })),
+        interests: builder.interests,
+        awards: builder.awards, // Separate from interests
+        certifications: builder.certifications?.map(c =>
+            c.year ? `${c.name} - ${c.issuer} (${c.year})` : `${c.name} - ${c.issuer}`
+        ),
+        customSections: builder.customSections?.map(s => ({
+            title: s.title,
+            content: s.content,
+        })),
     };
 }
 
-// Template components map
-const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<{ data: ResumeData }>> = {
+// Template components map - now using TemplateProps
+const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<{
+    data: ResumeData;
+    sectionOrder?: SectionKey[];
+    onMoveSection?: (sectionKey: SectionKey, direction: 'up' | 'down') => void;
+    onReorder?: (newOrder: SectionKey[]) => void;
+    isEditable?: boolean;
+}>> = {
     "modern-dark": TemplateModernDark,
     "elegant-serif": TemplateElegantSerif,
     "minimal-lines": TemplateMinimalLines,
@@ -62,10 +97,13 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<{ data: ResumeData
     "classic-frame": TemplateClassicFrame,
 };
 
-export default function LivePreview({ templateId, data }: LivePreviewProps) {
+export default function LivePreview({ templateId, data, sectionOrder, onMoveSection, onReorder }: LivePreviewProps) {
     const templateData = useMemo(() => transformToTemplateData(data), [data]);
 
     const TemplateComponent = TEMPLATE_COMPONENTS[templateId] || TemplateModernDark;
+
+    // Use provided section order or default
+    const effectiveSectionOrder = sectionOrder || DEFAULT_SECTION_ORDER;
 
     return (
         <div className="h-full flex flex-col">
@@ -79,6 +117,15 @@ export default function LivePreview({ templateId, data }: LivePreviewProps) {
                     <span className="text-xs text-slate-500">Auto-updating</span>
                 </div>
             </div>
+
+            {/* Tip for section reordering */}
+            {onMoveSection && (
+                <div className="mb-3 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-700 text-center">
+                        💡 <span className="font-medium">Tip:</span> Hover over sections in the preview to reorder them
+                    </p>
+                </div>
+            )}
 
             {/* Preview Container */}
             <div className="flex-1 bg-slate-200 rounded-xl p-4 overflow-auto">
@@ -94,7 +141,13 @@ export default function LivePreview({ templateId, data }: LivePreviewProps) {
                     >
                         {/* A4 Document - This is the PDF capture target (unscaled) */}
                         <div id="resume-preview-element" className="shadow-2xl bg-white">
-                            <TemplateComponent data={templateData} />
+                            <TemplateComponent
+                                data={templateData}
+                                sectionOrder={effectiveSectionOrder}
+                                onMoveSection={onMoveSection}
+                                onReorder={onReorder}
+                                isEditable={!!onMoveSection || !!onReorder}
+                            />
                         </div>
                     </div>
                 </div>
@@ -111,3 +164,4 @@ export default function LivePreview({ templateId, data }: LivePreviewProps) {
         </div>
     );
 }
+

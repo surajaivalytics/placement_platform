@@ -30,8 +30,8 @@ export default function WizardNav({
                 onClick={onBack}
                 disabled={isFirstStep}
                 className={`h-12 px-6 ${isFirstStep
-                        ? "opacity-0 pointer-events-none"
-                        : "text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                    ? "opacity-0 pointer-events-none"
+                    : "text-slate-600 hover:text-slate-800 hover:bg-slate-100"
                     }`}
             >
                 <ChevronLeft className="w-4 h-4 mr-2" />
@@ -44,10 +44,10 @@ export default function WizardNav({
                     <div
                         key={step.id}
                         className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === currentStep
-                                ? "w-8 bg-gradient-to-r from-blue-500 to-purple-500"
-                                : index < currentStep
-                                    ? "bg-green-500"
-                                    : "bg-slate-200"
+                            ? "w-8 bg-teal-500 shadow-sm"
+                            : index < currentStep
+                                ? "bg-slate-400"
+                                : "bg-slate-200"
                             }`}
                     />
                 ))}
@@ -59,9 +59,9 @@ export default function WizardNav({
                     type="button"
                     onClick={onNext}
                     disabled={!canGoNext}
-                    className={`h-12 px-8 font-semibold shadow-lg transition-all ${canGoNext
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-blue-200"
-                            : "bg-slate-300 cursor-not-allowed shadow-none"
+                    className={`h-12 px-8 font-semibold shadow-lg transition-all duration-300 ${canGoNext
+                        ? "bg-slate-900 text-white hover:bg-teal-600 shadow-teal-500/20"
+                        : "bg-slate-300 cursor-not-allowed shadow-none"
                         }`}
                 >
                     Next

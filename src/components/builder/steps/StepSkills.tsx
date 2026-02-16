@@ -52,10 +52,10 @@ export default function StepSkills({ skills, onChange }: StepSkillsProps) {
         >
             {/* Header */}
             <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-slate-900/20">
                     <Lightbulb className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-800">Skills</h2>
+                <h2 className="text-2xl font-bold text-slate-900">Skills</h2>
                 <p className="text-slate-500 mt-1">Showcase your expertise and abilities</p>
             </div>
 
@@ -70,13 +70,13 @@ export default function StepSkills({ skills, onChange }: StepSkillsProps) {
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Type a skill and press Enter..."
-                        className="h-12 pr-12 border-slate-200 focus:border-yellow-500 focus:ring-yellow-500"
+                        className="h-12 pr-12 border-slate-200 focus:border-teal-500 focus:ring-teal-500"
                     />
                     {inputValue && (
                         <button
                             type="button"
                             onClick={() => addSkill(inputValue.trim())}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900 text-white rounded-lg hover:bg-teal-600 transition-all"
                         >
                             <Plus className="w-4 h-4" />
                         </button>
@@ -104,13 +104,13 @@ export default function StepSkills({ skills, onChange }: StepSkillsProps) {
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.8 }}
-                                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-800 rounded-full text-sm font-medium border border-orange-200 hover:shadow-md transition-shadow"
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-50 text-teal-900 rounded-full text-sm font-medium border border-teal-200 hover:shadow-md transition-shadow"
                                     >
                                         {skill}
                                         <button
                                             type="button"
                                             onClick={() => removeSkill(skill)}
-                                            className="p-0.5 hover:bg-orange-200 rounded-full transition-colors"
+                                            className="p-0.5 hover:bg-teal-200 rounded-full transition-colors"
                                         >
                                             <X className="w-3.5 h-3.5" />
                                         </button>

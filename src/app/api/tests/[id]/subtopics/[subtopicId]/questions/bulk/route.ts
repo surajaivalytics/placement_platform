@@ -17,27 +17,38 @@ export async function POST(
         // Validate subtopic ownership (optional but good practice)
         // For now, trust the ID.
 
-        const results = await prisma.$transaction(
-            questions.map((q: any) =>
-                prisma.question.create({
-                    data: {
-                        testId: testId, // Still linked to the main test
-                        subtopicId: subtopicId, // LINKED TO SUBTOPIC
-                        text: q.text,
-                        type: q.type || 'multiple-choice',
-                        metadata: q.metadata,
-                        options: {
-                            create: q.options?.map((o: any) => ({
-                                text: o.text,
-                                isCorrect: o.isCorrect
-                            })) || []
-                        }
-                    }
-                })
-            )
-        );
+        // Batch process to avoid transaction timeouts
+        const BATCH_SIZE = 10;
+        let successCount = 0;
 
-        return NextResponse.json({ success: true, count: results.length });
+        for (let i = 0; i < questions.length; i += BATCH_SIZE) {
+            const batch = questions.slice(i, i + BATCH_SIZE);
+
+            await prisma.$transaction(
+                batch.map((q: any) =>
+                    prisma.question.create({
+                        data: {
+                            testId: testId,
+                            subtopicId: subtopicId,
+                            text: q.text,
+                            type: q.type || 'multiple-choice',
+                            marks: q.marks || 1, // Default marks
+                            metadata: q.metadata,
+                            options: {
+                                create: q.options?.map((o: any) => ({
+                                    text: o.text,
+                                    isCorrect: o.isCorrect
+                                })) || []
+                            }
+                        }
+                    })
+                )
+            );
+
+            successCount += batch.length;
+        }
+
+        return NextResponse.json({ success: true, count: successCount });
 
     } catch (error) {
         console.error("Subtopic Bulk Import Error:", error);

@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
+import { Building2 } from "lucide-react";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -37,19 +38,19 @@ export default async function ExamLayout({
     const getBrandConfig = (companyName: string = '') => {
         const name = companyName.toLowerCase();
         if (name.includes('tcs')) return {
-            logo: '/logos/tcs-1696999494.jpg',
+            logo: null,
             logoHeight: 40,
             hasIonBadge: true,
             headerColor: 'bg-[#181C2E]'
         };
         if (name.includes('wipro')) return {
-            logo: '/logos/Wipro_Secondary-Logo_Color_RGB.png',
+            logo: null,
             logoHeight: 32,
             hasIonBadge: false,
             headerColor: 'bg-white border-b border-gray-200 text-gray-900'
         };
         if (name.includes('ibm')) return {
-            logo: '/logos/IBM.png',
+            logo: null,
             logoHeight: 32,
             hasIonBadge: false,
             headerColor: 'bg-gray-900'
@@ -84,7 +85,8 @@ export default async function ExamLayout({
                                 />
                             </div>
                         ) : (
-                            <div className="font-bold text-lg tracking-tight bg-white/10 px-3 py-1 rounded">
+                            <div className="font-bold text-lg tracking-tight bg-white/10 px-3 py-1 rounded flex items-center gap-2">
+                                <Building2 className="w-5 h-5 text-current" />
                                 {test?.company || "MOCK EXAM"}
                             </div>
                         )}

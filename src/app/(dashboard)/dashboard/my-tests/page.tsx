@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
-import { Building2, BookOpen, Clock, AlertCircle, Loader2, PlayCircle, BarChart3 } from 'lucide-react';
+import { Building2, BookOpen, Clock, AlertCircle, PlayCircle, BarChart3 } from 'lucide-react';
 import { PageHeader } from "@/components/dashboard/page-header";
 import { motion } from "framer-motion";
+import { Loader } from "@/components/ui/loader";
 
 interface AssignedTest {
   id: string;
@@ -66,8 +67,8 @@ export default function MyTestsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <Loader text="Loading Assignments..." />
       </div>
     );
   }

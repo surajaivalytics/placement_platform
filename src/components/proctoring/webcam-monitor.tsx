@@ -6,7 +6,7 @@ import { Camera, CameraOff, Move } from 'lucide-react';
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-export function WebcamMonitor() {
+export function WebcamMonitor({ deviceId }: { deviceId?: string }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [hasPermission, setHasPermission] = useState<boolean | null>(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -17,7 +17,7 @@ export function WebcamMonitor() {
         const startCamera = async () => {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 320, height: 240 }
+                    video: deviceId ? { deviceId: { exact: deviceId } } : { width: 320, height: 240 }
                 });
 
                 if (videoRef.current) {
@@ -38,7 +38,7 @@ export function WebcamMonitor() {
                 stream.getTracks().forEach(track => track.stop());
             }
         };
-    }, []);
+    }, [deviceId]);
 
     if (hasPermission === false) {
         return (
@@ -53,28 +53,9 @@ export function WebcamMonitor() {
     }
 
     return (
-        <motion.div
-            drag
-            dragMomentum={false}
-            className={cn(
-                "fixed z-50 shadow-2xl rounded-xl overflow-hidden bg-black border-2 border-gray-800 transition-all",
-                isCollapsed ? "w-16 h-16 rounded-full bottom-4 left-4" : "w-48 h-36 bottom-6 left-6"
-            )}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+        <div
+            className="fixed bottom-4 right-4 z-50 w-48 h-36 bg-black rounded-lg overflow-hidden shadow-2xl border-2 border-gray-800"
         >
-            {/* Control Bar (Only visible when expanded) */}
-            {!isCollapsed && (
-                <div className="absolute top-0 left-0 right-0 bg-black/60 p-1 flex justify-between items-center z-10 opacity-0 hover:opacity-100 transition-opacity">
-                    <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-[10px] text-white font-mono">REC</span>
-                    </div>
-                    <Move className="w-3 h-3 text-white cursor-move" />
-                </div>
-            )}
-
-            {/* Video Feed */}
             <video
                 ref={videoRef}
                 autoPlay
@@ -84,30 +65,26 @@ export function WebcamMonitor() {
                     "w-full h-full object-cover transform scale-x-[-1]",
                     !hasPermission && "opacity-0"
                 )}
-                onClick={() => setIsCollapsed(!isCollapsed)}
             />
 
-            {/* Loading State or Collapsed Icon */}
+            {/* Loading State */}
             {(!hasPermission && hasPermission !== false) && (
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
 
-            {isCollapsed && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 pointer-events-none">
-                    <Camera className="w-6 h-6 text-white" />
-                </div>
-            )}
-
             {/* Label */}
-            {!isCollapsed && (
-                <div className="absolute bottom-1 left-0 right-0 text-center">
-                    <span className="text-[10px] text-white/80 bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
-                        You
-                    </span>
-                </div>
-            )}
-        </motion.div>
+            <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-white uppercase tracking-wider">REC</span>
+            </div>
+
+            <div className="absolute bottom-1 left-0 right-0 text-center pointer-events-none">
+                <span className="text-[10px] text-white/80 bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                    Live Proctoring
+                </span>
+            </div>
+        </div>
     );
 }

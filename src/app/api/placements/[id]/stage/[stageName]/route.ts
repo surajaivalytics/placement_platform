@@ -15,7 +15,7 @@ export async function POST(
 
         const { id, stageName } = await params;
         const body = await request.json();
-        const { answers, score, total, timeSpent, essayText, code, language } = body;
+        const { answers, score, total, timeSpent, essayText, code, language, proctoringData } = body;
 
 
         // Fetch application
@@ -122,6 +122,24 @@ export async function POST(
                 submittedAt: new Date(),
             },
         });
+
+        // Log proctoring violations if present
+        if (proctoringData?.violations?.length > 0) {
+            await Promise.all(
+                proctoringData.violations.map((v: any) =>
+                    prisma.monitoringEvent.create({
+                        data: {
+                            userId: application.userId,
+                            eventType: `violation_${v.type}`,
+                            violationType: v.type,
+                            details: JSON.stringify(v.metadata || {}),
+                            timestamp: new Date(v.timestamp),
+                            testType: `placement_${stageName}`,
+                        }
+                    })
+                )
+            );
+        }
 
         // Store essay or code if provided
         if (essayText && stageName === 'essay') {

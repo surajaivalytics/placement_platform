@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, Phone, Clock, Facebook, Twitter, Instagram, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
@@ -19,88 +19,93 @@ export function Navbar() {
     }, []);
 
     const navItems = [
-        { name: "Features", href: "#features" },
-        { name: "How It Works", href: "#how-it-works" },
+        { name: "Home", href: "/" },
+        { name: "All Courses", href: "#courses" },
+        { name: "About", href: "#about" },
+        { name: "Team", href: "#team" },
         { name: "Pricing", href: "#pricing" },
-        { name: "Testimonials", href: "#testimonials" },
-        { name: "FAQ", href: "#faq" },
-        { name: "Blog", href: "#blog" },
+        { name: "Journal", href: "#journal" },
+        { name: "Contact", href: "#contact" },
     ];
 
     return (
-        <nav
-            className={cn(
-                "fixed top-0 z-50 w-full transition-all duration-300 border-b border-transparent",
-                isScrolled
-                    ? "bg-[#020617]/80 backdrop-blur-md border-emerald-500/10 shadow-sm py-2"
-                    : "bg-transparent py-4"
-            )}
-        >
-            <div className="container mx-auto px-4 flex items-center justify-between">
-                {/* LOGO */}
-                <Link href="/" className="flex items-center gap-2 group">
-                    <span className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">
-                        Aivalytics
-                    </span>
-                </Link>
-
-                {/* DESKTOP NAV */}
-                <div className="hidden md:flex items-center gap-8">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className="text-sm font-medium text-gray-300 hover:text-emerald-400 transition-colors hover:underline underline-offset-4"
-                        >
-                            {item.name}
-                        </Link>
-                    ))}
-                </div>
-
-                {/* ACTIONS */}
-                <div className="hidden md:flex items-center gap-4">
-                    <Link href="/login">
-                        <Button variant="ghost" className="text-gray-300 hover:text-emerald-400 font-medium hover:bg-white/5">Log in</Button>
+        <header className="fixed top-0 z-50 w-full">
+            {/* MAIN NAVBAR */}
+            <nav
+                className={cn(
+                    "w-full transition-all duration-300",
+                    isScrolled
+                        ? "bg-white/95 backdrop-blur-md shadow-lg py-2"
+                        : "bg-white/70 backdrop-blur-sm py-4"
+                )}
+            >
+                <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
+                    {/* LOGO */}
+                    <Link href="/" className="flex flex-col group">
+                        <span className="text-2xl font-black text-gray-800 leading-none group-hover:text-primary transition-colors tracking-tight">
+                            AiValytics
+                        </span>
+                        <span className="text-[8px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-0.5">
+                            Online Education & Learning
+                        </span>
                     </Link>
-                    <Link href="/signup">
-                        <Button className="rounded-full px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-shadow border border-emerald-500/20">
-                            Get Started
-                        </Button>
-                    </Link>
-                </div>
 
-                {/* MOBILE TOGGLE */}
-                <div className="md:hidden">
-                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-white/10">
-                        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                    </Button>
-                </div>
-            </div>
+                    {/* DESKTOP NAV */}
+                    <div className="hidden lg:flex items-center gap-1">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                className="px-4 py-2 text-sm font-bold text-gray-600 hover:text-primary transition-colors uppercase tracking-wide"
+                            >
+                                {item.name}
+                            </Link>
+                        ))}
+                    </div>
 
-            {/* MOBILE MENU */}
-            {mobileMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 w-full bg-[#020617]/95 backdrop-blur-xl border-b border-gray-800 shadow-lg p-4 flex flex-col gap-4 animate-in slide-in-from-top-5 mt-2">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className="text-base font-medium p-3 text-gray-200 hover:bg-white/5 rounded-lg transition-colors"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            {item.name}
-                        </Link>
-                    ))}
-                    <div className="h-px bg-gray-800 my-2" />
-                    <div className="flex flex-col gap-3">
-                        <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                            <Button variant="outline" className="w-full justify-center border-gray-700 text-gray-300 hover:text-white hover:bg-white/10 bg-transparent">Log in</Button>
-                        </Link>
-                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                            <Button className="w-full justify-center shadow-md bg-emerald-600 hover:bg-emerald-700 text-white">Get Started</Button>
+                    {/* ACTIONS */}
+                    <div className="hidden lg:flex items-center gap-4">
+                        <Link href="/signup">
+                            <Button className="rounded-none bg-primary hover:bg-primary/90 text-white font-bold h-12 px-8 transition-all relative overflow-hidden group">
+                                <span className="relative z-10 uppercase tracking-widest text-xs">Get Certificate</span>
+                                <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300" />
+                            </Button>
                         </Link>
                     </div>
+
+                    {/* MOBILE TOGGLE */}
+                    <div className="lg:hidden">
+                        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-gray-800 hover:bg-gray-100">
+                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </Button>
+                    </div>
                 </div>
-            )}
-        </nav>
+
+                {/* MOBILE MENU */}
+                {mobileMenuOpen && (
+                    <div className="lg:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl p-6 flex flex-col gap-4 animate-in slide-in-from-top-5">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                className="text-base font-bold text-gray-700 hover:text-primary transition-colors py-2 border-b border-gray-50 uppercase tracking-widest text-xs"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                {item.name}
+                            </Link>
+                        ))}
+                        <div className="flex flex-col gap-3 mt-4">
+                            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                                <Button variant="outline" className="w-full justify-center border-gray-200 text-gray-600 font-bold uppercase tracking-widest text-xs">Log in</Button>
+                            </Link>
+                            <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                                <Button className="w-full justify-center bg-primary hover:bg-primary/90 text-white font-bold h-12 uppercase tracking-widest text-xs">Get Certificate</Button>
+                            </Link>
+                        </div>
+                    </div>
+                )}
+            </nav>
+        </header>
     );
 }
+

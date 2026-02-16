@@ -35,6 +35,30 @@ export interface CustomSection {
     content: string;
 }
 
+// Section ordering types
+export type SectionKey =
+    | 'summary'
+    | 'experience'
+    | 'education'
+    | 'skills'
+    | 'certifications'
+    | 'languages'
+    | 'awards'
+    | 'interests'
+    | 'customSections';
+
+export const DEFAULT_SECTION_ORDER: SectionKey[] = [
+    'summary',
+    'experience',
+    'education',
+    'skills',
+    'certifications',
+    'languages',
+    'awards',
+    'interests',
+    'customSections',
+];
+
 export interface ResumeData {
     firstName: string;
     lastName: string;
@@ -46,8 +70,18 @@ export interface ResumeData {
     skills: string[];
     languages?: Language[];
     interests?: string[];
+    awards?: string[]; // Awards & Honors - separate from interests
     certifications?: string[];
     customSections?: CustomSection[];
+}
+
+// Props for templates that support section reordering
+export interface TemplateProps {
+    data: ResumeData;
+    sectionOrder?: SectionKey[];
+    onMoveSection?: (sectionKey: SectionKey, direction: 'up' | 'down') => void;
+    onReorder?: (newOrder: SectionKey[]) => void;
+    isEditable?: boolean;
 }
 
 // Default sample data for preview

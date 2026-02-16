@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { PlacementMCQTest } from '@/components/placements/placement-mcq-test';
 import { fetchPlacementQuestions } from '@/lib/placement-questions';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Spinner } from "@/components/ui/loader";
+import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Question {
@@ -36,7 +37,7 @@ export default function TCSAdvancedTestPage() {
       }
       const appData = await appRes.json();
       setApplication(appData);
-      
+
       const advancedStage = appData.assessmentStages?.find(
         (s: { stageName: string; submittedAt?: string | Date }) => s.stageName === 'advanced'
       );
@@ -61,7 +62,7 @@ export default function TCSAdvancedTestPage() {
     loadTestData();
   }, [loadTestData]);
 
-  const handleSubmit = async (answers: Record<string, string>) => {
+  const handleSubmit = async (answers: Record<string, string>, proctoringData?: any) => {
     try {
       const res = await fetch(
         `/api/placements/${applicationId}/stage/advanced`,
@@ -73,6 +74,7 @@ export default function TCSAdvancedTestPage() {
             score: 0,
             total: questions.length,
             timeSpent: testDuration * 60,
+            proctoringData,
           }),
         }
       );
@@ -92,7 +94,7 @@ export default function TCSAdvancedTestPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Spinner size={32} className="text-blue-600" />
       </div>
     );
   }
@@ -142,6 +144,7 @@ export default function TCSAdvancedTestPage() {
         testTitle="TCS Advanced Quantitative + Logical Test"
         onSubmit={handleSubmit}
         onTimeUp={() => alert('Time is up!')}
+        applicationId={applicationId}
       />
     </div>
   );
