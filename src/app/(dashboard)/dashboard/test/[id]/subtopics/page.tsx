@@ -253,7 +253,7 @@ export default function SubtopicsPage({ params }: { params: Promise<{ id: string
       )}
 
       {/* Summary Button - Show after all completed */}
-      {completedCount === totalSubtopics && totalSubtopics > 0 && (
+      {completedCount >=1 && totalSubtopics > 0 && (
         <motion.div variants={item} className="flex justify-center pt-8">
           <Button
             onClick={() => router.push(`/dashboard/test/${testId}/summary`)}
