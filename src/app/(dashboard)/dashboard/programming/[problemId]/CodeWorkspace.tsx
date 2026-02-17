@@ -1,146 +1,214 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import Editor from '@monaco-editor/react';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Editor from "@monaco-editor/react";
 import { Panel, Group, Separator } from "react-resizable-panels";
 import {
   Play, Send, ChevronLeft, Sun, Moon, Terminal,
   CheckCircle2, XCircle, Code2, BookOpen, AlertCircle,
   Lock, Trophy, ListChecks, Timer as TimerIcon, Layers
-} from 'lucide-react';
+} from "lucide-react";
 import { Spinner } from "@/components/ui/loader";
-import { LANGUAGES, LanguageKey } from '@/config/languages';
-import ReactMarkdown from 'react-markdown';
+import { LANGUAGES, LanguageKey } from "@/config/languages";
+import ReactMarkdown from "react-markdown";
 
 export default function CodeWorkspace({ problem }: any) {
-  const router = useRouter();
-  const [language, setLanguage] = useState<LanguageKey>("cpp");
-  const [code, setCode] = useState("");
-  const [results, setResults] = useState<any[] | null>(null);
-  const [executionMeta, setExecutionMeta] = useState<any>(null);
-  const [activeTestCase, setActiveTestCase] = useState(0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingCode, setIsLoadingCode] = useState(true);
+ const router = useRouter();
 
-  const parsedData = useMemo(() => {
-    const parseItem = (item: any) => {
-      if (!item) return [];
-      if (Array.isArray(item)) return item;
-      try { return JSON.parse(item); } catch (e) { return [item]; }
-    };
 
-    return {
-      constraints: parseItem(problem.constraints),
-      examples: parseItem(problem.examples)
-    };
-  }, [problem.constraints, problem.examples]);
+const safeParse = (data: any) => {
+  try {
+    return typeof data === "string" ? JSON.parse(data) : data;
+  } catch {
+    return [];
+  }
+};
 
-  const testCases = useMemo(() => {
-    return typeof problem.testCases === 'string' ? JSON.parse(problem.testCases) : problem.testCases;
-  }, [problem.testCases]);
 
-  useEffect(() => {
-    const loadCode = async () => {
-      setIsLoadingCode(true);
-      try {
-        const res = await fetch(`/api/problems/saved?problemId=${problem.id}&language=${language}`);
+const [language, setLanguage] = useState<LanguageKey>("cpp");
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.code) {
-            setCode(data.code);
-            setIsLoadingCode(false);
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("Network error fetching saved code:", err);
-      }
 
-      const savedCode = localStorage.getItem(`code-${problem.id}-${language}`);
-      if (savedCode) {
-        setCode(savedCode);
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    const savedLang = localStorage.getItem(`language-${problem.id}`);
+    if (savedLang) {
+      setLanguage(savedLang as LanguageKey);
+    }
+  }
+}, [problem.id]);
+
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(`language-${problem.id}`, language);
+  }
+}, [language, problem.id]);
+
+
+const [code, setCode] = useState("");
+const [results, setResults] = useState<any[] | null>(null);
+const [executionMeta, setExecutionMeta] = useState<any>(null);
+const [activeTestCase, setActiveTestCase] = useState(0);
+const [isDarkMode, setIsDarkMode] = useState(false);
+const [isRunning, setIsRunning] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
+const [isLoadingCode, setIsLoadingCode] = useState(true);
+
+
+const STORAGE_KEY = useMemo(() => {
+  return `code-${problem.id}-${language}`;
+}, [problem.id, language]);
+
+
+const parsedData = useMemo(() => {
+  return {
+    constraints: safeParse(problem.constraints) || [],
+    examples: safeParse(problem.examples) || []
+  };
+}, [problem.constraints, problem.examples]);
+
+const testCases = useMemo(() => {
+  return safeParse(problem.testCases) || [];
+}, [problem.testCases]);
+
+
+const loadCode = useCallback(async () => {
+  setIsLoadingCode(true);
+
+
+  const localCode = localStorage.getItem(STORAGE_KEY);
+  if (localCode) {
+    setCode(localCode);
+    setIsLoadingCode(false);
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `/api/problems/saved?problemId=${problem.id}&language=${language}`
+    );
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.code) {
+        setCode(data.code);
+        localStorage.setItem(STORAGE_KEY, data.code);
         setIsLoadingCode(false);
         return;
       }
+    }
+  } catch (err) {
+    console.error("Server fetch error:", err);
+  }
 
-      const templates = typeof problem.starterTemplate === 'string'
-        ? JSON.parse(problem.starterTemplate)
-        : problem.starterTemplate;
 
-      setCode(templates?.[language] || "");
-      setIsLoadingCode(false);
-    };
+  const templates = safeParse(problem.starterTemplate);
+  const starterCode = templates?.[language] || "";
+  setCode(starterCode);
+  localStorage.setItem(STORAGE_KEY, starterCode);
 
-    loadCode();
-  }, [language, problem.id, problem.starterTemplate]);
+  setIsLoadingCode(false);
+}, [problem.id, language, problem.starterTemplate, STORAGE_KEY]);
 
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (isDarkMode) root.classList.add('dark');
-    else root.classList.remove('dark');
-  }, [isDarkMode]);
+useEffect(() => {
+  loadCode();
+}, [loadCode]);
+
+
+useEffect(() => {
+  if (!isLoadingCode) {
+    localStorage.setItem(STORAGE_KEY, code);
+  }
+}, [code, STORAGE_KEY, isLoadingCode]);
+
+
+useEffect(() => {
+  const root = document.documentElement;
+  if (isDarkMode) root.classList.add("dark");
+  else root.classList.remove("dark");
+}, [isDarkMode]);
+
+
+const handleRun = async () => {
+  setIsRunning(true);
+  setResults(null);
+  setExecutionMeta(null);
+
+  try {
+    const res = await fetch("/api/problems/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        problemId: problem.id,
+        userCode: code,
+        language,
+        languageId: LANGUAGES[language].judge0_id
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.results) {
+      setResults(data.results);
+      setExecutionMeta({
+        time: data.time,
+        memory: data.memory,
+        status: data.status
+      });
+    } else {
+      setExecutionMeta({
+        error: data.error || data.status?.description,
+        compile_output: data.compile_output,
+        stderr: data.stderr
+      });
+    }
+
+    setActiveTestCase(0);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setIsRunning(false);
+  }
+};
+
+const handleSubmit = async () => {
+  setIsSubmitting(true);
+
+  try {
+ 
+    let submissionStatus = "Pending";
+
+    if (results && results.length > 0) {
+      const allPassed = results.every((r) => r.passed);
+      submissionStatus = allPassed ? "Approved" : "Wrong Answer";
+    }
+
+    const res = await fetch("/api/problems/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        problemId: problem.id,
+        userCode: code,
+        language,
+        status: submissionStatus,  
+      }),
+    });
+
+    const data = await res.json();
+    alert(data.message || "Submission received!");
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const handleCodeChange = (value: string | undefined) => {
-    const newCode = value || "";
-    setCode(newCode);
-    localStorage.setItem(`code-${problem.id}-${language}`, newCode);
-  };
+  setCode(value || "");
+};
 
-  const handleRun = async () => {
-    setIsRunning(true);
-    setResults(null);
-    setExecutionMeta(null);
-    try {
-      const res = await fetch("/api/problems/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          problemId: problem.id,
-          userCode: code,
-          language,
-          languageId: LANGUAGES[language].judge0_id
-        }),
-      });
-      const data = await res.json();
-      if (data.results) {
-        setResults(data.results);
-        setExecutionMeta({ time: data.time, memory: data.memory, status: data.status });
-      } else {
-        setExecutionMeta({
-          error: data.error || data.status?.description,
-          compile_output: data.compile_output,
-          stderr: data.stderr,
-          status: data.status
-        });
-      }
-      setActiveTestCase(0);
-    } catch (err) {
-      console.error(err);
-    } finally { setIsRunning(false); }
-  };
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      const res = await fetch("/api/problems/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          problemId: problem.id,
-          userCode: code,
-          language,
-        }),
-      });
-      const data = await res.json();
-      alert(data.message || "Submission received!");
-    } catch (err) {
-      console.error(err);
-    } finally { setIsSubmitting(false); }
-  };
 
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-[#0a0a0a] transition-colors duration-300">
