@@ -12,6 +12,8 @@ export function MockDriveTimeline({ rounds, enrollment, driveId }: MockDriveTime
 
     const getRoundStatus = (roundNum: number) => {
         if (!enrollment) return 'LOCKED';
+        if (enrollment?.status === 'PASSED') return 'COMPLETED';
+
         const currentRound = enrollment?.currentRoundNumber || 1;
 
         if (roundNum < currentRound) return 'COMPLETED';

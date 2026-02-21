@@ -41,6 +41,7 @@ export default function ManageTestQuestionsPage() {
 
   const [test, setTest] = useState<Test | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [subtopics, setSubtopics] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -57,7 +58,8 @@ export default function ManageTestQuestionsPage() {
       inputFormat: '',
       outputFormat: '',
       testCases: [{ input: '', output: '' }]
-    }
+    },
+    subtopicId: ''
   });
 
   useEffect(() => {
@@ -71,6 +73,13 @@ export default function ManageTestQuestionsPage() {
         const data = await response.json();
         setTest(data.test);
         setQuestions(data.test.questions || []);
+      }
+
+      // Also fetch subtopics
+      const subResponse = await fetch(`/api/tests/${testId}/subtopics`);
+      if (subResponse.ok) {
+        const subData = await subResponse.json();
+        setSubtopics(subData.subtopics || []);
       }
     } catch (error) {
       console.error('Failed to fetch test:', error);
@@ -104,8 +113,10 @@ export default function ManageTestQuestionsPage() {
       options: question.options.length > 0 ? question.options.map(o => o.text) : ['', '', '', ''],
       correctOptionIndex: question.options.findIndex(o => o.isCorrect) !== -1 ? question.options.findIndex(o => o.isCorrect) : 0,
       marks: question.marks || 1,
-      codingMetadata: codingMetadata
+      codingMetadata: codingMetadata,
+      subtopicId: (question as any).subtopicId || ''
     });
+    setEditingId(question.id);
   };
 
   const handleAddQuestion = async (e: React.FormEvent) => {
@@ -116,6 +127,7 @@ export default function ManageTestQuestionsPage() {
         text: newQuestion.text,
         type: newQuestion.type,
         marks: newQuestion.marks,
+        subtopicId: newQuestion.subtopicId,
       };
 
       if (newQuestion.type === 'mcq') {
@@ -160,12 +172,13 @@ export default function ManageTestQuestionsPage() {
           type: 'mcq',
           options: ['', '', '', ''],
           correctOptionIndex: 0,
+          marks: 1,
           codingMetadata: {
             inputFormat: '',
             outputFormat: '',
             testCases: [{ input: '', output: '' }]
           },
-          marks: 1,
+          subtopicId: ''
         });
         setEditingId(null);
         setShowAddForm(false);
@@ -319,6 +332,7 @@ export default function ManageTestQuestionsPage() {
                 onSubmit={handleAddQuestion}
                 onCancel={() => setShowAddForm(false)}
                 isEditing={false}
+                subtopics={subtopics}
               />
             </motion.div>
           )}
@@ -380,6 +394,11 @@ export default function ManageTestQuestionsPage() {
                                 <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200">
                                   {question.marks || 1} Points
                                 </Badge>
+                                {(question as any).subtopicId && (
+                                  <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
+                                    Section: {subtopics.find(s => s.id === (question as any).subtopicId)?.name || 'Unknown'}
+                                  </Badge>
+                                )}
                               </div>
                               <h3 className="text-lg font-medium text-slate-800 mb-2 leading-relaxed">
                                 {question.text}
@@ -459,9 +478,11 @@ export default function ManageTestQuestionsPage() {
                                     testCases: [{ input: '', output: '' }]
                                   },
                                   marks: 1,
+                                  subtopicId: ''
                                 });
                               }}
                               isEditing={true}
+                              subtopics={subtopics}
                             />
                           </motion.div>
                         )}

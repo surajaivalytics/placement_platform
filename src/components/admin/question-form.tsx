@@ -12,9 +12,10 @@ interface QuestionFormProps {
     onSubmit: (e: React.FormEvent) => void;
     onCancel: () => void;
     isEditing?: boolean;
+    subtopics?: Array<{ id: string; name: string }>;
 }
 
-export function QuestionForm({ formData, setFormData, onSubmit, onCancel, isEditing }: QuestionFormProps) {
+export function QuestionForm({ formData, setFormData, onSubmit, onCancel, isEditing, subtopics }: QuestionFormProps) {
     return (
         <Card className="border-indigo-100 shadow-xl shadow-indigo-50/50 bg-white/80 backdrop-blur-sm ring-1 ring-indigo-50 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500" />
@@ -63,6 +64,27 @@ export function QuestionForm({ formData, setFormData, onSubmit, onCancel, isEdit
                             </div>
                             <p className="text-xs text-muted-foreground">Default marks: {formData.type === 'coding' ? '15' : '1'}</p>
                         </div>
+
+                        {/* Subtopic Selection */}
+                        {subtopics && subtopics.length > 0 && (
+                            <div className="space-y-3">
+                                <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Section / Subtopic</Label>
+                                <select
+                                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    value={formData.subtopicId || ""}
+                                    onChange={(e) => setFormData({ ...formData, subtopicId: e.target.value })}
+                                    required
+                                >
+                                    <option value="" disabled>Select a section</option>
+                                    {subtopics.map((sub) => (
+                                        <option key={sub.id} value={sub.id}>
+                                            {sub.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-muted-foreground">Assign this question to a specific test section.</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-3">

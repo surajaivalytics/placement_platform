@@ -28,7 +28,7 @@ export async function POST(
 
         const { id } = await params;
         const body = await req.json();
-        const { questions } = body;
+        const { questions, subtopicId } = body;
 
         if (!Array.isArray(questions) || questions.length === 0) {
             return NextResponse.json(
@@ -72,6 +72,7 @@ export async function POST(
                 const question = await prisma.question.create({
                     data: {
                         testId: id,
+                        subtopicId: subtopicId || null,
                         text: q.text,
                         type: q.type || 'multiple-choice',
                         metadata: q.metadata || null, // Ensure metadata is saved

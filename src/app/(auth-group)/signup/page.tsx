@@ -122,24 +122,24 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="max-w-[480px] mx-auto w-full space-y-10 animate-in fade-in slide-in-from-right-10 duration-700">
+    <div className="max-w-[480px] mx-auto w-full space-y-8 animate-in fade-in slide-in-from-right-10 duration-700">
 
       {/* Header */}
-      <div className="space-y-4">
-        <p className="text-ui-sm text-primary font-semibold uppercase tracking-wider">Enrollment</p>
-        <h1 className="text-h1 text-gray-900 tracking-tight leading-none">Create <span className="text-primary italic">Account</span></h1>
-        <p className="text-body text-gray-500">Start your journey with AiValytics today.</p>
+      <div className="space-y-2">
+        <p className="text-xs text-primary font-semibold uppercase tracking-wider">Enrollment</p>
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-none">Create <span className="text-primary italic">Account</span></h1>
+        <p className="text-sm text-gray-500">Start your journey with AiValytics today.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="space-y-5">
-          <div className="space-y-3">
-            <label className="text-caption text-gray-400 font-semibold uppercase tracking-wide">Institutional Email <span className="text-primary">*</span></label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wide">Institutional Email <span className="text-primary">*</span></label>
             <div className="flex gap-2">
               <Input
                 type="email"
                 placeholder="student@university.edu"
-                className="h-14 rounded-none border-gray-100 bg-gray-50 focus:bg-white transition-all focus:ring-4 focus:ring-primary/10 focus:border-primary text-ui font-medium text-gray-900"
+                className="h-11 rounded-none border-gray-200 bg-gray-50 focus:bg-white transition-all focus:ring-0 focus:border-primary font-medium text-gray-900"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -154,13 +154,13 @@ export default function SignupPage() {
                   type="button"
                   onClick={handleSendOtp}
                   disabled={sendingOtp || otpSent || !email}
-                  className="h-14 px-6 rounded-none bg-primary text-white hover:bg-primary/90 text-ui-sm font-semibold uppercase tracking-wide"
+                  className="h-11 px-6 rounded-none bg-primary text-white hover:bg-primary/90 text-xs font-bold uppercase tracking-wide shadow-sm"
                 >
                   {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : (otpSent ? "Resend" : "Verify")}
                 </Button>
               )}
               {isVerified && (
-                <div className="h-14 px-6 flex items-center justify-center bg-primary/10 text-primary border border-primary/20 rounded-none">
+                <div className="h-11 px-4 flex items-center justify-center bg-primary/10 text-primary border border-primary/20 rounded-none">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
               )}
@@ -172,7 +172,7 @@ export default function SignupPage() {
                 <Input
                   type="text"
                   placeholder="Enter 6-digit OTP"
-                  className="h-14 rounded-none border-gray-100 bg-gray-50 focus:bg-white transition-all focus:ring-4 focus:ring-primary/10 focus:border-primary text-ui font-medium text-gray-900"
+                  className="h-11 rounded-none border-gray-200 bg-gray-50 focus:bg-white transition-all focus:ring-0 focus:border-primary font-medium text-gray-900"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                 />
@@ -180,7 +180,7 @@ export default function SignupPage() {
                   type="button"
                   onClick={handleVerifyOtp}
                   disabled={verifyingOtp || !otp}
-                  className="h-14 px-6 rounded-none bg-primary text-white hover:bg-primary/90 text-ui-sm font-semibold uppercase tracking-wide"
+                  className="h-11 px-6 rounded-none bg-primary text-white hover:bg-primary/90 text-xs font-bold uppercase tracking-wide shadow-sm"
                 >
                   {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm"}
                 </Button>
@@ -189,37 +189,37 @@ export default function SignupPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <label className="text-caption text-gray-400 font-semibold uppercase tracking-wide">First Name <span className="text-primary">*</span></label>
+            <div className="space-y-2">
+              <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wide">First Name <span className="text-primary">*</span></label>
               <Input
                 placeholder="John"
-                className="h-14 rounded-none border-gray-100 bg-gray-50 focus:bg-white transition-all focus:ring-4 focus:ring-primary/10 focus:border-primary text-ui font-medium text-gray-900"
+                className="h-11 rounded-none border-gray-200 bg-gray-50 focus:bg-white transition-all focus:ring-0 focus:border-primary font-medium text-gray-900"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
               />
             </div>
-            <div className="space-y-3">
-              <label className="text-caption text-gray-400 font-semibold uppercase tracking-wide">Last Name</label>
+            <div className="space-y-2">
+              <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wide">Last Name</label>
               <Input
                 placeholder="Doe"
-                className="h-14 rounded-none border-gray-100 bg-gray-50 focus:bg-white transition-all focus:ring-4 focus:ring-primary/10 focus:border-primary text-ui font-medium text-gray-900"
+                className="h-11 rounded-none border-gray-200 bg-gray-50 focus:bg-white transition-all focus:ring-0 focus:border-primary font-medium text-gray-900"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="space-y-3">
-            <label className="text-caption text-gray-400 font-semibold uppercase tracking-wide">Mobile Number <span className="text-primary">*</span></label>
+          <div className="space-y-2">
+            <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wide">Mobile Number <span className="text-primary">*</span></label>
             <div className="flex gap-2">
-              <button type="button" className="h-14 px-4 border border-gray-100 rounded-none flex items-center gap-2 bg-gray-50 text-ui-sm font-semibold text-gray-700 min-w-[90px]">
+              <button type="button" className="h-11 px-3 border border-gray-200 rounded-none flex items-center gap-2 bg-gray-50 text-sm font-semibold text-gray-700 min-w-[80px]">
                 +91 <ChevronDown className="w-4 h-4 opacity-30 ml-auto" />
               </button>
               <Input
                 type="tel"
                 placeholder="9876543210"
-                className="h-14 rounded-none border-gray-100 bg-gray-50 focus:bg-white transition-all focus:ring-4 focus:ring-primary/10 focus:border-primary text-ui font-medium text-gray-900 flex-1"
+                className="h-11 rounded-none border-gray-200 bg-gray-50 focus:bg-white transition-all focus:ring-0 focus:border-primary font-medium text-gray-900 flex-1"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
@@ -227,13 +227,13 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <label className="text-caption text-gray-400 font-semibold uppercase tracking-wide">Access Password <span className="text-primary">*</span></label>
+          <div className="space-y-2">
+            <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wide">Access Password <span className="text-primary">*</span></label>
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
-                className="h-14 rounded-none border-gray-100 bg-gray-50 focus:bg-white transition-all focus:ring-4 focus:ring-primary/10 focus:border-primary pr-12 text-ui font-medium text-gray-900"
+                className="h-11 rounded-none border-gray-200 bg-gray-50 focus:bg-white transition-all focus:ring-0 focus:border-primary pr-12 font-medium text-gray-900"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -241,23 +241,23 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-primary transition-colors focus:outline-none"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors focus:outline-none"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
           {/* User Type Chips */}
-          <div className="pt-4">
-            <label className="text-caption text-gray-400 font-semibold uppercase tracking-wide block mb-4">Select Category <span className="text-primary">*</span></label>
-            <div className="flex flex-wrap gap-2">
+          <div className="pt-2">
+            <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wide block mb-3">Select Category <span className="text-primary">*</span></label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {['school', 'college', 'fresher', 'professional'].map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setUserType(type)}
-                  className={`h-11 px-6 rounded-none text-caption font-semibold uppercase tracking-wide border transition-all ${userType === type ? 'border-primary text-primary bg-primary/5' : 'border-gray-100 text-gray-400 hover:border-primary/30'}`}
+                  className={`h-10 px-2 rounded-none text-[10px] font-bold uppercase tracking-wider border transition-all ${userType === type ? 'border-primary text-primary bg-primary/5 shadow-sm' : 'border-gray-200 text-gray-400 hover:border-gray-300 hover:bg-gray-50'}`}
                 >
                   {type === 'school' ? 'School' : type === 'college' ? 'University' : type === 'fresher' ? 'Graduate' : 'Professional'}
                 </button>
@@ -266,43 +266,41 @@ export default function SignupPage() {
           </div>
 
           {/* Checkboxes */}
-          <div className="space-y-4 pt-4">
+          <div className="space-y-3 pt-2">
             <div className="flex items-start gap-3">
-              <Checkbox id="terms" className="mt-1 rounded-none border-gray-200 data-[state=checked]:bg-primary data-[state=checked]:border-primary" required />
-              <label htmlFor="terms" className="text-caption text-gray-400 font-medium leading-relaxed uppercase tracking-wide">
-                I agree to the <a href="#" className="text-primary hover:opacity-70 border-b border-primary/20">Privacy Policy</a> and <a href="#" className="text-primary hover:opacity-70 border-b border-primary/20">Terms of Use</a>
+              <Checkbox id="terms" className="mt-0.5 rounded-none border-gray-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary" required />
+              <label htmlFor="terms" className="text-[11px] text-gray-500 font-medium leading-tight uppercase tracking-wide">
+                I agree to the <a href="#" className="text-primary hover:underline underline-offset-2">Privacy Policy</a> and <a href="#" className="text-primary hover:underline underline-offset-2">Terms of Use</a>
               </label>
             </div>
           </div>
 
         </div>
 
-        <div className="flex flex-col gap-6 pt-4">
+        <div className="flex flex-col gap-4 pt-2">
           <Button
             type="submit"
             disabled={loading || !isVerified}
-            className="relative w-full h-16 rounded-none bg-gradient-to-r from-primary via-primary to-[#0d9488] text-white hover:shadow-2xl hover:shadow-primary/30 text-ui font-bold uppercase tracking-wider transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100 overflow-hidden group"
+            className="relative w-full h-12 rounded-none bg-gray-900 text-white hover:bg-black text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none overflow-hidden group"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0d9488] via-primary to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="absolute inset-0 bg-white/10 scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
-            <span className="relative z-10 flex items-center justify-center gap-3">
+            <span className="relative z-10 flex items-center justify-center gap-2">
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Processing...</span>
                 </>
               ) : (
                 <>
                   <span>Complete Registration</span>
-                  <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </>
               )}
             </span>
           </Button>
-          <div className="text-center text-caption text-gray-400 font-semibold uppercase tracking-wide">
-            Already registered? <Link href="/login" className="text-primary hover:opacity-70 border-b-2 border-primary/20 pb-0.5 ml-2 transition-all">Portal Login</Link>
+          <div className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+            Already registered? <Link href="/login" className="text-primary hover:underline underline-offset-2 ml-1 transition-all">Portal Login</Link>
           </div>
         </div>
       </form>
