@@ -1,7 +1,5 @@
 # 🎓 Aivalytics Skill Builder - Placement Portal
 
-
-
 A comprehensive, state-of-the-art career readiness and placement preparation platform. This system is designed to simulate real-world recruitment processes for top companies like **TCS** and **Wipro**, providing students with a realistic testing environment and AI-driven feedback.
 
 ---
