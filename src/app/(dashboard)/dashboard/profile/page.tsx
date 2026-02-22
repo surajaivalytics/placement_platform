@@ -31,7 +31,7 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession(); // Destructure update
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
@@ -88,7 +88,41 @@ export default function ProfilePage() {
   };
 
   const handleUpdate = async () => {
-    if (!user.phone || !user.graduationCGPA || !user.tenthPercentage || !user.twelfthPercentage) {
+    // Basic Validation
+    if (!user.name || typeof user.name !== 'string' || user.name.trim().length < 2) {
+      toast.error("Name must be at least 2 characters long");
+      return;
+    }
+
+    if (!user.email || typeof user.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+      toast.error("Invalid email address");
+      return;
+    }
+
+    if (!user.phone || typeof user.phone !== 'string' || !/^\d{10}$/.test(user.phone)) {
+      toast.error("Phone number must be exactly 10 digits");
+      return;
+    }
+
+    const validateNumber = (val: any, min: number, max: number, label: string) => {
+      if (val === null || val === undefined) return true;
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      if (isNaN(num)) {
+        toast.error(`Invalid ${label}`);
+        return false;
+      }
+      if (num < min || num > max) {
+        toast.error(`${label} must be between ${min} and ${max}`);
+        return false;
+      }
+      return true;
+    };
+
+    if (!validateNumber(user.graduationCGPA, 0, 10, "CGPA")) return;
+    if (!validateNumber(user.tenthPercentage, 0, 100, "10th percentage")) return;
+    if (!validateNumber(user.twelfthPercentage, 0, 100, "12th percentage")) return;
+
+    if (!user.phone || user.graduationCGPA === null || user.tenthPercentage === null || user.twelfthPercentage === null) {
       toast.error("Please fill in all required fields (Phone, Grades)!");
       return;
     }
@@ -101,13 +135,21 @@ export default function ProfilePage() {
         body: JSON.stringify(user),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
         toast.success("Profile updated successfully");
+        await update(); // Force session update to refresh profile completion status
         if (isIncomplete) {
           window.location.href = '/dashboard';
         }
       } else {
-        throw new Error("Failed update");
+        if (data.errors) {
+          const firstError = Object.values(data.errors)[0] as string;
+          toast.error(firstError || data.message || "Failed update");
+        } else {
+          toast.error(data.message || "Failed update");
+        }
       }
     } catch (error) {
       toast.error("Failed to update profile");
@@ -155,16 +197,16 @@ export default function ProfilePage() {
     switch (activeTab) {
       case 'personal':
         return (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="bg-white rounded-none p-8 border border-gray-100 shadow-sm space-y-6 aivalytics-card"
           >
             <div>
-               <p className="text-primary text-[11px] font-bold uppercase tracking-wider mb-2">User Profile</p>
-               <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Personal Information</h3>
-               <p className="text-base text-gray-500 mt-2 leading-relaxed">Manage your account details and contact information.</p>
+              <p className="text-primary text-[11px] font-bold uppercase tracking-wider mb-2">User Profile</p>
+              <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Personal Information</h3>
+              <p className="text-base text-gray-500 mt-2 leading-relaxed">Manage your account details and contact information.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -200,8 +242,8 @@ export default function ProfilePage() {
                   <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors group-focus-within:text-primary" />
                   <Input
                     className={cn(
-                        "pl-10 h-11 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium text-gray-900 focus:ring-0 focus:border-primary",
-                        (!user.phone && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
+                      "pl-10 h-11 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium text-gray-900 focus:ring-0 focus:border-primary",
+                      (!user.phone && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
                     )}
                     placeholder="+91 9876543210"
                     value={user.phone}
@@ -222,8 +264,8 @@ export default function ProfilePage() {
                   <GraduationCap className="w-5 h-5" />
                 </div>
                 <div>
-                   <p className="text-[11px] text-primary font-bold uppercase tracking-wider">Academic Records</p>
-                   <h3 className="text-base font-bold text-gray-900">Educational Performance</h3>
+                  <p className="text-[11px] text-primary font-bold uppercase tracking-wider">Academic Records</p>
+                  <h3 className="text-base font-bold text-gray-900">Educational Performance</h3>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -232,12 +274,15 @@ export default function ProfilePage() {
                   <Input
                     type="number" step="0.01" max="10"
                     className={cn(
-                        "h-11 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium focus:ring-0 focus:border-primary",
-                        (!user.graduationCGPA && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
+                      "h-11 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium focus:ring-0 focus:border-primary",
+                      (!user.graduationCGPA && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
                     )}
                     placeholder="8.5"
                     value={user.graduationCGPA ?? ''}
-                    onChange={(e) => setUser({ ...user, graduationCGPA: parseFloat(e.target.value) })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setUser({ ...user, graduationCGPA: val === '' ? null : parseFloat(val) });
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
@@ -245,12 +290,15 @@ export default function ProfilePage() {
                   <Input
                     type="number" step="0.01" max="100"
                     className={cn(
-                        "h-12 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium focus:ring-0 focus:border-primary",
-                        (!user.twelfthPercentage && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
+                      "h-12 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium focus:ring-0 focus:border-primary",
+                      (!user.twelfthPercentage && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
                     )}
                     placeholder="85.5"
                     value={user.twelfthPercentage ?? ''}
-                    onChange={(e) => setUser({ ...user, twelfthPercentage: parseFloat(e.target.value) })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setUser({ ...user, twelfthPercentage: val === '' ? null : parseFloat(val) });
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
@@ -258,12 +306,15 @@ export default function ProfilePage() {
                   <Input
                     type="number" step="0.01" max="100"
                     className={cn(
-                        "h-12 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium focus:ring-0 focus:border-primary",
-                        (!user.tenthPercentage && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
+                      "h-12 rounded-none border-gray-200 bg-white focus:bg-white transition-all font-medium focus:ring-0 focus:border-primary",
+                      (!user.tenthPercentage && isIncomplete) ? 'border-primary ring-2 ring-primary/10' : ''
                     )}
                     placeholder="90.0"
                     value={user.tenthPercentage ?? ''}
-                    onChange={(e) => setUser({ ...user, tenthPercentage: parseFloat(e.target.value) })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setUser({ ...user, tenthPercentage: val === '' ? null : parseFloat(val) });
+                    }}
                   />
                 </div>
               </div>
@@ -296,8 +347,8 @@ export default function ProfilePage() {
             <div className="pt-5 border-t border-gray-100">
               <div className="flex items-center justify-between p-5 bg-primary/5 border border-primary/20 rounded-none">
                 <div>
-                   <h4 className="text-base font-bold text-gray-900">Auto Payout</h4>
-                   <p className="text-[11px] text-gray-500 mt-1">Enable automatic payouts to your account</p>
+                  <h4 className="text-base font-bold text-gray-900">Auto Payout</h4>
+                  <p className="text-[11px] text-gray-500 mt-1">Enable automatic payouts to your account</p>
                 </div>
                 <Switch
                   checked={user.autoPayout}
@@ -310,16 +361,16 @@ export default function ProfilePage() {
         );
       case 'security':
         return (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="bg-white rounded-none p-8 border border-gray-100 shadow-sm space-y-6 aivalytics-card"
           >
             <div>
-               <p className="text-red-500 text-[11px] font-bold uppercase tracking-wider mb-2">Security Settings</p>
-               <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Password & Security</h3>
-               <p className="text-base text-gray-500 mt-2 leading-relaxed">Manage your password and security preferences.</p>
+              <p className="text-red-500 text-[11px] font-bold uppercase tracking-wider mb-2">Security Settings</p>
+              <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Password & Security</h3>
+              <p className="text-base text-gray-500 mt-2 leading-relaxed">Manage your password and security preferences.</p>
             </div>
 
             <div className="space-y-6">
@@ -346,16 +397,16 @@ export default function ProfilePage() {
         );
       case 'notifications':
         return (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="bg-white rounded-none p-8 border border-gray-100 shadow-sm space-y-6 aivalytics-card"
           >
             <div>
-               <p className="text-primary text-[11px] font-bold uppercase tracking-wider mb-2">Notifications</p>
-               <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Communication Preferences</h3>
-               <p className="text-base text-gray-500 mt-2 leading-relaxed">Manage how you receive notifications and updates.</p>
+              <p className="text-primary text-[11px] font-bold uppercase tracking-wider mb-2">Notifications</p>
+              <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Communication Preferences</h3>
+              <p className="text-base text-gray-500 mt-2 leading-relaxed">Manage how you receive notifications and updates.</p>
             </div>
 
             <div className="space-y-4">
@@ -393,10 +444,10 @@ export default function ProfilePage() {
           <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-600 rounded-none p-5 shadow-sm border-l-4 border-l-red-600">
             <AlertCircle className="h-5 w-5" />
             <div className="ml-4">
-                <AlertTitle className="text-[11px] font-bold uppercase tracking-wider">Profile Incomplete</AlertTitle>
-                <AlertDescription className="text-sm mt-1">
-                  Please complete all required fields to access the full platform.
-                </AlertDescription>
+              <AlertTitle className="text-[11px] font-bold uppercase tracking-wider">Profile Incomplete</AlertTitle>
+              <AlertDescription className="text-sm mt-1">
+                Please complete all required fields to access the full platform.
+              </AlertDescription>
             </div>
           </Alert>
         )}
@@ -409,11 +460,11 @@ export default function ProfilePage() {
             className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-          
+
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm">
-            <Button 
-              variant="secondary" 
-              className="h-11 px-5 rounded-none text-[11px] font-bold uppercase tracking-wider bg-white text-gray-900 shadow-sm hover:bg-primary hover:text-white transition-all duration-300" 
+            <Button
+              variant="secondary"
+              className="h-11 px-5 rounded-none text-[11px] font-bold uppercase tracking-wider bg-white text-gray-900 shadow-sm hover:bg-primary hover:text-white transition-all duration-300"
               onClick={() => coverInputRef.current?.click()}
             >
               <Camera className="w-4 h-4 mr-2" /> Change Cover
@@ -462,9 +513,9 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex gap-3 mb-3">
-              <Button 
-                className="h-11 px-6 rounded-none bg-gray-900 text-white hover:bg-black text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md border-b-2 border-primary flex items-center gap-2" 
-                onClick={handleUpdate} 
+              <Button
+                className="h-11 px-6 rounded-none bg-gray-900 text-white hover:bg-black text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md border-b-2 border-primary flex items-center gap-2"
+                onClick={handleUpdate}
                 disabled={saving}
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -484,23 +535,23 @@ export default function ProfilePage() {
                 { id: 'security', icon: Lock, label: 'Security' },
                 { id: 'notifications', icon: Bell, label: 'Notifications' }
               ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={cn(
-                        "w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-none transition-all duration-300 text-[11px] font-bold uppercase tracking-wider group",
-                        activeTab === item.id
-                          ? 'bg-primary text-white shadow-md'
-                          : 'text-gray-500 hover:bg-gray-50 hover:text-primary'
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <item.icon className={cn("w-4 h-4 transition-transform duration-300 group-hover:scale-110", activeTab === item.id ? 'text-white' : 'text-gray-400 group-hover:text-primary')} />
-                      {item.label}
-                    </div>
-                    {activeTab === item.id && <CheckCircle className="w-4 h-4 text-white/60" />}
-                  </button>
-                ))}
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-none transition-all duration-300 text-[11px] font-bold uppercase tracking-wider group",
+                    activeTab === item.id
+                      ? 'bg-primary text-white shadow-md'
+                      : 'text-gray-500 hover:bg-gray-50 hover:text-primary'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className={cn("w-4 h-4 transition-transform duration-300 group-hover:scale-110", activeTab === item.id ? 'text-white' : 'text-gray-400 group-hover:text-primary')} />
+                    {item.label}
+                  </div>
+                  {activeTab === item.id && <CheckCircle className="w-4 h-4 text-white/60" />}
+                </button>
+              ))}
             </div>
 
             {/* Logout Button */}

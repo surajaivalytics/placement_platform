@@ -17,7 +17,23 @@ export default function BulkImportPage() {
     const [file, setFile] = useState<File | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
+    const [subtopics, setSubtopics] = useState<any[]>([]);
+    const [selectedSubtopicId, setSelectedSubtopicId] = useState<string>('');
     const [isSaving, setIsSaving] = useState(false);
+
+    useState(() => {
+        const fetchSubtopics = async () => {
+            const response = await fetch(`/api/tests/${testId}/subtopics`);
+            if (response.ok) {
+                const data = await response.json();
+                setSubtopics(data.subtopics || []);
+                if (data.subtopics?.length > 0) {
+                    setSelectedSubtopicId(data.subtopics[0].id);
+                }
+            }
+        };
+        fetchSubtopics();
+    });
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -62,7 +78,10 @@ export default function BulkImportPage() {
             const response = await fetch(`/api/tests/${testId}/questions/bulk`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ questions: parsedQuestions })
+                body: JSON.stringify({
+                    questions: parsedQuestions,
+                    subtopicId: selectedSubtopicId
+                })
             });
 
             if (response.ok) {
@@ -127,6 +146,24 @@ export default function BulkImportPage() {
                     >
                         {isAnalyzing ? "Analyzing File..." : parsedQuestions.length > 0 ? "File Analyzed" : "Analyze & Parse Questions"}
                     </Button>
+
+                    {subtopics.length > 0 && (
+                        <div className="space-y-2 pt-4 border-t">
+                            <Label className="text-sm font-semibold">Assign to Section</Label>
+                            <select
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={selectedSubtopicId}
+                                onChange={(e) => setSelectedSubtopicId(e.target.value)}
+                            >
+                                {subtopics.map((sub) => (
+                                    <option key={sub.id} value={sub.id}>
+                                        {sub.name} ({sub.roundTitle})
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-xs text-muted-foreground">Select the section where these questions will be added.</p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

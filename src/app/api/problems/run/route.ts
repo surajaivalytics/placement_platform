@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { executeCode, mapPistonToStatus } from "@/lib/piston";
+
+const Judge0_IP=process.env.JUDGE0_SERVER_IP;
 
 export async function POST(req: Request) {
   try {
@@ -23,14 +24,49 @@ export async function POST(req: Request) {
     let fullcode = drivers[language];
     fullcode = fullcode.replace("{{USER_CODE}}", userCode);
 
-    const formattedStdin = testCases.map((tc: any) => tc.input?.toString().trim() || "").join("\n");
+   
+    const formattedStdin = testCases.map((tc: any) => tc.input.trim()).join("\n");
 
-    // Execute with Piston
-    const pistonResult = await executeCode(fullcode, languageId || language, formattedStdin);
-    const status = mapPistonToStatus(pistonResult);
+    const submissions = [
+      {
+        language_id: languageId,
+        source_code: Buffer.from(fullcode).toString("base64"),
+        stdin: Buffer.from(formattedStdin).toString("base64"),
+      },
+    ];
 
-    if (pistonResult.run.stdout || pistonResult.run.code === 0) {
-      const decodedOutput = pistonResult.run.stdout.trim().replace(/\r/g, "");
+
+    const response = await fetch(`${Judge0_IP}/submissions/batch?base64_encoded=true`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ submissions }),
+    });
+
+    const initialResult = await response.json();
+    const tokens = initialResult.map((s: any) => s.token).join(",");
+
+    // 3. Polling Logic
+    async function pollbatch(tokens: string) {
+      let attempts = 0;
+      const MAX_ATTEMPTS = 20;
+      while (attempts < MAX_ATTEMPTS) {
+        const poll = await fetch(`${Judge0_IP}/submissions/batch?tokens=${tokens}&base64_encoded=true`);
+        const data = await poll.json();
+        if (data.submissions) {
+          const allDone = data.submissions.every((s: any) => s.status && s.status.id > 2);
+          if (allDone) return data.submissions[0]; // Single batch return
+        }
+        attempts++;
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+      throw new Error("Judge0 timeout");
+    }
+
+    const finalSubmission = await pollbatch(tokens);
+
+    
+    if (finalSubmission.stdout) {
+      const decodedOutput = Buffer.from(finalSubmission.stdout, "base64").toString().trim().replace(/\r/g, "");
       const actualOutputs = decodedOutput.split("\n");
 
       const results = testCases.map((tc: any, index: number) => {
@@ -47,21 +83,22 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: results.every((r: any) => r.passed),
         results: results,
-        time: "0.1",
-        memory: "1024",
-        status: status
+        time: finalSubmission.time,
+        memory: finalSubmission.memory,
+        status: finalSubmission.status
       });
     }
 
+ 
     return NextResponse.json({
       success: false,
-      status: status,
-      compile_output: pistonResult.compile?.stderr || null,
-      stderr: pistonResult.run.stderr || null,
+      status: finalSubmission.status,
+      compile_output: finalSubmission.compile_output ? Buffer.from(finalSubmission.compile_output, "base64").toString() : null,
+      stderr: finalSubmission.stderr ? Buffer.from(finalSubmission.stderr, "base64").toString() : null,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Server Error", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Server Error" }, { status: 500 });
   }
 }
