@@ -137,7 +137,7 @@ export function TimelineRoundStep({ round, status, isLocked, driveId, progressId
                     )}
 
                     {/* DEV BYPASS BUTTON */}
-                    {isActive && (
+                    {/* {isActive && (
                         <div className="mt-2 text-center">
                             <Button
                                 variant="link"
@@ -150,7 +150,7 @@ export function TimelineRoundStep({ round, status, isLocked, driveId, progressId
                                 DEV: Bypass Round
                             </Button>
                         </div>
-                    )}
+                    )} */}
                 </motion.div>
             </div>
 

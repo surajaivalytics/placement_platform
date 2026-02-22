@@ -46,6 +46,51 @@ export async function PUT(req: Request) {
     try {
         const data = await req.json();
 
+        // Robust Validation
+        const errors: Record<string, string> = {};
+
+        if (!data.name || typeof data.name !== 'string' || data.name.trim().length < 2) {
+            errors.name = "Name must be at least 2 characters long";
+        }
+
+        if (!data.email || typeof data.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+            errors.email = "Invalid email address";
+        }
+
+        if (!data.phone || typeof data.phone !== 'string' || !/^\d{10}$/.test(data.phone)) {
+            errors.phone = "Phone number must be exactly 10 digits";
+        }
+
+        const parseNumeric = (val: any) => {
+            if (val === null || val === undefined || val === '') return null;
+            const parsed = parseFloat(val);
+            return isNaN(parsed) ? 'INVALID' : parsed;
+        };
+
+        const cgpa = parseNumeric(data.graduationCGPA);
+        if (cgpa === 'INVALID' || (typeof cgpa === 'number' && (cgpa < 0 || cgpa > 10))) {
+            errors.graduationCGPA = "CGPA must be between 0 and 10";
+        }
+
+        const tenth = parseNumeric(data.tenthPercentage);
+        if (tenth === 'INVALID' || (typeof tenth === 'number' && (tenth < 0 || tenth > 100))) {
+            errors.tenthPercentage = "10th percentage must be between 0 and 100";
+        }
+
+        const twelfth = parseNumeric(data.twelfthPercentage);
+        if (twelfth === 'INVALID' || (typeof twelfth === 'number' && (twelfth < 0 || twelfth > 100))) {
+            errors.twelfthPercentage = "12th percentage must be between 0 and 100";
+        }
+
+        if (Object.keys(errors).length > 0) {
+            console.warn("Profile Validation Failed:", { email: session.user.email, errors, dataReceived: data });
+            return NextResponse.json({ message: "Validation failed", errors }, { status: 400 });
+        }
+
+        const validatedCGPA = typeof cgpa === 'number' ? cgpa : undefined;
+        const validatedTenth = typeof tenth === 'number' ? tenth : undefined;
+        const validatedTwelfth = typeof twelfth === 'number' ? twelfth : undefined;
+
         const updatedUser = await prisma.user.update({
             where: { email: session.user.email },
             data: {
@@ -56,9 +101,9 @@ export async function PUT(req: Request) {
                 image: data.image,
                 coverImage: data.coverImage,
                 autoPayout: data.autoPayout,
-                graduationCGPA: data.graduationCGPA ? parseFloat(data.graduationCGPA) : undefined,
-                tenthPercentage: data.tenthPercentage ? parseFloat(data.tenthPercentage) : undefined,
-                twelfthPercentage: data.twelfthPercentage ? parseFloat(data.twelfthPercentage) : undefined,
+                graduationCGPA: validatedCGPA as number | undefined,
+                tenthPercentage: validatedTenth as number | undefined,
+                twelfthPercentage: validatedTwelfth as number | undefined,
             }
         });
 

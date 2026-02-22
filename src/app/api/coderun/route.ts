@@ -15,7 +15,7 @@ export async function POST(req: Request) {
             console.log("Not base64 or already decoded");
         }
 
-        const result = await executeCode(sourceCode, judge0_id);
+        const result = await executeCode(sourceCode, judge0_id, "");
         const status = mapPistonToStatus(result);
 
         // Map Piston response to match what the UI expects from Judge0

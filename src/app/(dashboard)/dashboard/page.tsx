@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -64,12 +65,20 @@ interface RecentTest {
  *  COMPONENT: UserDashboard
  * ---------------------------------------------------------------------------------- */
 export default function UserDashboard() {
+  const { data: session } = useSession();
   const [profile, setProfile] = useState({
     name: "User",
     image: null as string | null,
     role: "student",
     accountType: "Regular"
   });
+
+  // Sync profile name with session if it's currently "User"
+  useEffect(() => {
+    if (profile.name === "User" && session?.user?.name) {
+      setProfile(prev => ({ ...prev, name: session.user.name || "" }));
+    }
+  }, [session, profile.name]);
 
   const [stats, setStats] = useState<UserStats>({
     testsTaken: 0,
@@ -100,7 +109,7 @@ export default function UserDashboard() {
       if (profileRes.ok) {
         const profileData = await profileRes.json();
         setProfile({
-          name: profileData.name || "User",
+          name: profileData.name || session?.user?.name || "User",
           image: profileData.image || null,
           role: profileData.role || "student",
           accountType: profileData.accountType || "Regular"
@@ -311,32 +320,32 @@ export default function UserDashboard() {
 
                 <div className="h-[350px] w-full relative z-10" style={{ minHeight: '350px', minWidth: '100px' }}>
                   {chartData.length > 0 && (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData.length ? chartData : [{ name: 'T1', score: 0 }]} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#1eb2a6" stopOpacity={0.2} />
-                          <stop offset="95%" stopColor="#1eb2a6" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#cbd5e1', fontSize: 10, fontWeight: 900 }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#cbd5e1', fontSize: 10, fontWeight: 900 }} />
-                      <Tooltip
-                        contentStyle={{ borderRadius: '0', border: 'none', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', padding: '16px', backgroundColor: '#111827', color: '#fff' }}
-                        itemStyle={{ color: '#1eb2a6', fontWeight: 'bold' }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="score"
-                        stroke="#1eb2a6"
-                        strokeWidth={5}
-                        fillOpacity={1}
-                        fill="url(#colorScore)"
-                        activeDot={{ r: 10, strokeWidth: 0, fill: '#1eb2a6' }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData.length ? chartData : [{ name: 'T1', score: 0 }]} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#1eb2a6" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="#1eb2a6" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#cbd5e1', fontSize: 10, fontWeight: 900 }} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#cbd5e1', fontSize: 10, fontWeight: 900 }} />
+                        <Tooltip
+                          contentStyle={{ borderRadius: '0', border: 'none', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', padding: '16px', backgroundColor: '#111827', color: '#fff' }}
+                          itemStyle={{ color: '#1eb2a6', fontWeight: 'bold' }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="score"
+                          stroke="#1eb2a6"
+                          strokeWidth={5}
+                          fillOpacity={1}
+                          fill="url(#colorScore)"
+                          activeDot={{ r: 10, strokeWidth: 0, fill: '#1eb2a6' }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   )}
                 </div>
               </div>
@@ -346,10 +355,10 @@ export default function UserDashboard() {
             {visibleSections.activity && (
               <div className="bg-white rounded-none p-8 border border-gray-100 shadow-sm transition-all duration-500 hover:shadow-xl">
                 <div className="flex justify-between items-center mb-8">
-                   <div>
+                  <div>
                     <p className="text-primary font-black text-[10px] uppercase tracking-[0.3em] mb-2">Audit Logs</p>
                     <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Recent Assessment Records</h3>
-                   </div>
+                  </div>
                   <Link href="/dashboard/results" className="text-[10px] font-black text-primary hover:opacity-70 uppercase tracking-[0.2em] border-b-2 border-primary/20 pb-1 transition-all">View Full Registry</Link>
                 </div>
 
@@ -378,8 +387,8 @@ export default function UserDashboard() {
                     ))
                   ) : (
                     <div className="text-center py-24 bg-gray-50/50 rounded-none border border-dashed border-gray-100">
-                       <p className="text-gray-300 font-black uppercase tracking-[0.2em] text-sm">No activity records identified.</p>
-                       <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest mt-2">Initialize your first assessment to generate audit logs.</p>
+                      <p className="text-gray-300 font-black uppercase tracking-[0.2em] text-sm">No activity records identified.</p>
+                      <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest mt-2">Initialize your first assessment to generate audit logs.</p>
                     </div>
                   )}
                 </div>
@@ -455,9 +464,9 @@ export default function UserDashboard() {
             )}
 
             <div className="bg-primary/5 rounded-none p-8 border border-primary/20 border-dashed">
-                <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">Support & Feedback</p>
-                <p className="text-[11px] font-bold text-gray-500 leading-relaxed uppercase tracking-widest">Encountering anomalies? Contact the administration department.</p>
-                <Button variant="link" className="text-primary p-0 h-auto mt-3 font-black text-[10px] uppercase tracking-widest hover:opacity-70">Reach Support &rarr;</Button>
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">Support & Feedback</p>
+              <p className="text-[11px] font-bold text-gray-500 leading-relaxed uppercase tracking-widest">Encountering anomalies? Contact the administration department.</p>
+              <Button variant="link" className="text-primary p-0 h-auto mt-3 font-black text-[10px] uppercase tracking-widest hover:opacity-70">Reach Support &rarr;</Button>
             </div>
 
           </motion.div>

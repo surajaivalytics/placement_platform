@@ -74,7 +74,7 @@ export async function POST(
 
         const { id: testId } = await params;
         const body = await req.json();
-        const { text, type = 'multiple-choice', marks = 1, options, metadata } = body;
+        const { text, type = 'multiple-choice', marks = 1, options, metadata, subtopicId } = body;
 
         if (!text) {
             return NextResponse.json(
@@ -95,9 +95,20 @@ export async function POST(
             );
         }
 
+        // Validate or fallback for subtopicId
+        let finalSubtopicId = subtopicId;
+        if (!finalSubtopicId) {
+            const firstSubtopic = await prisma.subtopic.findFirst({
+                where: { testId },
+                orderBy: { order: 'asc' }
+            });
+            finalSubtopicId = firstSubtopic?.id;
+        }
+
         // Prepare data for creation
         const questionData: any = {
             testId,
+            subtopicId: finalSubtopicId,
             text,
             type,
             marks: Number(marks),
@@ -209,9 +220,9 @@ export async function PUT(
 
         const { id: testId } = await params;
         const body = await req.json();
-        const { id, text, type, marks, options, metadata } = body;
+        const { id: questionId, text, type, marks, options, metadata, subtopicId } = body;
 
-        if (!id) {
+        if (!questionId) {
             return NextResponse.json(
                 { error: 'Question ID is required' },
                 { status: 400 }
@@ -220,7 +231,7 @@ export async function PUT(
 
         // Verify question exists
         const existingQuestion = await prisma.question.findUnique({
-            where: { id },
+            where: { id: questionId },
         });
 
         if (!existingQuestion) {
@@ -236,13 +247,14 @@ export async function PUT(
             type,
             marks: Number(marks),
             metadata,
+            subtopicId: subtopicId || undefined,
         };
 
         // Transaction to update question and options
         await prisma.$transaction(async (tx) => {
             // Update question basic details
             await tx.question.update({
-                where: { id },
+                where: { id: questionId },
                 data: updateData,
             });
 
@@ -251,7 +263,7 @@ export async function PUT(
                 if (Array.isArray(options) && options.length > 0) {
                     // Delete existing options
                     await tx.option.deleteMany({
-                        where: { questionId: id },
+                        where: { questionId: questionId },
                     });
 
                     // Create new options
@@ -259,7 +271,7 @@ export async function PUT(
                         data: options.map((opt: { text: string; isCorrect: boolean }) => ({
                             text: opt.text,
                             isCorrect: opt.isCorrect || false,
-                            questionId: id,
+                            questionId: questionId,
                         })),
                     });
                 }
@@ -268,7 +280,7 @@ export async function PUT(
 
         // Fetch updated question with options to return
         const updatedQuestion = await prisma.question.findUnique({
-            where: { id },
+            where: { id: questionId },
             include: { options: true },
         });
 

@@ -25,7 +25,7 @@ export default function AuthLayout({
     }, []);
 
     return (
-        <div className="h-screen w-full flex bg-gray-50/50">
+        <div className="min-h-screen w-full flex bg-gray-50/50">
             {/* Background Decor (Grid) */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-40"
                 style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '40px 40px' }}
@@ -98,8 +98,8 @@ export default function AuthLayout({
             </div>
 
             {/* Main Container */}
-            <div className="relative z-10 w-full max-w-[1200px] mx-auto min-h-screen flex items-center justify-center p-4 md:p-8 origin-center md:scale-80">
-                <div className="bg-white w-full rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px]">
+            <div className="relative z-10 w-full max-w-[1200px] mx-auto min-h-screen flex items-center justify-center p-4 md:p-8">
+                <div className="bg-white w-full rounded-[32px] shadow-2xl flex flex-col md:flex-row min-h-[700px] overflow-hidden">
 
                     {/* Left Panel (AiValytics Decorative) */}
                     <div className="w-full md:w-[45%] bg-primary relative p-12 flex flex-col justify-between overflow-hidden">
