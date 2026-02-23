@@ -1,9 +1,16 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, ArrowLeft, RotateCcw, List, Trophy, Target, Zap, TrendingUp, Award, Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  CheckCircle2, XCircle, ArrowLeft, RotateCcw, 
+  List, Trophy, Target, Zap, TrendingUp, 
+  Award, Star, BrainCircuit, Sparkles, ChevronRight
+} from "lucide-react";
+import { Spinner } from "@/components/ui/loader";
 import { motion, AnimatePresence } from "framer-motion";
 
 function SubtopicResultContent({ 
@@ -15,7 +22,9 @@ function SubtopicResultContent({
   const searchParams = useSearchParams();
   const [testId, setTestId] = useState<string>('');
   const [subtopicId, setSubtopicId] = useState<string>('');
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [testTitle, setTestTitle] = useState<string>('');
+  const [subtopicName, setSubtopicName] = useState<string>('');
+  const [loading, setLoading] = useState(true);
   
   const score = parseInt(searchParams.get('score') || '0');
   const total = parseInt(searchParams.get('total') || '0');
@@ -25,371 +34,191 @@ function SubtopicResultContent({
     params.then(({ id, subtopicId: subId }) => {
       setTestId(id);
       setSubtopicId(subId);
+      
+      // Fetch test and subtopic info for UI consistency
+      Promise.all([
+        fetch(`/api/tests?id=${id}`).then(res => res.json()),
+        fetch(`/api/tests/${id}/subtopics`).then(res => res.json())
+      ]).then(([testData, subtopicsData]) => {
+        if (testData.test) setTestTitle(testData.test.title);
+        if (subtopicsData.subtopics) {
+          const subtopic = subtopicsData.subtopics.find((s: any) => s.id === subId);
+          if (subtopic) setSubtopicName(subtopic.name);
+        }
+      }).finally(() => setLoading(false));
     });
   }, [params]);
 
-  useEffect(() => {
-    if (percentage >= 60) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
-    }
-  }, [percentage]);
-
   const isPassed = percentage >= 60;
-  const isExcellent = percentage >= 90;
-  const isGood = percentage >= 70;
+  const statusLabel = percentage >= 70 ? 'Mastered' : 'Growing';
 
-  const getPerformanceData = (percentage: number) => {
-    if (percentage >= 90) return { 
-      grade: 'A+', 
-      title: 'Outstanding Performance', 
-      subtitle: 'Exceptional Mastery',
-      color: 'from-emerald-500 to-teal-500',
-      textColor: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-emerald-500',
-      icon: Trophy,
-      message: 'You\'ve demonstrated exceptional understanding of this topic!'
-    };
-    if (percentage >= 80) return { 
-      grade: 'A', 
-      title: 'Excellent Work', 
-      subtitle: 'Strong Understanding',
-      color: 'from-green-500 to-emerald-500',
-      textColor: 'text-green-600',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-500',
-      icon: Award,
-      message: 'Great job! You have a solid grasp of the material.'
-    };
-    if (percentage >= 70) return { 
-      grade: 'B', 
-      title: 'Good Performance', 
-      subtitle: 'Competent Knowledge',
-      color: 'from-blue-500 to-cyan-500',
-      textColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-500',
-      icon: Target,
-      message: 'Well done! You\'re on the right track.'
-    };
-    if (percentage >= 60) return { 
-      grade: 'C', 
-      title: 'Passed', 
-      subtitle: 'Basic Understanding',
-      color: 'from-yellow-500 to-amber-500',
-      textColor: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
-      borderColor: 'border-yellow-500',
-      icon: Star,
-      message: 'You passed! Keep practicing to improve further.'
-    };
-    return { 
-      grade: 'F', 
-      title: 'Needs Improvement', 
-      subtitle: 'Review Required',
-      color: 'from-orange-500 to-red-500',
-      textColor: 'text-red-600',
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-500',
-      icon: XCircle,
-      message: 'Don\'t worry! Review the material and try again.'
-    };
-  };
-
-  const performance = getPerformanceData(percentage);
-  const PerformanceIcon = performance.icon;
+  if (loading) return (
+    <div className="flex flex-col justify-center items-center h-screen bg-white">
+      <div className="relative flex items-center justify-center">
+        <Spinner size={64} />
+      </div>
+      <p className="mt-4 text-slate-400 font-medium tracking-wide italic">Generating your result...</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#f8fcfb] relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
+    <div className="min-h-screen bg-[#FAFBFF] pb-20">
+      {/* Dynamic Header Background */}
+      <div className="h-64 w-full bg-slate-900 absolute top-0 left-0 z-0 rounded-b-[3rem]" />
 
-      {/* Confetti Effect for Success */}
-      <AnimatePresence>
-        {showConfetti && (
-          <div className="fixed inset-0 pointer-events-none z-50">
-            {[...Array(50)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ 
-                  top: '50%', 
-                  left: '50%',
-                  opacity: 1,
-                  scale: 0
-                }}
-                animate={{ 
-                  top: `${Math.random() * 100}%`,
-                  left: `${Math.random() * 100}%`,
-                  opacity: 0,
-                  scale: 1,
-                  rotate: Math.random() * 360
-                }}
-                transition={{ 
-                  duration: 2,
-                  delay: i * 0.02,
-                  ease: "easeOut"
-                }}
-                className={`absolute w-3 h-3 ${i % 3 === 0 ? 'bg-primary' : i % 3 === 1 ? 'bg-blue-500' : 'bg-purple-500'} rounded-full`}
-              />
-            ))}
-          </div>
-        )}
-      </AnimatePresence>
-
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-4xl"
-        >
-          {/* Main Result Card */}
-          <div className="bg-white rounded-none shadow-lg overflow-hidden border border-gray-100">
-            
-            {/* Hero Section */}
-            <div className={`relative bg-gradient-to-r ${performance.color} p-12 text-white overflow-hidden`}>
-              {/* Animated Background Pattern */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-[120px] transform translate-x-1/3 -translate-y-1/3" />
-              </div>
-
-              <div className="relative z-10">
-                {/* Icon with Animation */}
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ 
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 15,
-                    delay: 0.2
-                  }}
-                  className="flex justify-center mb-6"
-                >
-                  <div className="relative">
-                    <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-none flex items-center justify-center border-4 border-white/30 shadow-xl">
-                      <PerformanceIcon className="w-12 h-12" strokeWidth={2.5} />
-                    </div>
-                    {isExcellent && (
-                      <motion.div
-                        animate={{ 
-                          scale: [1, 1.2, 1],
-                          rotate: [0, 360]
-                        }}
-                        transition={{ 
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "linear"
-                        }}
-                        className="absolute -top-2 -right-2 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center"
-                      >
-                        <Star className="w-4 h-4 text-white fill-white" />
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-
-                {/* Title */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-center space-y-2"
-                >
-                  <p className="text-[11px] font-bold uppercase tracking-wider opacity-90">
-                    {performance.subtitle}
-                  </p>
-                  <h1 className="text-4xl md:text-5xl font-black tracking-tighter">
-                    {performance.title}
-                  </h1>
-                  <p className="text-base opacity-90 max-w-2xl mx-auto leading-relaxed">
-                    {performance.message}
-                  </p>
-                </motion.div>
-              </div>
-            </div>
-
-            {/* Stats Section */}
-            <div className="p-8">
-              {/* Score Display - Large Circular */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                className="flex justify-center mb-10"
-              >
-                <div className="relative">
-                  {/* Circular Progress */}
-                  <svg className="w-48 h-48 transform -rotate-90">
-                    <circle
-                      cx="96"
-                      cy="96"
-                      r="88"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      className="text-gray-100"
-                    />
-                    <motion.circle
-                      cx="96"
-                      cy="96"
-                      r="88"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeLinecap="round"
-                      className={performance.textColor}
-                      initial={{ strokeDasharray: "0 1000" }}
-                      animate={{ strokeDasharray: `${percentage * 5.53} 1000` }}
-                      transition={{ duration: 1.5, delay: 0.6, ease: "easeOut" }}
-                    />
-                  </svg>
-                  
-                  {/* Center Content */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.8, type: "spring" }}
-                      className="text-center"
-                    >
-                      <div className={`text-5xl font-bold ${performance.textColor} mb-1`}>
-                        {Math.round(percentage)}%
-                      </div>
-                      <div className={`text-3xl font-bold ${performance.textColor} opacity-50`}>
-                        {performance.grade}
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Detailed Stats Grid */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 }}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
-              >
-                {/* Correct Answers */}
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-none transform group-hover:scale-105 transition-transform duration-300" />
-                  <div className="relative p-5 border-l-4 border-green-500 bg-white">
-                    <div className="flex items-center justify-between mb-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
-                      <TrendingUp className="w-4 h-4 text-green-500/30" />
-                    </div>
-                    <div className="text-3xl font-bold text-green-600 mb-1">{score}</div>
-                    <div className="text-caption text-gray-500 font-bold uppercase tracking-wider">Correct Answers</div>
-                  </div>
-                </div>
-
-                {/* Total Questions */}
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-none transform group-hover:scale-105 transition-transform duration-300" />
-                  <div className="relative p-5 border-l-4 border-blue-500 bg-white">
-                    <div className="flex items-center justify-between mb-2">
-                      <Target className="w-5 h-5 text-blue-500" />
-                      <Zap className="w-4 h-4 text-blue-500/30" />
-                    </div>
-                    <div className="text-3xl font-bold text-blue-600 mb-1">{total}</div>
-                    <div className="text-caption text-gray-500 font-bold uppercase tracking-wider">Total Questions</div>
-                  </div>
-                </div>
-
-                {/* Accuracy */}
-                <div className="relative group">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${performance.color} opacity-10 rounded-none transform group-hover:scale-105 transition-transform duration-300`} />
-                  <div className={`relative p-5 border-l-4 ${performance.borderColor} bg-white`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <PerformanceIcon className={`w-5 h-5 ${performance.textColor}`} />
-                      <Star className={`w-4 h-4 ${performance.textColor} opacity-30`} />
-                    </div>
-                    <div className={`text-3xl font-bold ${performance.textColor} mb-1`}>{Math.round(percentage)}%</div>
-                    <div className="text-caption text-gray-500 font-bold uppercase tracking-wider">Accuracy Rate</div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Progress Bar */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.1 }}
-                className="mb-8"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-caption text-gray-500 font-bold uppercase tracking-wider">Performance</span>
-                  <span className={`text-base font-bold ${performance.textColor}`}>{Math.round(percentage)}%</span>
-                </div>
-                <div className="h-2 w-full bg-gray-100 rounded-none overflow-hidden shadow-inner">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 1.5, delay: 1.2, ease: "easeOut" }}
-                    className={`h-full bg-gradient-to-r ${performance.color} relative overflow-hidden`}
-                  >
-                    <motion.div
-                      animate={{ x: ["0%", "100%"] }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                    />
-                  </motion.div>
-                </div>
-              </motion.div>
-
-              {/* Action Buttons */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.3 }}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4"
-              >
-                <Button
-                  onClick={() => router.push(`/dashboard/test/${testId}/subtopics`)}
-                  variant="outline"
-                  className="h-11 rounded-none border border-gray-200 bg-white hover:bg-gray-50 hover:border-primary/30 hover:text-primary text-gray-900 text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md flex items-center justify-center gap-2"
-                >
-                  <List className="w-4 h-4" />
-                  All Subtopics
-                </Button>
-                <Button
-                  onClick={() => router.push(`/dashboard/test/${testId}/subtopic/${subtopicId}`)}
-                  variant="outline"
-                  className="h-11 rounded-none border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 text-blue-600 text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md flex items-center justify-center gap-2"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Retry Test
-                </Button>
-                <Button
-                  onClick={() => router.push('/dashboard/topics')}
-                  className="h-11 rounded-none bg-gray-900 hover:bg-black text-white text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md border-b-2 border-primary flex items-center justify-center gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to Topics
-                </Button>
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Motivational Quote */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-            className="mt-6 text-center"
+      <div className="max-w-4xl mx-auto px-6 relative z-10 pt-12">
+        {/* Navigation */}
+        <nav className="flex items-center justify-between mb-8">
+          <button 
+            onClick={() => router.push(`/dashboard/test/${testId}/subtopics`)} 
+            className="flex items-center text-slate-300 hover:text-white transition-colors group"
           >
-            <p className="text-base text-gray-500 italic">
-              {isPassed 
-                ? "\"Success is the sum of small efforts repeated day in and day out.\"" 
-                : "\"The expert in anything was once a beginner. Keep learning!\""}
-            </p>
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">All Subtopics</span>
+          </button>
+          <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10">
+            <Trophy className="w-6 h-6 text-yellow-400" />
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <section className="text-white mb-10">
+          <motion.h1 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="text-5xl font-black tracking-tight"
+          >
+            {subtopicName || 'Result'}
+          </motion.h1>
+          <p className="text-slate-400 mt-2 text-lg font-medium italic opacity-80">
+            {testTitle || 'Performance Report'}
+          </p>
+        </section>
+
+        {/* Main Score Card */}
+        <div className="grid gap-6">
+          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+            <Card className="border-0 shadow-2xl shadow-indigo-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+              <div className="p-10 flex flex-col md:flex-row items-center gap-10">
+                {/* Circular Progress */}
+                <div className="relative flex items-center justify-center w-40 h-40">
+                  <svg className="w-full h-full -rotate-90">
+                    <circle cx="80" cy="80" r="70" fill="transparent" stroke="#F1F5F9" strokeWidth="12" />
+                    <motion.circle
+                      cx="80" cy="80" r="70" fill="transparent" stroke="url(#scoreGradient)" strokeWidth="12" strokeLinecap="round"
+                      initial={{ strokeDasharray: "0 1000" }} 
+                      animate={{ strokeDasharray: `${(percentage / 100) * 440} 1000` }} 
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                    />
+                    <defs>
+                      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#4F46E5" />
+                        <stop offset="100%" stopColor="#9333EA" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-black text-slate-900">{Math.round(percentage)}%</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Score</span>
+                  </div>
+                </div>
+
+                {/* Score stats */}
+                <div className="flex-1 grid grid-cols-2 gap-8 w-full border-l border-slate-100 pl-0 md:pl-10">
+                  <div>
+                    <p className="text-slate-400 text-xs font-bold uppercase mb-1">Correct Answers</p>
+                    <p className="text-2xl font-black text-slate-800">{score} <span className="text-slate-300 font-medium">/ {total}</span></p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-xs font-bold uppercase mb-1">Accuracy</p>
+                    <p className="text-2xl font-black text-slate-800">{Math.round(percentage)}%</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Badge className={`border-none px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest ${
+                      isPassed ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600'
+                    }`}>
+                      Status: {statusLabel}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Motivational Insight Section - Reusing AI Feedback style */}
+              <div className="bg-slate-50 p-8 border-t border-slate-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <BrainCircuit className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-sm font-black uppercase tracking-tighter text-slate-700">Performance Insight</h3>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <p className="text-sm text-slate-600 leading-relaxed italic md:col-span-2">
+                    {isPassed 
+                      ? "\"Your dedication is showing! You've successfully navigated through this topic with a solid understanding.\"" 
+                      : "\"Every challenge is an opportunity to learn. This topic needs a bit more focus, but you're definitely capable of mastering it.\""}
+                  </p>
+                  <div className="p-4 bg-white rounded-2xl border border-slate-100">
+                    <p className="text-[10px] font-black text-indigo-400 uppercase mb-1">Key Insight</p>
+                    <p className="text-xs text-slate-700 font-medium">
+                      {percentage >= 90 ? "Excellent mastery. You can now confidently apply these concepts." : 
+                       percentage >= 70 ? "Good progress. A few more practice sessions will help solidify your knowledge." :
+                       "Reviewing the core principles will help bridge the current understanding gap."}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-white rounded-2xl border border-slate-100">
+                    <p className="text-[10px] font-black text-rose-400 uppercase mb-1">Strategy</p>
+                    <p className="text-xs text-slate-700 font-medium">
+                      {isPassed ? "Keep building on this momentum and try more advanced topics." : "Try retaking the test after a quick revision of the missed questions."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
           </motion.div>
-        </motion.div>
+
+          {/* Quick Action Cards */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card 
+              className="border-0 shadow-lg rounded-[2rem] bg-white p-6 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors group"
+              onClick={() => router.push(`/dashboard/test/${testId}/subtopic/${subtopicId}`)}
+            >
+              <div>
+                <RotateCcw className="text-indigo-600 mb-2 group-hover:rotate-180 transition-transform duration-500" size={20} />
+                <h4 className="text-slate-900 font-bold">Retry Test</h4>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Perfect your score</p>
+              </div>
+              <div className="p-3 bg-indigo-50 rounded-2xl group-hover:bg-indigo-100 transition-colors">
+                <ChevronRight className="w-5 h-5 text-indigo-600" />
+              </div>
+            </Card>
+
+            <Card 
+              className="border-0 shadow-lg rounded-[2rem] bg-white p-6 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors group"
+              onClick={() => router.push(`/dashboard/test/${testId}/subtopics`)}
+            >
+              <div>
+                <List className="text-slate-600 mb-2" size={20} />
+                <h4 className="text-slate-900 font-bold">All Subtopics</h4>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">View progress</p>
+              </div>
+              <div className="p-3 bg-slate-100 rounded-2xl group-hover:bg-slate-200 transition-colors">
+                <ChevronRight className="w-5 h-5 text-slate-600" />
+              </div>
+            </Card>
+          </div>
+
+          {/* Primary Action */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+            <Button 
+              onClick={() => router.push('/dashboard/topics')} 
+              className="h-14 px-10 rounded-full bg-slate-900 text-white font-bold hover:scale-105 transition-transform shadow-xl shadow-slate-200"
+            >
+              Continue Learning
+            </Button>
+          </div>
+
+          <div className="mt-8 text-center text-slate-400 text-sm font-medium italic opacity-60">
+            {isPassed ? "Outstanding! You're making great progress." : "Don't give up! Every mistake is a lesson learned."}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -402,11 +231,9 @@ export default function SubtopicResultPage({
 }) {
   return (
     <Suspense fallback={
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-base text-gray-500 font-bold">Loading your results...</p>
-        </div>
+      <div className="flex flex-col justify-center items-center h-screen bg-white">
+        <Spinner size={64} />
+        <p className="mt-4 text-slate-400 font-medium tracking-wide italic">Loading results...</p>
       </div>
     }>
       <SubtopicResultContent params={params} />

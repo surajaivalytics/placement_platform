@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import {
-  ChevronLeft, Award, Target, BookOpen, Brain, Sparkles, CheckCircle, XCircle
+  ChevronLeft, Award, Target, BookOpen, Brain, Sparkles, 
+  CheckCircle, XCircle, ArrowLeft, Trophy, BrainCircuit, 
+  TrendingUp, TrendingDown, ChevronRight
 } from "lucide-react";
 import { Spinner } from "@/components/ui/loader";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ResultData {
   id: string;
@@ -19,6 +22,7 @@ interface ResultData {
   aiFeedback: string | null;
   createdAt: string;
   test: {
+    id: string;
     title: string;
     type: string;
     difficulty: string;
@@ -88,175 +92,179 @@ export default function ResultDetailPage() {
   }, [result]);
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-      <Spinner size={40} className="text-blue-600" />
-      <p className="text-slate-500 font-medium">Loading your results...</p>
+    <div className="flex flex-col justify-center items-center h-screen bg-white">
+      <div className="relative flex items-center justify-center">
+        <Spinner size={64} />
+      </div>
+      <p className="mt-4 text-slate-400 font-medium tracking-wide italic">Retrieving your analysis...</p>
     </div>
   );
 
   if (error || !result) return (
     <div className="max-w-2xl mx-auto py-20 text-center">
-      <h2 className="text-2xl font-bold mb-4">Oops! Result Not Found</h2>
+      <h2 className="text-2xl font-bold mb-4">Result Not Found</h2>
       <Button asChild><Link href="/dashboard">Return to Dashboard</Link></Button>
     </div>
   );
 
-  // Ensure percentage is always a valid number to prevent NaN errors
   const safePercentage = typeof result.percentage === 'number' && !isNaN(result.percentage) ? result.percentage : 0;
-  const scoreColor = safePercentage >= 80 ? 'text-emerald-600' : safePercentage >= 60 ? 'text-amber-600' : 'text-rose-600';
+  const isPassed = safePercentage >= 60;
+  const statusLabel = safePercentage >= 70 ? 'Mastered' : 'Growing';
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-12 p-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <Button variant="ghost" onClick={() => router.back()} className="mb-2 -ml-2 text-slate-500 hover:text-slate-900">
-            <ChevronLeft className="w-4 h-4 mr-1" /> Back to History
-          </Button>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Report Summary</h1>
-        </div>
-        <div className="flex gap-2">
-          <Badge variant="outline" className="px-3 py-1 bg-white shadow-sm capitalize">
-            {result.test.difficulty} Difficulty
-          </Badge>
-          <Badge className="px-3 py-1 bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-50 shadow-sm">
-            {result.test.type}
-          </Badge>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#FAFBFF] pb-20">
+      {/* Dynamic Header Background */}
+      <div className="h-64 w-full bg-slate-900 absolute top-0 left-0 z-0 rounded-b-[3rem]" />
 
-      {/* Hero Score Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-1 border-none bg-slate-900 text-white shadow-2xl overflow-hidden relative">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <Award size={120} />
+      <div className="max-w-4xl mx-auto px-6 relative z-10 pt-12">
+        {/* Navigation */}
+        <nav className="flex items-center justify-between mb-8">
+          <button 
+            onClick={() => router.back()} 
+            className="flex items-center text-slate-300 hover:text-white transition-colors group"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Back to History</span>
+          </button>
+          <div className="flex gap-3">
+            <Badge variant="outline" className="px-3 py-1 bg-white/10 text-white border-white/20 backdrop-blur-md uppercase text-[10px] font-bold">
+              {result.test.difficulty}
+            </Badge>
+            <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10">
+              <Trophy className="w-6 h-6 text-yellow-400" />
+            </div>
           </div>
-          <CardHeader>
-            <CardTitle className="text-slate-400 font-medium uppercase tracking-wider text-xs">Overall Performance</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center py-6 text-center">
-            <div className="relative flex items-center justify-center mb-4">
-              <svg className="w-32 h-32 transform -rotate-90">
-                <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-800" />
-                <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={364} strokeDashoffset={364 - (364 * safePercentage) / 100} className="text-indigo-400 transition-all duration-1000" />
-              </svg>
-              <span className="absolute text-3xl font-bold">{safePercentage}%</span>
-            </div>
-            <h2 className="text-2xl font-bold">{result.score} / {result.total}</h2>
-            <p className="text-slate-400 mt-2 text-sm italic">"{getPerformanceLabel(safePercentage)}"</p>
-          </CardContent>
-        </Card>
+        </nav>
 
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="shadow-sm border-slate-100">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600"><Target /></div>
-              <div>
-                <p className="text-sm text-slate-500">Total Accuracy</p>
-                <p className="text-xl font-bold">{safePercentage}% Correct</p>
+        {/* Hero Section */}
+        <section className="text-white mb-10">
+          <motion.h1 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="text-5xl font-black tracking-tight"
+          >
+            {result.test.title}
+          </motion.h1>
+          <p className="text-slate-400 mt-2 text-lg font-medium italic opacity-80">
+            Performance Report • {new Date(result.createdAt).toLocaleDateString()}
+          </p>
+        </section>
+
+        {/* Main Score & AI Feedback */}
+        <div className="grid gap-6">
+          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+            <Card className="border-0 shadow-2xl shadow-indigo-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+              <div className="p-10 flex flex-col md:flex-row items-center gap-10">
+                <div className="relative flex items-center justify-center w-40 h-40">
+                  <svg className="w-full h-full -rotate-90">
+                    <circle cx="80" cy="80" r="70" fill="transparent" stroke="#F1F5F9" strokeWidth="12" />
+                    <motion.circle
+                      cx="80" cy="80" r="70" fill="transparent" stroke="url(#scoreGradient)" strokeWidth="12" strokeLinecap="round"
+                      initial={{ strokeDasharray: "0 1000" }} 
+                      animate={{ strokeDasharray: `${(safePercentage / 100) * 440} 1000` }} 
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                    />
+                    <defs>
+                      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#4F46E5" />
+                        <stop offset="100%" stopColor="#9333EA" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-black text-slate-900">{Math.round(safePercentage)}%</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Score</span>
+                  </div>
+                </div>
+
+                <div className="flex-1 grid grid-cols-2 gap-8 w-full border-l border-slate-100 pl-0 md:pl-10">
+                  <div>
+                    <p className="text-slate-400 text-xs font-bold uppercase mb-1">Total Accuracy</p>
+                    <p className="text-2xl font-black text-slate-800">{result.score} <span className="text-slate-300 font-medium">/ {result.total}</span></p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-xs font-bold uppercase mb-1">Attempted On</p>
+                    <p className="text-2xl font-black text-slate-800">{new Date(result.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Badge className={`border-none px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest ${
+                      isPassed ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600'
+                    }`}>
+                      Status: {statusLabel}
+                    </Badge>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-slate-100">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="p-3 bg-blue-50 rounded-2xl text-blue-600"><Brain /></div>
-              <div>
-                <p className="text-sm text-slate-500">Topic Title</p>
-                <p className="text-xl font-bold truncate max-w-[150px]">{result.test.title}</p>
+
+              {/* AI Coaching Feedback */}
+              <div className="bg-slate-50 p-8 border-t border-slate-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <BrainCircuit className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-sm font-black uppercase tracking-tighter text-slate-700">AI Performance Analysis</h3>
+                </div>
+                {ailoading ? (
+                  <div className="flex gap-2 items-center py-4">
+                    <Spinner size={16} />
+                    <span className="text-xs text-slate-400">Personalizing your insights...</span>
+                  </div>
+                ) : aiFeedback ? (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <p className="text-sm text-slate-600 leading-relaxed italic md:col-span-2">"{aiFeedback.summary}"</p>
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100">
+                      <p className="text-[10px] font-black text-emerald-500 uppercase mb-1 flex items-center gap-1">
+                        <TrendingUp size={10} /> Key Strengths
+                      </p>
+                      <p className="text-xs text-slate-700 font-medium">{aiFeedback.strengths}</p>
+                    </div>
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100">
+                      <p className="text-[10px] font-black text-rose-400 uppercase mb-1 flex items-center gap-1">
+                        <TrendingDown size={10} /> Focus Areas
+                      </p>
+                      <p className="text-xs text-slate-700 font-medium">{aiFeedback.improvements}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">Analysis temporarily unavailable.</p>
+                )}
               </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-slate-100">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="p-3 bg-purple-50 rounded-2xl text-purple-600"><BookOpen /></div>
-              <div>
-                <p className="text-sm text-slate-500">Attempt Date</p>
-                <p className="text-xl font-bold">{new Date(result.createdAt).toLocaleDateString()}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-slate-100">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="p-3 bg-amber-50 rounded-2xl text-amber-600"><Award /></div>
-              <div>
-                <p className="text-sm text-slate-500">Correct Answers</p>
-                <p className="text-xl font-bold">{result.score} Questions</p>
-              </div>
-            </CardContent>
-          </Card>
+            </Card>
+          </motion.div>
+
+          {/* Quick Stats Cards */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="border-0 shadow-lg rounded-[2.5rem] bg-indigo-600 p-8 text-white relative overflow-hidden group">
+              <Brain className="absolute -bottom-4 -right-4 w-32 h-32 opacity-10 group-hover:scale-110 transition-transform" />
+              <p className="text-indigo-200 text-xs font-black uppercase tracking-widest mb-2">Coach's Pro-Tip</p>
+              <h4 className="text-lg font-bold italic leading-relaxed relative z-10">
+                "{aiFeedback?.advice || "Keep practicing consistently to see exponential growth in your understanding."}"
+              </h4>
+            </Card>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="border-0 shadow-sm rounded-[2rem] bg-white p-5 flex flex-col items-center justify-center text-center">
+                <Target className="text-indigo-600 mb-2" size={20} />
+                <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Correct</p>
+                <p className="text-xl font-black text-slate-800">{result.score}</p>
+              </Card>
+              <Card className="border-0 shadow-sm rounded-[2rem] bg-white p-5 flex flex-col items-center justify-center text-center">
+                <BookOpen className="text-indigo-600 mb-2" size={20} />
+                <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Total</p>
+                <p className="text-xl font-black text-slate-800">{result.total}</p>
+              </Card>
+            </div>
+          </div>
+
+          {/* Primary Actions */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+            <Button asChild className="h-14 px-10 rounded-full bg-slate-900 text-white font-bold hover:scale-105 transition-transform shadow-xl shadow-slate-200">
+              <Link href="/dashboard/my-tests">Retake Assessment</Link>
+            </Button>
+            <Button asChild variant="outline" className="h-14 px-10 rounded-full border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">
+              <Link href="/dashboard">Back to Dashboard</Link>
+            </Button>
+          </div>
         </div>
-      </div>
-
-      {/* AI Coach Feedback Section */}
-      <Card className="border-none bg-gradient-to-br from-indigo-50 to-white dark:from-slate-900 dark:to-slate-950 shadow-lg overflow-hidden border-l-4 border-l-indigo-500">
-        <CardHeader className="border-b border-white/20">
-          <CardTitle className="flex items-center gap-2 text-indigo-900 dark:text-indigo-300">
-            <Sparkles className="h-5 w-5 animate-pulse" />
-            AI Performance Analysis
-          </CardTitle>
-          <CardDescription>Personalized feedback to accelerate your career growth</CardDescription>
-        </CardHeader>
-        <CardContent className="p-6">
-          {ailoading ? (
-            <div className="flex flex-col items-center py-12 gap-3">
-              <Spinner size={32} className="text-blue-600" />
-              <p className="text-indigo-600/70 animate-pulse font-medium">Consulting AI Coach...</p>
-            </div>
-          ) : aiFeedback ? (
-            <div className="space-y-8">
-              <div className="bg-white/50 dark:bg-black/20 p-5 rounded-2xl">
-                <h4 className="font-bold text-slate-900 dark:text-white mb-2">Executive Summary</h4>
-                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{aiFeedback.summary}</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <h4 className="flex items-center gap-2 font-bold text-emerald-700">
-                    <CheckCircle className="h-5 w-5" /> Your Strengths
-                  </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 bg-emerald-50/50 dark:bg-emerald-900/10 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900">
-                    {aiFeedback.strengths}
-                  </p>
-                </div>
-                <div className="space-y-3">
-                  <h4 className="flex items-center gap-2 font-bold text-amber-700">
-                    <XCircle className="h-5 w-5" /> Areas to Improve
-                  </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 bg-amber-50/50 dark:bg-amber-900/10 p-4 rounded-xl border border-amber-100 dark:border-amber-900">
-                    {aiFeedback.improvements}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-indigo-600 text-white p-6 rounded-2xl shadow-xl shadow-indigo-200 dark:shadow-none relative overflow-hidden">
-                <Brain className="absolute -bottom-4 -right-4 w-24 h-24 opacity-20" />
-                <h4 className="font-bold text-lg mb-2">Coach's Pro-Tip</h4>
-                <p className="text-indigo-50 relative z-10 italic">"{aiFeedback.advice}"</p>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-10 text-slate-400">Unable to load AI feedback at this time.</div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Footer Actions */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-4">
-        <Button variant="outline" asChild className="w-full sm:w-auto h-12 px-8">
-          <Link href="/dashboard">Back to Dashboard</Link>
-        </Button>
-        <Button asChild className="w-full sm:w-auto h-12 px-8 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100">
-          <Link href="/dashboard/my-tests">Take Another Assessment</Link>
-        </Button>
       </div>
     </div>
   );
-}
-
-function getPerformanceLabel(pct: number) {
-  if (pct >= 90) return 'Top Tier Performance';
-  if (pct >= 80) return 'Highly Proficient';
-  if (pct >= 70) return 'Strong Foundation';
-  if (pct >= 60) return 'Developing Skills';
-  return 'Focus Needed';
 }
