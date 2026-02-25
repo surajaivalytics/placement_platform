@@ -72,7 +72,7 @@ export async function analyzeVoiceRecording(audioBuffer: Buffer, mimeType: strin
 
             // Fallback 1: gemini-1.5-flash
             try {
-                const text = await tryGenerate("gemini-1.5-flash");
+                const text = await tryGenerate("gemini-3-pro-preview");
                 const jsonStr = text.replace(/```json|```/g, "").trim();
                 return JSON.parse(jsonStr);
             } catch (innerE: any) {
