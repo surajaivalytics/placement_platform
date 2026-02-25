@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Upload, FileText, CheckCircle, AlertCircle, ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, ArrowLeft, Save, Loader2, Download } from 'lucide-react';
 import Link from 'next/link';
 import { importQuestionsFromContext } from '@/app/actions/import-questions';
+import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label'; // Ensure this exists or use html label
 
@@ -81,6 +82,50 @@ export default function BulkImportPage() {
         }
     };
 
+    const downloadTemplate = () => {
+        const templateData = [
+            {
+                'Question Text': 'What is the capital of France?',
+                'Type': 'mcq',
+                'Option A': 'London',
+                'Option B': 'Paris',
+                'Option C': 'Berlin',
+                'Option D': 'Madrid',
+                'Correct Answer': 'Paris',
+                'Difficulty': 'Easy',
+                'Category': 'General Knowledge',
+                'Points': 1
+            },
+            {
+                'Question Text': 'Write a function to sum two numbers.',
+                'Type': 'coding',
+                'Input Format': 'Two integers a and b',
+                'Output Format': 'One integer representing the sum',
+                'Sample Input': '5 10',
+                'Sample Output': '15',
+                'Difficulty': 'Medium',
+                'Category': 'Basic Programming',
+                'Points': 5
+            }
+        ];
+
+        const worksheet = XLSX.utils.json_to_sheet(templateData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+
+        // Use XLSX.write to create a buffer
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'question_import_template.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-6">
             <div className="flex items-center gap-4">
@@ -91,16 +136,22 @@ export default function BulkImportPage() {
                 </Button>
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Bulk Import Questions</h1>
-                    <p className="text-muted-foreground">Upload questions from CSV, Excel, JSON or PDF</p>
+                    <p className="text-muted-foreground">Upload questions from CSV, Excel, JSON or AI-powered Docs (PDF/Word)</p>
                 </div>
             </div>
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Step 1: Upload File</CardTitle>
-                    <CardDescription>
-                        Supported formats: .csv, .xlsx, .json, .pdf (via AI)
-                    </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                        <CardTitle>Step 1: Upload File</CardTitle>
+                        <CardDescription>
+                            Supported formats: .csv, .xlsx, .json, .pdf, .docx (AI analysis)
+                        </CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={downloadTemplate} className="text-indigo-600 border-indigo-200 hover:bg-indigo-50">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Template
+                    </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className={`border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center transition-colors ${file ? 'border-green-500 bg-green-50' : 'border-slate-300 hover:border-slate-400'}`}>
@@ -114,7 +165,7 @@ export default function BulkImportPage() {
                                     id="file-upload"
                                     type="file"
                                     className="hidden"
-                                    accept=".csv,.xlsx,.xls,.json,.pdf"
+                                    accept=".csv,.xlsx,.xls,.json,.pdf,.docx,.doc"
                                     onChange={handleFileChange}
                                 />
                             </label>
@@ -127,7 +178,14 @@ export default function BulkImportPage() {
                         className="w-full"
                         disabled={!file || isAnalyzing || parsedQuestions.length > 0}
                     >
-                        {isAnalyzing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing File...</> : parsedQuestions.length > 0 ? "File Analyzed" : "Analyze & Parse Questions"}
+                        {isAnalyzing ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                {['pdf', 'docx', 'doc'].includes(file?.name.split('.').pop()?.toLowerCase() || '')
+                                    ? "AI is analyzing your document..."
+                                    : "Analyzing File..."}
+                            </>
+                        ) : parsedQuestions.length > 0 ? "File Analyzed" : "Analyze & Parse Questions"}
                     </Button>
                 </CardContent>
             </Card>
@@ -157,12 +215,30 @@ export default function BulkImportPage() {
                                 </CardHeader>
                                 <CardContent className="p-4 pt-2">
                                     {q.type === 'coding' ? (
-                                        <div className="text-xs text-slate-500 font-mono">
-                                            METADATA: {q.metadata ? 'Present' : 'Missing'}
+                                        <div className="space-y-1">
+                                            <div className="text-xs text-slate-500 font-mono">
+                                                METADATA: {q.metadata ? 'Present' : 'Missing'}
+                                            </div>
+                                            {q.metadata && (
+                                                <div className="text-[10px] text-slate-400 truncate">
+                                                    {q.metadata}
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
-                                        <div className="text-xs text-slate-500">
-                                            {q.options?.length || 0} Options • Correct: {q.options?.find((o: any) => o.isCorrect)?.text || 'None'}
+                                        <div className="space-y-2">
+                                            <div className="text-xs text-slate-500">
+                                                {q.options?.length || 0} Options • Correct: <span className={q.options?.find((o: any) => o.isCorrect) ? "text-green-600 font-medium" : "text-red-600 font-bold"}>
+                                                    {q.options?.find((o: any) => o.isCorrect)?.text || 'None (Header mismatch?)'}
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                                {q.options?.map((opt: any, idx: number) => (
+                                                    <div key={idx} className={`text-[10px] p-1 rounded border ${opt.isCorrect ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+                                                        {idx + 1}. {opt.text}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </CardContent>
