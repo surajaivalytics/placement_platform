@@ -20,75 +20,14 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // OTP State
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
-  const [sendingOtp, setSendingOtp] = useState(false);
+
 
   const router = useRouter();
 
-  const handleSendOtp = async () => {
-    if (!email) {
-      toast.error("Please enter an email address");
-      return;
-    }
-    setSendingOtp(true);
-    try {
-      const response = await fetch('/api/auth/otp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
 
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.message || 'Failed to send OTP');
-
-      setOtpSent(true);
-      toast.success("OTP sent to your email!");
-    } catch (error) {
-      console.error("Error sending OTP:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to send OTP");
-    } finally {
-      setSendingOtp(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otp) {
-      toast.error("Please enter the OTP");
-      return;
-    }
-    setVerifyingOtp(true);
-    try {
-      const response = await fetch('/api/auth/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.message || 'Invalid OTP');
-
-      setIsVerified(true);
-      toast.success("Email verified successfully!");
-    } catch (error) {
-      console.error("Error verifying OTP:", error);
-      toast.error("Invalid OTP. Please try again.");
-    } finally {
-      setVerifyingOtp(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isVerified) {
-      toast.error("Please verify your email first");
-      return;
-    }
     setLoading(true);
 
     try {
@@ -141,51 +80,10 @@ export default function SignupPage() {
                 placeholder="student@university.edu"
                 className="h-11 rounded-none border-gray-200 bg-gray-50 focus:bg-white transition-all focus:ring-0 focus:border-primary font-medium text-gray-900"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (isVerified) setIsVerified(false);
-                  if (otpSent) setOtpSent(false);
-                }}
-                disabled={isVerified}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              {!isVerified && (
-                <Button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={sendingOtp || otpSent || !email}
-                  className="h-11 px-6 rounded-none bg-primary text-white hover:bg-primary/90 text-xs font-bold uppercase tracking-wide shadow-sm"
-                >
-                  {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : (otpSent ? "Resend" : "Verify")}
-                </Button>
-              )}
-              {isVerified && (
-                <div className="h-11 px-4 flex items-center justify-center bg-primary/10 text-primary border border-primary/20 rounded-none">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-              )}
             </div>
-
-            {/* OTP Input */}
-            {otpSent && !isVerified && (
-              <div className="mt-2 flex gap-2 animate-in fade-in slide-in-from-top-2">
-                <Input
-                  type="text"
-                  placeholder="Enter 6-digit OTP"
-                  className="h-11 rounded-none border-gray-200 bg-gray-50 focus:bg-white transition-all focus:ring-0 focus:border-primary font-medium text-gray-900"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  onClick={handleVerifyOtp}
-                  disabled={verifyingOtp || !otp}
-                  className="h-11 px-6 rounded-none bg-primary text-white hover:bg-primary/90 text-xs font-bold uppercase tracking-wide shadow-sm"
-                >
-                  {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm"}
-                </Button>
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -280,7 +178,7 @@ export default function SignupPage() {
         <div className="flex flex-col gap-4 pt-2">
           <Button
             type="submit"
-            disabled={loading || !isVerified}
+            disabled={loading}
             className="relative w-full h-12 rounded-none bg-gray-900 text-white hover:bg-black text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none overflow-hidden group"
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
