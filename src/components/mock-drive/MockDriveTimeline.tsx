@@ -29,8 +29,26 @@ export function MockDriveTimeline({ rounds, enrollment, driveId }: MockDriveTime
 
     const isRoundLocked = (roundNum: number) => {
         if (!enrollment) return true;
+
+        // If the drive is passed or failed entirely, no more rounds unlock
+        if (enrollment?.status === 'PASSED') return false;
+
+        let highestCompletedRoundNum = 0;
+        if (enrollment?.roundProgress) {
+            enrollment.roundProgress.forEach((rp: any) => {
+                const r = rounds.find(round => round.id === rp.roundId);
+                if (r && rp.status === 'COMPLETED' && r.roundNumber > highestCompletedRoundNum) {
+                    highestCompletedRoundNum = r.roundNumber;
+                }
+            });
+        }
+
+        // Allowed to access if the round is less than or equals to (highest completed + 1)
+        // OR if it's the currentRoundNumber tracked by enrollment
         const currentRound = enrollment?.currentRoundNumber || 1;
-        return roundNum > currentRound;
+        const maxAllowedRound = Math.max(currentRound, highestCompletedRoundNum + 1);
+
+        return roundNum > maxAllowedRound;
     };
 
     return (
