@@ -54,7 +54,7 @@ export async function POST(req: Request) {
 
         const totalCases = Math.max(testCases.length, 1);
         const score = (passedCases / totalCases) * 100;
-        const isPassed = score >= 70;
+        const isPassed = score >= 60;
 
         // Generate AI Evaluation
         const aiEvaluation = await generateCodingEvaluation(

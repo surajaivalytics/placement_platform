@@ -29,8 +29,9 @@ export async function POST(req: Request) {
         });
 
         const responsesData: any[] = [];
-        let score = 0;
-        let totalScore = 0;
+        let score = 0; // Will be used for points
+        let correctCount = 0;
+        const totalQuestionsCount = questions.length;
         const categoryResults: Record<string, { correct: number; total: number }> = {};
 
         questions.forEach(q => {
@@ -53,9 +54,9 @@ export async function POST(req: Request) {
             if (selectedOption?.isCorrect) {
                 isCorrect = true;
                 score += q.points;
+                correctCount++;
                 categoryResults[category].correct++;
             }
-            totalScore += q.points;
 
             responsesData.push({
                 questionId: q.id,
@@ -66,9 +67,9 @@ export async function POST(req: Request) {
         });
 
         // 4. Save Responses & Update Progress in Transaction
-        const percentage = totalScore > 0 ? (score / totalScore) * 100 : 0;
+        const percentage = totalQuestionsCount > 0 ? (correctCount / totalQuestionsCount) * 100 : 0;
         const normalizedScore = percentage;
-        const isPassed = percentage >= 70;
+        const isPassed = percentage >= 60;
 
         // Generate AI Evaluation
         const aiEvaluation = await generateMCQEvaluation(
