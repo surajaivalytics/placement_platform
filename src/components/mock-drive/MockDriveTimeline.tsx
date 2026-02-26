@@ -14,6 +14,12 @@ export function MockDriveTimeline({ rounds, enrollment, driveId }: MockDriveTime
         if (!enrollment) return 'LOCKED';
         if (enrollment?.status === 'PASSED') return 'COMPLETED';
 
+        const round = rounds.find(r => r.roundNumber === roundNum);
+        const progress = round ? enrollment?.roundProgress?.find((rp: any) => rp.roundId === round.id) : null;
+        if (progress?.status) {
+            return progress.status;
+        }
+
         const currentRound = enrollment?.currentRoundNumber || 1;
 
         if (roundNum < currentRound) return 'COMPLETED';
