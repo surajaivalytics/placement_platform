@@ -53,9 +53,18 @@ export function WebcamMonitor({ deviceId }: { deviceId?: string }) {
     }
 
     return (
-        <div
-            className="fixed bottom-4 right-4 z-50 w-48 h-36 bg-black rounded-lg overflow-hidden shadow-2xl border-2 border-gray-800"
+        <motion.div
+            drag
+            dragMomentum={false}
+            whileHover={{ scale: 1.02, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}
+            whileDrag={{ scale: 1.05, cursor: "grabbing" }}
+            className="fixed bottom-24 right-4 z-[9999] w-48 h-36 bg-black rounded-xl overflow-hidden shadow-2xl border-2 border-gray-700/80 ring-1 ring-white/10 cursor-grab group transition-shadow"
         >
+            {/* Hover Drag Indicator */}
+            <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-black/40 hover:bg-black/60 rounded-lg text-white/90 backdrop-blur-md border border-white/10 shadow-lg">
+                <Move className="w-4 h-4" />
+            </div>
+
             <video
                 ref={videoRef}
                 autoPlay
@@ -85,6 +94,6 @@ export function WebcamMonitor({ deviceId }: { deviceId?: string }) {
                     Live Proctoring
                 </span>
             </div>
-        </div>
+        </motion.div>
     );
 }
