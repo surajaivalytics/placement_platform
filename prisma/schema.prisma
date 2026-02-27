@@ -53,6 +53,7 @@ model User {
   accountType           String?                @default("Regular")
   autoPayout            Boolean                @default(false)
   coverImage            String?
+  collegeName           String?
   accounts              Account[]
   interviewSessions     InterviewSession[]
   mockEnrollments       MockDriveEnrollment[]

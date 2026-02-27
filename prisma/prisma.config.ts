@@ -1,4 +1,3 @@
-
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
@@ -8,5 +7,6 @@ export default defineConfig({
     },
     datasource: {
         // DATABASE_URL is used for pooled connections (runtime queries)
+        url: process.env.DATABASE_URL,
     },
 });

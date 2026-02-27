@@ -41,7 +41,7 @@ export function RoundInstructions({ round, onStart }: RoundInstructionsProps) {
                         <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 flex flex-col items-center text-center gap-2">
                             <Clock className="w-8 h-8 text-blue-600" />
                             <h3 className="font-semibold text-gray-900">Timed Round</h3>
-                            <p className="text-xs text-gray-600">Total duration is {round?.durationMinutes || 0} minutes. Timer cannot be paused.</p>
+                            <p className="text-xs text-gray-600">Total duration is {round?.type === 'CODING' ? 30 : (round?.durationMinutes || 0)} minutes. Timer cannot be paused.</p>
                         </div>
                         <div className="bg-amber-50/50 p-4 rounded-lg border border-amber-100 flex flex-col items-center text-center gap-2">
                             <AlertTriangle className="w-8 h-8 text-amber-600" />

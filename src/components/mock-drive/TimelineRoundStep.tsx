@@ -18,7 +18,8 @@ interface TimelineRoundStepProps {
 
 export function TimelineRoundStep({ round, status, isLocked, driveId, progressId, index, isRight }: TimelineRoundStepProps) {
     const router = useRouter();
-    const isActive = status === 'IN_PROGRESS' || status === 'PENDING';
+    const isActive = status === 'IN_PROGRESS';
+    const isPending = status === 'PENDING';
     const isCompleted = status === 'COMPLETED';
     const isFailed = status === 'FAILED';
 
@@ -96,7 +97,7 @@ export function TimelineRoundStep({ round, status, isLocked, driveId, progressId
                         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${isActive ? 'bg-white/10 text-blue-300' : 'bg-gray-100 text-gray-600'
                             }`}>
                             <Clock className="w-3.5 h-3.5" />
-                            {round.durationMinutes} mins
+                            {round?.type === 'CODING' ? 30 : round.durationMinutes} mins
                         </div>
                         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${isActive ? 'bg-white/10 text-blue-300' : 'bg-gray-100 text-gray-600'
                             }`}>
@@ -106,7 +107,7 @@ export function TimelineRoundStep({ round, status, isLocked, driveId, progressId
                     </div>
 
                     <Button
-                        disabled={isLocked || isCompleted}
+                        disabled={isLocked || isCompleted || isFailed}
                         onClick={handleStart}
                         className={`w-full h-11 text-sm font-bold rounded-xl transition-all ${isActive
                             ? 'bg-[#fbbf24] text-black hover:bg-[#f59e0b] shadow-[0_4px_0_rgb(217,119,6)] active:translate-y-1 active:shadow-none'
@@ -118,9 +119,11 @@ export function TimelineRoundStep({ round, status, isLocked, driveId, progressId
                         ) : isCompleted ? (
                             'Completed'
                         ) : isFailed ? (
-                            'Retry Round'
+                            'Attempt Used'
                         ) : isLocked ? (
                             'Locked'
+                        ) : isPending ? (
+                            'Start Round'
                         ) : (
                             'Resume Round'
                         )}
