@@ -371,7 +371,7 @@ model MockRound {
   type            MockRoundType
   title           String
   description     String?
-  durationMinutes Int                 @default(60)
+  durationMinutes Int                 @default(30)
   metadata        Json?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt

@@ -4,7 +4,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, FileText, CheckCircle2, Code } from 'lucide-react';
+import { Plus, FileText, CheckCircle2, Code, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface QuestionFormProps {
     formData: any;
@@ -157,33 +158,91 @@ export function QuestionForm({ formData, setFormData, onSubmit, onCancel, isEdit
                                     />
                                 </div>
                             </div>
-                            <div>
-                                <Label className="text-xs mb-1.5 block text-slate-600">Sample Test Case</Label>
-                                <div className="grid grid-cols-2 gap-3 font-mono text-sm">
-                                    <div className="relative">
-                                        <div className="absolute top-2 left-2 text-[10px] text-slate-400 uppercase font-bold tracking-wider">Input</div>
-                                        <textarea
-                                            className="w-full p-2 pt-6 border rounded-lg bg-slate-900 text-slate-50 min-h-[80px]"
-                                            value={formData.codingMetadata.testCases[0].input}
-                                            onChange={(e) => {
-                                                const newTC = [...formData.codingMetadata.testCases];
-                                                newTC[0].input = e.target.value;
-                                                setFormData({ ...formData, codingMetadata: { ...formData.codingMetadata, testCases: newTC } });
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="relative">
-                                        <div className="absolute top-2 left-2 text-[10px] text-slate-400 uppercase font-bold tracking-wider">Output</div>
-                                        <textarea
-                                            className="w-full p-2 pt-6 border rounded-lg bg-slate-900 text-slate-50 min-h-[80px]"
-                                            value={formData.codingMetadata.testCases[0].output}
-                                            onChange={(e) => {
-                                                const newTC = [...formData.codingMetadata.testCases];
-                                                newTC[0].output = e.target.value;
-                                                setFormData({ ...formData, codingMetadata: { ...formData.codingMetadata, testCases: newTC } });
-                                            }}
-                                        />
-                                    </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-xs font-semibold text-slate-600 uppercase">Test Cases</Label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const newTC = [...formData.codingMetadata.testCases, { input: '', output: '', isHidden: false }];
+                                            setFormData({ ...formData, codingMetadata: { ...formData.codingMetadata, testCases: newTC } });
+                                        }}
+                                        className="h-7 text-[10px] font-bold border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                                    >
+                                        <Plus className="w-3 h-3 mr-1" /> Add Test Case
+                                    </Button>
+                                </div>
+
+                                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {formData.codingMetadata.testCases.map((tc: any, index: number) => (
+                                        <div key={index} className="space-y-2 p-4 bg-white rounded-xl border border-slate-200 shadow-sm relative group/tc">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <Badge variant="outline" className="text-[10px] font-bold text-slate-400 border-slate-200">
+                                                    Case #{index + 1} {index === 0 && '(Sample)'}
+                                                </Badge>
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            const newTC = [...formData.codingMetadata.testCases];
+                                                            newTC[index].isHidden = !newTC[index].isHidden;
+                                                            setFormData({ ...formData, codingMetadata: { ...formData.codingMetadata, testCases: newTC } });
+                                                        }}
+                                                        className={`h-6 w-6 ${tc.isHidden ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50' : 'text-slate-400 hover:text-indigo-500 hover:bg-indigo-50'}`}
+                                                        title={tc.isHidden ? 'Hidden Case (Evaluation Only)' : 'Public Case (Visible to Student)'}
+                                                    >
+                                                        {tc.isHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                    </Button>
+                                                    {formData.codingMetadata.testCases.length > 1 && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => {
+                                                                const newTC = formData.codingMetadata.testCases.filter((_: any, i: number) => i !== index);
+                                                                setFormData({ ...formData, codingMetadata: { ...formData.codingMetadata, testCases: newTC } });
+                                                            }}
+                                                            className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3 font-mono text-xs">
+                                                <div className="relative">
+                                                    <div className="absolute top-2 left-2 text-[8px] text-slate-400 uppercase font-bold tracking-wider z-10">Input</div>
+                                                    <textarea
+                                                        className="w-full p-2 pt-6 border rounded-lg bg-slate-900 text-slate-50 min-h-[80px] focus:ring-1 focus:ring-indigo-500 outline-none"
+                                                        value={tc.input}
+                                                        onChange={(e) => {
+                                                            const newTC = [...formData.codingMetadata.testCases];
+                                                            newTC[index].input = e.target.value;
+                                                            setFormData({ ...formData, codingMetadata: { ...formData.codingMetadata, testCases: newTC } });
+                                                        }}
+                                                        placeholder="Enter input..."
+                                                    />
+                                                </div>
+                                                <div className="relative">
+                                                    <div className="absolute top-2 left-2 text-[8px] text-slate-400 uppercase font-bold tracking-wider z-10">Output</div>
+                                                    <textarea
+                                                        className="w-full p-2 pt-6 border rounded-lg bg-slate-900 text-slate-50 min-h-[80px] focus:ring-1 focus:ring-indigo-500 outline-none"
+                                                        value={tc.output}
+                                                        onChange={(e) => {
+                                                            const newTC = [...formData.codingMetadata.testCases];
+                                                            newTC[index].output = e.target.value;
+                                                            setFormData({ ...formData, codingMetadata: { ...formData.codingMetadata, testCases: newTC } });
+                                                        }}
+                                                        placeholder="Enter expected output..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>

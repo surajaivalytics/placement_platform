@@ -17,7 +17,7 @@ export async function POST(
         const { roundId } = await params;
         const body = await request.json();
 
-        const { text, type, marks, options, codingMetadata, metadata } = body;
+        const { text, type, marks, points, options, codingMetadata, metadata } = body;
 
         if (!text || !type) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -28,7 +28,7 @@ export async function POST(
                 roundId,
                 text,
                 type,
-                points: marks || 1,
+                points: points || marks || 1,
                 options: options || [],
                 codingMetadata: codingMetadata || (metadata ? JSON.parse(metadata) : undefined)
             }
@@ -53,7 +53,7 @@ export async function PUT(
         }
 
         const body = await request.json();
-        const { id: questionId, text, type, marks, options, codingMetadata, metadata } = body;
+        const { id: questionId, text, type, marks, points, options, codingMetadata, metadata } = body;
 
         if (!questionId) {
             return NextResponse.json({ error: 'Question ID is required' }, { status: 400 });
@@ -64,7 +64,7 @@ export async function PUT(
             data: {
                 text,
                 type,
-                points: marks,
+                points: points || marks,
                 options: options || [],
                 codingMetadata: codingMetadata || (metadata ? JSON.parse(metadata) : undefined)
             }

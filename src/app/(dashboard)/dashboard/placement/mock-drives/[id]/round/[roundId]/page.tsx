@@ -46,26 +46,27 @@ export default function MockRoundPage() {
                     if (roundByNum) {
                         // It was a number, use it
                         setRound(roundByNum);
-                        // Check lock
-                        if (roundByNum.roundNumber > (progressData.enrollment?.currentRoundNumber || 1)) {
-                            router.push(`/placement/mock-drives/${driveId}`);
-                            return;
-                        }
+                        setEnrollment(progressData.enrollment);
+                        return;
                         setEnrollment(progressData.enrollment);
                         return;
                     }
                     throw new Error('Round not found');
                 }
 
-                // Check lock status
-                if (currentRound.roundNumber > (progressData.enrollment?.currentRoundNumber || 1)) {
-                    router.push(`/placement/mock-drives/${driveId}`);
-                    return;
-                }
+
 
                 if (!progressData.enrollment) {
                     toast.error("You must register for the drive first.");
-                    router.push(`/placement/mock-drives/${driveId}`);
+                    router.push(`/dashboard/placement/mock-drives/${driveId}`);
+                    return;
+                }
+
+                // Enforce single-attempt policy
+                const roundProgress = progressData.enrollment?.roundProgress?.find((rp: any) => rp.roundId === currentRound.id);
+                if (roundProgress?.status === 'COMPLETED') {
+                    toast.error("You have already completed this round. Only one attempt is allowed.");
+                    router.push(`/dashboard/placement/mock-drives/${driveId}`);
                     return;
                 }
 
@@ -126,7 +127,7 @@ export default function MockRoundPage() {
                             companyName={enrollment?.drive?.company || 'Company'}
                             onFinish={() => {
                                 toast.success("Interview Round Completed");
-                                router.push(`/placement/mock-drives/${driveId}`);
+                                router.push(`/dashboard/placement/mock-drives/${driveId}`);
                             }}
                             enrollmentId={enrollment.id}
                             roundId={round.id}

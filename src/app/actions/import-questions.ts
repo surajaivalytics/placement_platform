@@ -64,12 +64,12 @@ export async function importQuestionsFromContext(formData: FormData) {
                     const constraints = getValue(row, ['Constraints']) || '';
 
                     // Support multiple sample inputs/outputs (Sample Input 1, Sample Input 2, etc.)
-                    const testCases: { input: string; output: string }[] = [];
+                    const testCases: { input: string; output: string; isHidden: boolean }[] = [];
                     for (let i = 1; i <= 5; i++) {
                         const input = getValue(row, [`Sample Input ${i}`, `SampleInput${i}`, i === 1 ? 'Sample Input' : '']);
                         const output = getValue(row, [`Sample Output ${i}`, `SampleOutput${i}`, i === 1 ? 'Sample Output' : '']);
                         if (input !== null && output !== null) {
-                            testCases.push({ input: String(input), output: String(output) });
+                            testCases.push({ input: String(input), output: String(output), isHidden: false });
                         }
                     }
 
@@ -77,7 +77,7 @@ export async function importQuestionsFromContext(formData: FormData) {
                         inputFormat,
                         outputFormat,
                         constraints,
-                        testCases: testCases.length > 0 ? testCases : [{ input: '', output: '' }]
+                        testCases: testCases.length > 0 ? testCases : [{ input: '', output: '', isHidden: false }]
                     });
 
                     return {
@@ -155,11 +155,15 @@ export async function importQuestionsFromContext(formData: FormData) {
                     "text": "The question text",
                     "type": "mcq" | "coding",
                     "options": [{"text": "Option text", "isCorrect": boolean}], // For MCQ
-                    "metadata": "JSON string for coding details (input/output format, sample cases)", // For Coding
+                    "metadata": "{'inputFormat': '...', 'outputFormat': '...', 'constraints': '...', 'testCases': [{'input': '...', 'output': '...', 'isHidden': boolean}]}", // For Coding
                     "difficulty": "Easy" | "Medium" | "Hard",
                     "category": "Topic",
                     "points": number
                 }]
+                
+                IMPORTANT for Coding Questions:
+                - The "metadata" field MUST be a stringified JSON object.
+                - Include at least 2-3 public test cases (isHidden: false) and 2-3 hidden evaluation cases (isHidden: true) in the "testCases" array.
 
                 Document Content:
                 ${docText.substring(0, 50000)} 

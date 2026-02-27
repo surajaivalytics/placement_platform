@@ -6,14 +6,14 @@ import {
 
 export default function RadarChartComponent({ scores }: { scores: any }) {
     const data = [
-        { subject: 'Programming', A: scores?.programmingFundamentals || 0, fullMark: 10 },
-        { subject: 'OOP', A: scores?.oopConcepts || 0, fullMark: 10 },
-        { subject: 'DSA', A: scores?.dsaBasics || 0, fullMark: 10 },
-        { subject: 'SDLC', A: scores?.sdlc || 0, fullMark: 10 },
-        { subject: 'App Dev', A: scores?.appDev || 0, fullMark: 10 },
-        { subject: 'Debugging', A: scores?.debugging || 0, fullMark: 10 },
-        { subject: 'SQL', A: scores?.sqlBasics || 0, fullMark: 10 },
-        { subject: 'Collaboration', A: scores?.collaboration || 0, fullMark: 10 },
+        { subject: 'Logic', A: scores?.logicAndReasoning || 0, fullMark: 10 },
+        { subject: 'Solving', A: scores?.problemSolving || 0, fullMark: 10 },
+        { subject: 'DSA', A: scores?.algorithmDesign || 0, fullMark: 10 },
+        { subject: 'Concepts', A: scores?.conceptualDepth || 0, fullMark: 10 },
+        { subject: 'Fundamentals', A: scores?.programmingFundamentals || 0, fullMark: 10 },
+        { subject: 'Debugging', A: scores?.debuggingAbility || 0, fullMark: 10 },
+        { subject: 'Design', A: scores?.systemArchitecture || 0, fullMark: 10 },
+        { subject: 'Precision', A: scores?.attentionToDetail || 0, fullMark: 10 },
     ];
 
     return (

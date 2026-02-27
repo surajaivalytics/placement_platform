@@ -19,7 +19,7 @@ export default function DashboardLayout({
     const pathname = usePathname();
 
     const isTestPage = pathname?.startsWith('/dashboard/test');
-    const isMockRoundPage = pathname?.includes('/placement/mock-drives/') && pathname?.includes('/round/');
+    const isMockRoundPage = pathname?.includes('/dashboard/placement/mock-drives/') && pathname?.includes('/round/');
     const hideSidebar = isTestPage || isMockRoundPage;
 
     return (

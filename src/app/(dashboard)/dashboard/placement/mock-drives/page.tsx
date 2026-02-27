@@ -137,7 +137,7 @@ export default function MockDrivesPage() {
                                         </div>
                                     </div>
 
-                                    <Link href={`/placement/mock-drives/${drive.id}`}>
+                                    <Link href={`/dashboard/placement/mock-drives/${drive.id}`}>
                                         <Button className="w-full h-14 bg-[#1e293b] hover:bg-black text-white rounded-2xl font-black text-md tracking-tight flex items-center justify-center gap-3 group/btn shadow-xl transition-all shadow-slate-200">
                                             Start Drive
                                             <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-2 transition-transform" />

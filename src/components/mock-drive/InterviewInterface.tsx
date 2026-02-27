@@ -87,7 +87,7 @@ export function InterviewInterface({ round, enrollment }: InterviewInterfaceProp
                 setIsComplete(true);
                 setMessages(prev => [...prev, { role: 'ai', text: 'Thank you. The interview is now complete.' }]);
                 setTimeout(() => {
-                    router.push(`/placement/mock-drives/${enrollment.driveId}`);
+                    router.push(`/dashboard/placement/mock-drives/${enrollment.driveId}`);
                 }, 3000);
             } else if (data.question) {
                 setMessages(prev => [...prev, { role: 'ai', text: data.question }]);

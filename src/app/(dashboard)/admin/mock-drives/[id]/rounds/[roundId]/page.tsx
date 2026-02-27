@@ -324,6 +324,10 @@ export default function RoundQuestionsPage() {
                                                                         <span>Output Format:</span>
                                                                         <span className="text-slate-800">{question.codingMetadata.outputFormat || 'Not specified'}</span>
                                                                     </div>
+                                                                    <div className="flex justify-between mt-1 pt-1 border-t border-slate-200/50">
+                                                                        <span>Test Cases:</span>
+                                                                        <span className="text-indigo-600 font-bold">{question.codingMetadata.testCases?.length || 0} Cases</span>
+                                                                    </div>
                                                                 </div>
                                                             )}
                                                         </div>

@@ -34,18 +34,29 @@ export default async function RoundReportPage({
     }
 
     let evaluation: any = {};
+    const score = progress.score || 0;
+
+    // Custom Verdict Logic
+    let derivedVerdict = "Low";
+    if (score === 100) derivedVerdict = "Hire";
+    else if (score >= 70) derivedVerdict = "High";
+    else if (score >= 50) derivedVerdict = "Maybe";
+    else derivedVerdict = "Low";
+
     try {
-        evaluation = JSON.parse(progress.aiFeedback);
+        evaluation = JSON.parse(progress.aiFeedback || '{}');
     } catch (e) {
         const isLogs = progress.aiFeedback?.includes('TAB_SWITCH') || progress.aiFeedback?.includes('FULLSCREEN_EXIT');
         evaluation = {
-            scores: { overallHireability: progress.score / 10 },
+            scores: { overallHireability: score / 10 },
             feedback: isLogs ? "AI performance analysis is being processed. Individual scores are shown below." : (progress.aiFeedback || "No detailed feedback available."),
-            overallVerdict: "Maybe"
+            overallVerdict: derivedVerdict
         };
     }
 
-    const { scores, feedback, strengths, weaknesses, overallVerdict } = evaluation;
+    // Always override verdict with derived one if it's missing or for consistency
+    const { scores, feedback, strengths, weaknesses } = evaluation;
+    const finalVerdict = derivedVerdict;
 
     return (
         <div className="min-h-screen bg-slate-50/50 pb-12">
@@ -54,7 +65,7 @@ export default async function RoundReportPage({
                 <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/placement/mock-drives/${driveId}`}>
+                            <Link href={`/dashboard/placement/mock-drives/${driveId}`}>
                                 <ChevronLeft className="w-4 h-4 mr-1" /> Back to Drive
                             </Link>
                         </Button>
@@ -97,11 +108,12 @@ export default async function RoundReportPage({
                                 <div className="text-6xl font-black mb-2 text-white">
                                     {Math.round(progress.score)}<span className="text-2xl text-slate-400">%</span>
                                 </div>
-                                <div className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider ${overallVerdict === 'Hire' ? 'bg-green-500/20 text-green-400' :
-                                    overallVerdict === 'Maybe' ? 'bg-amber-500/20 text-amber-400' :
-                                        'bg-red-500/20 text-red-400'
+                                <div className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider ${finalVerdict === 'Hire' ? 'bg-green-500/20 text-green-400' :
+                                    finalVerdict === 'High' ? 'bg-blue-500/20 text-blue-400' :
+                                        finalVerdict === 'Maybe' ? 'bg-amber-500/20 text-amber-400' :
+                                            'bg-red-500/20 text-red-400'
                                     }`}>
-                                    Verdict: {overallVerdict}
+                                    Verdict: {finalVerdict}
                                 </div>
                             </CardContent>
                         </Card>
