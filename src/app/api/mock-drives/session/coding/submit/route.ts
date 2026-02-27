@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { executeCode, mapPistonToStatus, PistonExecutionResult } from '@/lib/piston';
+import { executeCode } from '@/lib/judge0';
+import { LANGUAGES } from '@/config/languages';
 import { generateCodingEvaluation } from '@/lib/assessment-ai';
 
 export async function POST(req: Request) {
@@ -12,6 +13,9 @@ export async function POST(req: Request) {
 
         const body = await req.json();
         const { enrollmentId, roundId, questionId, code, language } = body;
+
+        const judge0Id = (LANGUAGES as any)[language]?.judge0_id;
+        if (!judge0Id) return NextResponse.json({ error: 'Unsupported language' }, { status: 400 });
 
         // 1. Fetch Question & Test Cases
         const question = await prisma.mockQuestion.findUnique({
@@ -31,25 +35,24 @@ export async function POST(req: Request) {
             fullcode = fullcode.replace("{{USER_CODE}}", code);
         }
 
-        // 3. Execute with Piston
-        let runResults: PistonExecutionResult[] = [];
+        // 3. Execute with Judge0
+        let runResults: any[] = [];
         if (testCases.length === 0) {
-            const result = await executeCode(fullcode, language, "");
+            const result = await executeCode(fullcode, judge0Id, "");
             runResults.push(result);
         } else {
             // Execute all test cases in parallel
             runResults = await Promise.all(
                 testCases.map((tc: { input?: string | number }) =>
-                    executeCode(fullcode, language, tc.input?.toString().trim() || "")
+                    executeCode(fullcode, judge0Id, tc.input?.toString().trim() || "")
                 )
-            ) as PistonExecutionResult[];
+            );
         }
 
-        const passedCases = runResults.filter((res: PistonExecutionResult, index: number) => {
-            const status = mapPistonToStatus(res);
-            const stdout = res.run.stdout.trim();
+        const passedCases = runResults.filter((res: any, index: number) => {
+            const stdout = (res.stdout || "").trim();
             const expected = testCases[index]?.output?.toString().trim() || "";
-            return status.id === 3 && (testCases.length === 0 || stdout === expected);
+            return res.status.id === 3 && (testCases.length === 0 || stdout === expected);
         }).length;
 
         const totalCases = Math.max(testCases.length, 1);
@@ -147,17 +150,16 @@ export async function POST(req: Request) {
         }
 
         // Transform results for UI compatibility if needed
-        const formattedRunResults = runResults.map((res: PistonExecutionResult, index: number) => {
-            const status = mapPistonToStatus(res);
-            const stdout = res.run.stdout.trim();
+        const formattedRunResults = runResults.map((res: any, index: number) => {
+            const stdout = (res.stdout || "").trim();
             const expected = testCases[index]?.output?.toString().trim() || "";
-            const passed = status.id === 3 && (testCases.length === 0 || stdout === expected);
+            const passed = res.status.id === 3 && (testCases.length === 0 || stdout === expected);
 
             return {
-                status: passed ? { id: 3, description: "Accepted" } : (status.id === 3 ? { id: 4, description: "Wrong Answer" } : status),
+                status: passed ? { id: 3, description: "Accepted" } : (res.status.id === 3 ? { id: 4, description: "Wrong Answer" } : res.status),
                 stdout,
-                stderr: res.run.stderr,
-                compile_output: res.compile?.stderr || ""
+                stderr: res.stderr,
+                compile_output: res.compile_output || ""
             };
         });
 

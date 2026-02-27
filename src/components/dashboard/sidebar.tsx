@@ -88,23 +88,23 @@ const SidebarItem = ({
       {!active && (
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       )}
-      
+
       <Icon className={cn(
-        "w-5 h-5 relative z-10 transition-all duration-500", 
+        "w-5 h-5 relative z-10 transition-all duration-500",
         active ? "text-white" : "text-gray-400 group-hover:text-primary group-hover:scale-110"
       )} />
-      
+
       {!collapsed && (
         <span className="text-ui-sm uppercase tracking-wide relative z-10 transition-all duration-300 font-medium">
           {label}
         </span>
       )}
-      
+
       {active && !collapsed && (
-         <motion.div 
-           layoutId="active-glow" 
-           className="absolute inset-0 bg-white/10 blur-sm pointer-events-none"
-         />
+        <motion.div
+          layoutId="active-glow"
+          className="absolute inset-0 bg-white/10 blur-sm pointer-events-none"
+        />
       )}
 
       {/* Active indicator line */}
@@ -126,7 +126,7 @@ const SidebarContent = ({
   const userLinks = [
     { href: "/dashboard", label: "Home", icon: LayoutDashboard },
     { href: "/dashboard/topics", label: "Curriculum", icon: BookOpen },
-    { href: "/placement/mock-drives", label: "Simulations", icon: MonitorPlay },
+    { href: "/dashboard/placement/mock-drives", label: "Simulations", icon: MonitorPlay },
     { href: "/dashboard/interview-suite", label: "AI Interview", icon: Mic },
     { href: "/dashboard/voice-assessment", label: "Voice Engine", icon: AudioLines },
     { href: "/dashboard/programming", label: "Compiler", icon: Code },
@@ -180,20 +180,20 @@ const SidebarContent = ({
         <div className="p-5 border-t border-gray-50 space-y-5 bg-gradient-to-b from-transparent to-gray-50/50">
           {/* User Profile Section */}
           <div className="flex items-center gap-3 group cursor-pointer">
-             <div className="relative">
-                <div className="h-10 w-10 rounded-none bg-primary/5 flex items-center justify-center overflow-hidden border border-primary/10 transition-all duration-500 group-hover:border-primary/30 group-hover:shadow-lg">
-                  {user?.image ? (
-                    <img src={user.image} alt={user.name || 'User'} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  ) : (
-                    <User className="h-5 w-5 text-primary transition-transform duration-500 group-hover:scale-110" />
-                  )}
-                </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-primary border-2 border-white rounded-none transition-all duration-300 group-hover:scale-125"></div>
-             </div>
-             <div className="flex-1 overflow-hidden">
-               <p className="text-ui-sm font-semibold uppercase tracking-wide text-gray-900 truncate transition-colors duration-300 group-hover:text-primary">{user?.name || 'Academic Member'}</p>
-               <p className="text-caption font-medium text-gray-400 truncate mt-0.5">{user?.email || 'verified'}</p>
-             </div>
+            <div className="relative">
+              <div className="h-10 w-10 rounded-none bg-primary/5 flex items-center justify-center overflow-hidden border border-primary/10 transition-all duration-500 group-hover:border-primary/30 group-hover:shadow-lg">
+                {user?.image ? (
+                  <img src={user.image} alt={user.name || 'User'} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                ) : (
+                  <User className="h-5 w-5 text-primary transition-transform duration-500 group-hover:scale-110" />
+                )}
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-primary border-2 border-white rounded-none transition-all duration-300 group-hover:scale-125"></div>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-ui-sm font-semibold uppercase tracking-wide text-gray-900 truncate transition-colors duration-300 group-hover:text-primary">{user?.name || 'Academic Member'}</p>
+              <p className="text-caption font-medium text-gray-400 truncate mt-0.5">{user?.email || 'verified'}</p>
+            </div>
           </div>
 
           <Button

@@ -35,6 +35,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/placement/:path*',
+        destination: '/dashboard/placement/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -84,7 +84,7 @@ export async function POST(req: Request) {
             const progress = await tx.mockRoundProgress.upsert({
                 where: { enrollmentId_roundId: { enrollmentId, roundId } },
                 update: {
-                    status: isPassed ? 'COMPLETED' : 'FAILED',
+                    status: 'COMPLETED',
                     score: normalizedScore,
                     totalQuestions: questions.length,
                     answeredQuestions: Object.keys(answers).length,

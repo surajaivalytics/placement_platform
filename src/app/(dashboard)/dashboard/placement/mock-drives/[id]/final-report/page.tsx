@@ -49,13 +49,16 @@ export default async function FinalDriveReportPage({
         notFound();
     }
 
-    const completedRounds = enrollment.roundProgress.filter(rp => rp.status === 'COMPLETED');
+    const completedRounds = enrollment.roundProgress.filter(rp => rp.status === 'COMPLETED' || rp.status === 'FAILED');
+    const calculatedOverallScore = completedRounds.length > 0
+        ? completedRounds.reduce((acc, rp) => acc + rp.score, 0) / completedRounds.length
+        : 0;
 
     // Aggregate scores for the radar chart
     const aggregatedScores: Record<string, number> = {};
     const scoreCategories = [
-        'programmingFundamentals', 'oopConcepts', 'dsaBasics', 'sdlc',
-        'appDev', 'debugging', 'sqlBasics', 'collaboration'
+        'logicAndReasoning', 'problemSolving', 'conceptualDepth', 'programmingFundamentals',
+        'algorithmDesign', 'debuggingAbility', 'systemArchitecture', 'attentionToDetail'
     ];
 
     // Count how many rounds contributed to each category for proper averaging
@@ -95,7 +98,7 @@ export default async function FinalDriveReportPage({
                 <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/placement/mock-drives/${driveId}`}>
+                            <Link href={`/dashboard/placement/mock-drives/${driveId}`}>
                                 <ChevronLeft className="w-4 h-4 mr-1" /> Drive Dashboard
                             </Link>
                         </Button>
@@ -133,7 +136,7 @@ export default async function FinalDriveReportPage({
                         </CardHeader>
                         <CardContent className="flex flex-col items-center py-8">
                             <div className="text-7xl font-black mb-2 flex items-baseline">
-                                {Math.round(enrollment.overallScore)}<span className="text-3xl text-indigo-400">%</span>
+                                {Math.round(calculatedOverallScore)}<span className="text-3xl text-indigo-400">%</span>
                             </div>
                             <div className="text-indigo-400 font-bold mb-6">Overall Score</div>
                             <div className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest ${enrollment.status === 'PASSED' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
@@ -188,7 +191,7 @@ export default async function FinalDriveReportPage({
                                     </p>
                                     {rp.status === 'COMPLETED' && (
                                         <Button variant="outline" size="sm" className="w-full text-[10px] font-bold h-8" asChild>
-                                            <Link href={`/placement/mock-drives/${driveId}/report/${rp.id}`}>
+                                            <Link href={`/dashboard/placement/mock-drives/${driveId}/report/${rp.id}`}>
                                                 View Detailed Breakdown
                                             </Link>
                                         </Button>
@@ -213,7 +216,7 @@ export default async function FinalDriveReportPage({
                             <h3 className="text-xl font-bold mb-3">Overall Performance Summary</h3>
                             <p className="text-indigo-50 leading-relaxed">
                                 You have successfully navigated through the {enrollment.drive.companyName} selection process simulation.
-                                Your overall performance demonstrates a {enrollment.overallScore >= 80 ? 'strong' : 'solid'} foundation in required competencies.
+                                Your overall performance demonstrates a {calculatedOverallScore >= 80 ? 'strong' : 'solid'} foundation in required competencies.
                                 Continued focus on {scoreCategories.find(cat => aggregatedScores[cat] < 7)?.replace(/([A-Z])/g, ' $1').toLowerCase() || 'technical depth'} will further improve your hireability for the actual drive.
                             </p>
                         </div>
@@ -236,9 +239,9 @@ export default async function FinalDriveReportPage({
                                 <h4 className="font-bold text-sm mb-2 text-indigo-200 uppercase tracking-widest">Readiness Level</h4>
                                 <div className="flex items-center gap-3">
                                     <div className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden">
-                                        <div className="h-full bg-amber-400" style={{ width: `${enrollment.overallScore}%` }} />
+                                        <div className="h-full bg-amber-400" style={{ width: `${calculatedOverallScore}%` }} />
                                     </div>
-                                    <span className="text-xs font-black">{Math.round(enrollment.overallScore)}%</span>
+                                    <span className="text-xs font-black">{Math.round(calculatedOverallScore)}%</span>
                                 </div>
                                 <p className="text-[10px] text-indigo-200 mt-2">Ready for actual recruitment drives.</p>
                             </div>

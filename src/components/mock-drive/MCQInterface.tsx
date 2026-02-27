@@ -23,7 +23,17 @@ export function MCQInterface({ round, enrollment }: MCQInterfaceProps) {
     const [questions, setQuestions] = useState<any[]>([]);
     const [currentQIndex, setCurrentQIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, string>>({});
-    const [timeLeft, setTimeLeft] = useState(round.durationMinutes * 60);
+    const [timeLeft, setTimeLeft] = useState(() => {
+        const progress = enrollment?.roundProgress?.find((p: any) => p.roundId === round?.id);
+        const durationSeconds = (round?.durationMinutes || 30) * 60;
+        if (progress?.startedAt) {
+            const start = new Date(progress.startedAt).getTime();
+            const now = new Date().getTime();
+            const elapsed = Math.floor((now - start) / 1000);
+            return Math.max(0, durationSeconds - elapsed);
+        }
+        return durationSeconds;
+    });
     const [submitting, setSubmitting] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
     const [markedForReview, setMarkedForReview] = useState<string[]>([]);
@@ -63,9 +73,31 @@ export function MCQInterface({ round, enrollment }: MCQInterfaceProps) {
         fetchQuestions();
     }, [round.id, enrollment?.driveId]);
 
-    // Timer
+    // Timer & Persistence
     useEffect(() => {
         if (isCompleted) return;
+
+        // Sync with persisted start time if available
+        const progress = enrollment?.roundProgress?.find((p: any) => p.roundId === round.id);
+        const durationSeconds = (round?.durationMinutes || 30) * 60;
+
+        if (progress?.startedAt) {
+            const start = new Date(progress.startedAt).getTime();
+            const now = new Date().getTime();
+            const elapsed = Math.floor((now - start) / 1000);
+            setTimeLeft(Math.max(0, durationSeconds - elapsed));
+        } else {
+            // Mark as started immediately on first mount
+            fetch('/api/mock-drives/session/mcq/autosave', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    enrollmentId: enrollment.id,
+                    roundId: round.id
+                })
+            }).catch(err => console.error("Failed to mark MCQ round as started", err));
+        }
+
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
@@ -77,7 +109,30 @@ export function MCQInterface({ round, enrollment }: MCQInterfaceProps) {
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [isCompleted]);
+    }, [isCompleted, enrollment, round.id, round.durationMinutes]);
+
+    // Background Autosave for Answers
+    useEffect(() => {
+        if (isCompleted || Object.keys(answers).length === 0) return;
+
+        const interval = setInterval(async () => {
+            try {
+                await fetch('/api/mock-drives/session/mcq/autosave', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        enrollmentId: enrollment.id,
+                        roundId: round.id,
+                        answers
+                    })
+                });
+            } catch (e) {
+                console.error("MCQ Autosave failed", e);
+            }
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, [answers, isCompleted, enrollment.id, round.id]);
 
     const handleOptionSelect = (value: string) => {
         setAnswers(prev => ({
@@ -147,7 +202,7 @@ export function MCQInterface({ round, enrollment }: MCQInterfaceProps) {
                         </div>
                         <Button
                             className="w-full bg-[#181C2E] hover:bg-gray-800 h-12 text-lg rounded-xl shadow-lg shadow-gray-200"
-                            onClick={() => router.push(`/placement/mock-drives/${enrollment.driveId}`)}
+                            onClick={() => router.push(`/dashboard/placement/mock-drives/${enrollment.driveId}`)}
                         >
                             Back to Dashboard
                         </Button>

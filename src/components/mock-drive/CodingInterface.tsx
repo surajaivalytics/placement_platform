@@ -5,7 +5,7 @@ import Editor from '@monaco-editor/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Play, Save, CheckCircle, AlertTriangle, CameraOff, Camera, Mic, Volume2, ArrowRight } from 'lucide-react';
+import { Loader2, Play, Save, CheckCircle, AlertTriangle, CameraOff, Camera, Mic, Volume2, ArrowRight, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useProctoring } from "@/hooks/use-proctoring";
@@ -30,6 +30,18 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
     const [isRunning, setIsRunning] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [timeLeft, setTimeLeft] = useState(() => {
+        const progress = enrollment?.roundProgress?.find((p: any) => p.roundId === round?.id);
+        const durationSeconds = (round?.durationMinutes || 30) * 60;
+        if (progress?.startedAt) {
+            const start = new Date(progress.startedAt).getTime();
+            const now = new Date().getTime();
+            const elapsed = Math.floor((now - start) / 1000);
+            return Math.max(0, durationSeconds - elapsed);
+        }
+        return durationSeconds;
+    });
+    const [hasStarted, setHasStarted] = useState(false);
 
     const [audioLevel, setAudioLevel] = useState(0);
     const [micPermission, setMicPermission] = useState<boolean | null>(null);
@@ -130,6 +142,8 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
     const [loading, setLoading] = useState(true);
     const [userCodeMap, setUserCodeMap] = useState<Record<string, { code: string; language: string }>>({});
 
+    const containerRef = useRef<HTMLDivElement>(null);
+
     // Fetch Questions
     useEffect(() => {
         if (!enrollment) return;
@@ -196,6 +210,41 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
         autoSelect();
     }, [currentStage]);
 
+    // Timer logic
+    useEffect(() => {
+        if (currentStage !== 'CODING' || isSubmitting) return;
+
+        // Sync with persisted start time if available
+        const progress = enrollment?.roundProgress?.find((p: any) => p.roundId === round.id);
+        const durationSeconds = (round.durationMinutes || 30) * 60;
+
+        if (progress?.startedAt) {
+            const start = new Date(progress.startedAt).getTime();
+            const now = new Date().getTime();
+            const elapsed = Math.floor((now - start) / 1000);
+            setTimeLeft(Math.max(0, durationSeconds - elapsed));
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    handleSubmit(); // Auto-submit when time is up
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [currentStage, isSubmitting, enrollment, round.id, round.durationMinutes]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
     // Update Local State when code/language changes
     useEffect(() => {
         if (!question) return;
@@ -204,6 +253,44 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
             [question.id]: { code, language }
         }));
     }, [code, language, question?.id]);
+
+    const handleLanguageChange = (newLang: LanguageKey) => {
+        setLanguage(newLang);
+
+        // If the current code is just the default placeholder, update it to the new language's starter code
+        const currentStarter = question?.codingMetadata?.starterCode || '// Write your solution here';
+        if (code.trim() === '' || code.trim() === currentStarter.trim() || code.includes('// Write your solution here') || code.includes('# Write your solution here')) {
+            // In a real app we might use getStarterCode(newLang)
+            // For now, let's just use the metadata if available or a generic one
+            const newStarter = question?.codingMetadata?.starterCode ||
+                (newLang === 'python' ? '# Write your solution here\n' : '// Write your solution here\n');
+            setCode(newStarter);
+        }
+    };
+
+    const handleStartCoding = async () => {
+        stopMedia();
+        setCurrentStage('CODING');
+
+        // Immediate call to mark as started even if autosave is 30s away
+        if (question) {
+            try {
+                await fetch('/api/mock-drives/session/coding/autosave', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        enrollmentId: enrollment.id,
+                        roundId: round.id,
+                        questionId: question.id,
+                        code,
+                        language
+                    })
+                });
+            } catch (e) {
+                console.error("Failed to mark round as started", e);
+            }
+        }
+    };
 
     // Autosave Interval
     useEffect(() => {
@@ -255,14 +342,15 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
 
             if (res.ok && data.results) {
                 setTestResults(data.results);
-                const passed = data.results.filter((r: any) => r.passed).length;
-                const total = data.results.length;
+                const publicResults = data.results.filter((r: any) => !r.isHidden);
+                const passed = publicResults.filter((r: any) => r.passed).length;
+                const total = publicResults.length;
 
                 let outText = `Result: ${passed}/${total} Test Cases Passed\n`;
                 if (passed === total) outText += `✅ Success: All test cases passed.\n\n`;
                 else outText += `⚠️ Note: Some test cases failed. Review details below.\n\n`;
 
-                data.results.forEach((r: any, i: number) => {
+                publicResults.forEach((r: any, i: number) => {
                     const statusStr = r.passed ? 'PASSED' : 'FAILED';
                     outText += `[Test Case ${i + 1}] ${statusStr} (${r.time || '0'}s, ${Math.round(r.memory / 1024) || 0}KB)\n`;
                     if (!r.passed) {
@@ -454,10 +542,7 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
                                     size="lg"
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-[24px] h-16 text-lg font-black shadow-2xl shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98] border border-blue-400/20"
                                     disabled={!camPermission || !micPermission}
-                                    onClick={() => {
-                                        stopMedia();
-                                        setCurrentStage('CODING');
-                                    }}
+                                    onClick={handleStartCoding}
                                 >
                                     Initialize Coding Session <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
@@ -470,7 +555,7 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
     }
 
     return (
-        <div className="fixed inset-0 bg-gray-100 flex flex-col z-[99999] overflow-hidden select-none">
+        <div ref={containerRef} className="fixed inset-0 bg-gray-100 flex flex-col z-[99999] overflow-hidden select-none">
             {/* Warning Banner */}
             {warnings > 0 && (
                 <div className="bg-red-500 text-white px-4 py-1 text-xs text-center font-mono animate-pulse">
@@ -494,7 +579,7 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
                             </div>
                             <Button
                                 className="w-full bg-[#181C2E] hover:bg-gray-800 h-12 text-lg rounded-xl shadow-lg shadow-gray-200"
-                                onClick={() => router.push(`/placement/mock-drives/${enrollment.driveId}`)}
+                                onClick={() => router.push(`/dashboard/placement/mock-drives/${enrollment.driveId}`)}
                             >
                                 Back to Dashboard
                             </Button>
@@ -538,8 +623,16 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <Select value={language} onValueChange={(val: LanguageKey) => setLanguage(val)}>
+                <div className="flex items-center gap-6">
+                    <div className={cn(
+                        "flex items-center gap-2 px-3 py-1 rounded-lg font-mono font-bold text-sm",
+                        timeLeft < 300 ? "bg-red-100 text-red-600 animate-pulse" : "bg-blue-50 text-blue-700"
+                    )}>
+                        <Clock className="w-4 h-4" />
+                        {formatTime(timeLeft)}
+                    </div>
+
+                    <Select value={language} onValueChange={(val: LanguageKey) => handleLanguageChange(val)}>
                         <SelectTrigger className="items-center gap-2 px-3 py-1 bg-gray-100 rounded-md border border-gray-200 h-9 ring-0 focus:ring-0">
                             <div className="flex flex-col items-start leading-none">
                                 <span className="text-[10px] font-black uppercase text-gray-400">Language</span>
@@ -548,7 +641,7 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
                                 </SelectValue>
                             </div>
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200 shadow-xl rounded-xl">
+                        <SelectContent container={containerRef.current} className="bg-white border-gray-200 shadow-xl rounded-xl">
                             {Object.entries(LANGUAGES).map(([key, lang]) => (
                                 <SelectItem key={key} value={key} className="text-xs font-medium text-gray-700 focus:bg-gray-100 focus:text-blue-600 transition-colors">
                                     {lang.label}
@@ -589,7 +682,7 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
 
                         <div className="mt-4">
                             <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-2">Sample Cases</h4>
-                            {question.codingMetadata?.testCases?.slice(0, 2).map((tc: any, i: number) => (
+                            {question.codingMetadata?.testCases?.filter((tc: any) => !tc.isHidden).slice(0, 2).map((tc: any, i: number) => (
                                 <div key={i} className="mb-3">
                                     <div className="bg-gray-800 text-gray-200 p-2 rounded-t text-xs font-mono">Input</div>
                                     <pre className="bg-gray-100 p-2 text-xs font-mono border-x border-b border-gray-200 mb-1">{tc.input}</pre>

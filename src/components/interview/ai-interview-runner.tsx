@@ -1123,7 +1123,7 @@ export function AIInterviewRunner({
                                     <Button
                                         onClick={() => {
                                             if (onFinish) onFinish();
-                                            else router.push(`/placement/mock-drives/${params.id}`);
+                                            else router.push(`/dashboard/placement/mock-drives/${params.id}`);
                                         }}
                                         className="flex-1 bg-gray-900 hover:bg-black text-white h-14 rounded-2xl font-bold text-lg transition-all hover:scale-[1.02] active:scale-95"
                                     >

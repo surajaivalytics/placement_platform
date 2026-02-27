@@ -107,17 +107,21 @@ export default function MockDriveDashboard() {
 
     const getRoundStatus = (roundNum: number) => {
         if (!enrollment) return 'LOCKED';
-        const currentRound = enrollment?.currentRoundNumber || 1;
 
-        if (roundNum < currentRound) return 'COMPLETED';
-        if (roundNum === currentRound) return enrollment?.status === 'FAILED' ? 'FAILED' : 'IN_PROGRESS';
-        return 'PENDING';
+        // Find if this specific round is completed in roundProgress
+        const rp = enrollment.roundProgress?.find((rp: any) => {
+            const r = rounds.find(round => round.id === rp.roundId);
+            return r && r.roundNumber === roundNum;
+        });
+
+        if (rp?.status === 'COMPLETED') return 'COMPLETED';
+        if (rp?.status === 'FAILED') return 'FAILED';
+
+        return 'IN_PROGRESS'; // All other rounds are accessible
     };
 
     const isRoundLocked = (roundNum: number) => {
-        if (!enrollment) return true;
-        const currentRound = enrollment?.currentRoundNumber || 1;
-        return roundNum > currentRound;
+        return !enrollment; // Only locked if not registered
     };
 
     return (
@@ -138,16 +142,28 @@ export default function MockDriveDashboard() {
                             </h1>
                         </div>
                     </div>
-                    {enrollment && (
-                        <div className="flex items-center gap-3">
-                            <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${enrollment?.status === 'PASSED' ? 'bg-green-100 text-green-700' :
-                                enrollment?.status === 'FAILED' ? 'bg-red-100 text-red-700' :
-                                    'bg-indigo-100 text-indigo-700'
-                                }`}>
-                                {enrollment?.status?.replace('_', ' ') || 'Registered'}
+                    {enrollment && (() => {
+                        const allRoundsFinished = rounds.length > 0 &&
+                            enrollment?.roundProgress?.length === rounds.length &&
+                            enrollment.roundProgress.every((rp: any) => rp.status === 'COMPLETED' || rp.status === 'FAILED');
+
+                        const statusLabel = allRoundsFinished ? 'COMPLETED' :
+                            (enrollment?.status?.replace('_', ' ') || 'Registered');
+
+                        const statusStyles = allRoundsFinished || enrollment?.status === 'PASSED'
+                            ? 'bg-green-100 text-green-700'
+                            : enrollment?.status === 'FAILED'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-indigo-100 text-indigo-700';
+
+                        return (
+                            <div className="flex items-center gap-3">
+                                <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${statusStyles}`}>
+                                    {statusLabel}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        );
+                    })()}
                 </div>
             </div>
 
@@ -301,14 +317,21 @@ export default function MockDriveDashboard() {
                                         </div>
                                         <div className="h-10 w-px bg-slate-200" />
                                         <div className="flex flex-col">
-                                            <span className="text-2xl font-bold text-slate-900">{Math.round(enrollment?.overallScore || 0)}%</span>
+                                            <span className="text-2xl font-bold text-slate-900">
+                                                {(() => {
+                                                    const completedRounds = enrollment?.roundProgress?.filter((rp: any) => rp.status === 'COMPLETED' || rp.status === 'FAILED') || [];
+                                                    if (completedRounds.length === 0) return 0;
+                                                    const totalScore = completedRounds.reduce((acc: number, rp: any) => acc + (rp.score || 0), 0);
+                                                    return Math.round(totalScore / completedRounds.length);
+                                                })()}%
+                                            </span>
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Overall Score</span>
                                         </div>
                                         {(enrollment?.status === 'PASSED' || enrollment?.status === 'FAILED') && (
                                             <>
                                                 <div className="h-10 w-px bg-slate-200" />
                                                 <Button
-                                                    onClick={() => router.push(`/placement/mock-drives/${driveId}/final-report`)}
+                                                    onClick={() => router.push(`/dashboard/placement/mock-drives/${driveId}/final-report`)}
                                                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 rounded-xl shadow-lg shadow-indigo-100"
                                                 >
                                                     <Trophy className="w-4 h-4 mr-2" /> View Final Report

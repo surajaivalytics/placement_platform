@@ -4,14 +4,14 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 export interface AssessmentEvaluation {
     scores: {
+        logicAndReasoning: number;
+        problemSolving: number;
+        conceptualDepth: number;
         programmingFundamentals: number;
-        oopConcepts: number;
-        dsaBasics: number;
-        sdlc?: number;
-        appDev?: number;
-        debugging?: number;
-        sqlBasics?: number;
-        collaboration?: number;
+        algorithmDesign: number;
+        debuggingAbility: number;
+        systemArchitecture: number;
+        attentionToDetail: number;
     };
     feedback: string;
     strengths: string[];
@@ -40,14 +40,20 @@ export async function generateMCQEvaluation(
       - Overall Score: ${score}% (${score / 100 * totalQuestions}/${totalQuestions} questions correct)
       - Category Performance: ${JSON.stringify(categoryResults)}
       
+      Analyze the candidate's understanding and logic based on the questions they attempted and their accuracy.
       Provide a professional performance report in the following JSON format:
       {
         "scores": {
+          "logicAndReasoning": number (1-10),
+          "problemSolving": number (1-10),
+          "conceptualDepth": number (1-10),
           "programmingFundamentals": number (1-10),
-          "oopConcepts": number (1-10),
-          "dsaBasics": number (1-10)
+          "algorithmDesign": number (1-10),
+          "debuggingAbility": number (1-10),
+          "systemArchitecture": number (1-10),
+          "attentionToDetail": number (1-10)
         },
-        "feedback": "A summary of their conceptual understanding based on the numbers.",
+        "feedback": "A summary of their conceptual understanding and logical consistency.",
         "strengths": ["list of concepts they seem to master"],
         "weaknesses": ["list of concepts needing improvement"],
         "overallVerdict": "Hire" | "Maybe" | "Reject"
@@ -58,7 +64,16 @@ export async function generateMCQEvaluation(
 
         const result = await model.generateContent(prompt);
         const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(text);
+        const parsed = JSON.parse(text);
+
+        // Ensure all keys exist
+        const defaultScores = {
+            logicAndReasoning: 5, problemSolving: 5, conceptualDepth: 5,
+            programmingFundamentals: 5, algorithmDesign: 5, debuggingAbility: 5,
+            systemArchitecture: 5, attentionToDetail: 5
+        };
+        parsed.scores = { ...defaultScores, ...parsed.scores };
+        return parsed;
     } catch (error) {
         console.error("Gemini MCQ Eval Error:", error);
         return getFallbackMCQReport(score, totalQuestions, roundTitle);
@@ -92,19 +107,23 @@ export async function generateCodingEvaluation(
       - Code: \`\`\`${language}\n${code}\n\`\`\`
       - Test Results: ${passedCases}/${totalCases} test cases passed (${score}% score).
       
-      Evaluation criteria: Logic accuracy, code cleanliness, time/space complexity awareness, and edge case handling.
+      Evaluation criteria: Logic accuracy, problem-solving approach, algorithmic efficiency (Big-O), code cleanliness, and attention to edge cases.
       
       Provide a detailed report in the following JSON format:
       {
         "scores": {
+          "logicAndReasoning": number (1-10),
+          "problemSolving": number (1-10),
+          "conceptualDepth": number (1-10),
           "programmingFundamentals": number (1-10),
-          "oopConcepts": number (1-10),
-          "dsaBasics": number (1-10),
-          "debugging": number (1-10)
+          "algorithmDesign": number (1-10),
+          "debuggingAbility": number (1-10),
+          "systemArchitecture": number (1-10),
+          "attentionToDetail": number (1-10)
         },
-        "feedback": "Strategic feedback on their coding style and logic.",
+        "feedback": "Strategic feedback on their coding logic, algorithmic choices, and technical depth.",
         "strengths": ["list of specific coding strengths"],
-        "weaknesses": ["list of areas for improvement (e.g., big-O, naming, etc)"],
+        "weaknesses": ["list of areas for improvement (e.g., big-O, naming, logic flow etc)"],
         "overallVerdict": "Hire" | "Maybe" | "Reject"
       }
       
@@ -113,7 +132,16 @@ export async function generateCodingEvaluation(
 
         const result = await model.generateContent(prompt);
         const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(text);
+        const parsed = JSON.parse(text);
+
+        // Ensure all keys exist
+        const defaultScores = {
+            logicAndReasoning: 5, problemSolving: 5, conceptualDepth: 5,
+            programmingFundamentals: 5, algorithmDesign: 5, debuggingAbility: 5,
+            systemArchitecture: 5, attentionToDetail: 5
+        };
+        parsed.scores = { ...defaultScores, ...parsed.scores };
+        return parsed;
     } catch (error) {
         console.error("Gemini Coding Eval Error:", error);
         return getFallbackCodingReport(score, passedCases, totalCases);
@@ -125,9 +153,14 @@ function getFallbackMCQReport(score: number, total: number, title: string): Asse
     const passed = score >= 70;
     return {
         scores: {
+            logicAndReasoning: Math.min(10, normalized + 1),
+            problemSolving: normalized,
+            conceptualDepth: Math.min(10, normalized + 2),
             programmingFundamentals: Math.min(10, normalized + 1),
-            oopConcepts: normalized,
-            dsaBasics: Math.max(1, normalized - 1)
+            algorithmDesign: normalized,
+            debuggingAbility: normalized,
+            systemArchitecture: Math.max(1, normalized - 1),
+            attentionToDetail: normalized
         },
         feedback: `Automated analysis for ${title} based on ${score}% score.`,
         strengths: passed ? ["Conceptual understanding"] : [],
@@ -138,12 +171,17 @@ function getFallbackMCQReport(score: number, total: number, title: string): Asse
 
 function getFallbackCodingReport(score: number, passed: number, total: number): AssessmentEvaluation {
     const normalized = score / 10;
+    const passedVal = passed;
     return {
         scores: {
+            logicAndReasoning: normalized,
+            problemSolving: normalized,
+            conceptualDepth: Math.max(1, normalized - 1),
             programmingFundamentals: normalized,
-            oopConcepts: normalized,
-            dsaBasics: normalized,
-            debugging: (passed / total) * 10
+            algorithmDesign: normalized,
+            debuggingAbility: (passedVal / total) * 10,
+            systemArchitecture: Math.max(1, normalized - 2),
+            attentionToDetail: (passedVal / total) * 10
         },
         feedback: `Code submission results: ${passed}/${total} test cases passed.`,
         strengths: passed === total ? ["Functional implementation"] : ["Basic attempt"],

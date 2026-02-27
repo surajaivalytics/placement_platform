@@ -37,7 +37,7 @@ export function RoundCard({ round, status, isLocked, driveId }: RoundCardProps) 
 
     const handleStart = () => {
         if (!isLocked) {
-            router.push(`/placement/mock-drives/${driveId}/round/${round.id}`);
+            router.push(`/dashboard/placement/mock-drives/${driveId}/round/${round.id}`);
         }
     };
 

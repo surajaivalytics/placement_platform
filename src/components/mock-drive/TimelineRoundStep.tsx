@@ -23,8 +23,8 @@ export function TimelineRoundStep({ round, status, isLocked, driveId, progressId
     const isFailed = status === 'FAILED';
 
     const handleStart = () => {
-        if (!isLocked) {
-            router.push(`/placement/mock-drives/${driveId}/round/${round.id}`);
+        if (!isLocked && !isCompleted) {
+            router.push(`/dashboard/placement/mock-drives/${driveId}/round/${round.id}`);
         }
     };
 
@@ -129,7 +129,7 @@ export function TimelineRoundStep({ round, status, isLocked, driveId, progressId
 
                     {isCompleted && (
                         <Button
-                            onClick={() => router.push(`/placement/mock-drives/${driveId}/report/${progressId}`)}
+                            onClick={() => router.push(`/dashboard/placement/mock-drives/${driveId}/report/${progressId}`)}
                             className="w-full h-11 text-sm font-bold rounded-xl transition-all border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 mt-2"
                         >
                             View Performance Report

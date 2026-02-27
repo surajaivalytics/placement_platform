@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { executeCode, mapPistonToStatus } from "@/lib/piston";
+import { executeCode } from "@/lib/judge0";
 
 export async function POST(req: Request) {
     try {
@@ -19,7 +19,9 @@ export async function POST(req: Request) {
         if (!question) return NextResponse.json({ error: "Question not found" }, { status: 404 });
 
         const metadata = question.codingMetadata as any || {};
-        const testCases = metadata.testCases || [];
+        const allTestCases = metadata.testCases || [];
+        // Filter out hidden test cases for "Run" (simulation mode)
+        const testCases = allTestCases.filter((tc: any) => !tc.isHidden);
 
         // 2. Prepare Code for Execution
         const drivers = metadata.driverCode || {};
@@ -29,54 +31,51 @@ export async function POST(req: Request) {
             fullcode = fullcode.replace("{{USER_CODE}}", code);
         }
 
-        // 3. Execute all test cases using Piston
+        // 3. Execute all test cases using Judge0
         if (testCases.length === 0) {
             // Default if no test cases defined
-            const result = await executeCode(fullcode, languageId || language, "");
-            const status = mapPistonToStatus(result);
+            const result = await executeCode(fullcode, languageId, "");
 
             return NextResponse.json({
-                success: status.id === 3,
+                success: result.status.id === 3,
                 results: [{
                     id: 0,
-                    passed: status.id === 3,
-                    status: status,
-                    stdout: result.run.stdout,
-                    stderr: result.run.stderr,
-                    compile_output: result.compile?.stderr || "",
-                    time: "0.1",
-                    memory: "1024"
+                    passed: result.status.id === 3,
+                    status: result.status,
+                    stdout: result.stdout,
+                    stderr: result.stderr,
+                    compile_output: result.compile_output || "",
+                    time: result.time || "0.1",
+                    memory: result.memory || "1024"
                 }]
             });
         }
 
-        // Execute test cases in parallel
-        const pistonResults = await Promise.all(
+        // Execute test cases sequence for Judge0 to avoid rate limits on free tier if necessary, 
+        // but Promise.all is faster. Let's stick with Promise.all for now.
+        const judge0Results = await Promise.all(
             testCases.map((tc: any) =>
-                executeCode(fullcode, languageId || language, tc.input?.toString().trim() || "")
+                executeCode(fullcode, languageId, tc.input?.toString().trim() || "")
             )
         );
 
         // 4. Format Results
-        const formattedResults = pistonResults.map((res: any, index: number) => {
-            const status = mapPistonToStatus(res);
-            const stdout = res.run.stdout.trim();
-            const stderr = res.run.stderr.trim();
-            const compile_output = res.compile?.stderr.trim() || "";
-            const expected = testCases[index]?.output?.toString().trim() || "";
+        const formattedResults = judge0Results.map((res: any, index: number) => {
+            const stdout = (res.stdout || "").trim();
+            const expected = (testCases[index]?.output || "").toString().trim();
 
-            // For Piston, we manually check if stdout matches expected output if status is Accepted
-            let passed = status.id === 3 && stdout === expected;
+            // Judge0 usually handles status, but we must verify output match
+            let passed = res.status.id === 3 && stdout === expected;
 
             return {
                 id: testCases[index]?.id || index,
                 passed,
-                status: passed ? { id: 3, description: "Accepted" } : (status.id === 3 ? { id: 4, description: "Wrong Answer" } : status),
+                status: passed ? { id: 3, description: "Accepted" } : (res.status.id === 3 ? { id: 4, description: "Wrong Answer" } : res.status),
                 stdout,
-                stderr,
-                compile_output,
-                time: "0.1",
-                memory: "1024"
+                stderr: res.stderr,
+                compile_output: res.compile_output || "",
+                time: res.time,
+                memory: res.memory
             };
         });
 
