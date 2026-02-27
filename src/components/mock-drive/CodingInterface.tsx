@@ -32,7 +32,7 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [timeLeft, setTimeLeft] = useState(() => {
         const progress = enrollment?.roundProgress?.find((p: any) => p.roundId === round?.id);
-        const durationSeconds = (round?.durationMinutes || 30) * 60;
+        const durationSeconds = 30 * 60; // Enforce 30 minutes
         if (progress?.startedAt) {
             const start = new Date(progress.startedAt).getTime();
             const now = new Date().getTime();
@@ -216,7 +216,7 @@ export function CodingInterface({ round, enrollment }: CodingInterfaceProps) {
 
         // Sync with persisted start time if available
         const progress = enrollment?.roundProgress?.find((p: any) => p.roundId === round.id);
-        const durationSeconds = (round.durationMinutes || 30) * 60;
+        const durationSeconds = 30 * 60; // Enforce 30 minutes
 
         if (progress?.startedAt) {
             const start = new Date(progress.startedAt).getTime();

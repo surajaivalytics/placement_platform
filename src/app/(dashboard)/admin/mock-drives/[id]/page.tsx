@@ -66,10 +66,15 @@ export default function AdminDriveConfigPage() {
 
             const method = editingRoundId ? 'PATCH' : 'POST';
 
+            const payload = {
+                ...roundForm,
+                durationMinutes: roundForm.type === 'CODING' ? 30 : roundForm.durationMinutes
+            };
+
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(roundForm)
+                body: JSON.stringify(payload)
             });
 
             if (res.ok) {
@@ -165,7 +170,7 @@ export default function AdminDriveConfigPage() {
                                         <Label>Round Type</Label>
                                         <Select
                                             value={roundForm.type}
-                                            onValueChange={(val) => setRoundForm({ ...roundForm, type: val })}
+                                            onValueChange={(val) => setRoundForm({ ...roundForm, type: val, durationMinutes: val === 'CODING' ? 30 : roundForm.durationMinutes })}
                                             disabled={!!editingRoundId}
                                         >
                                             <SelectTrigger>
@@ -184,8 +189,9 @@ export default function AdminDriveConfigPage() {
                                             <Label>Duration (Minutes)</Label>
                                             <Input
                                                 type="number"
-                                                value={roundForm.durationMinutes}
+                                                value={roundForm.type === 'CODING' ? 30 : roundForm.durationMinutes}
                                                 onChange={(e) => setRoundForm({ ...roundForm, durationMinutes: parseInt(e.target.value) || 0 })}
+                                                disabled={roundForm.type === 'CODING'}
                                             />
                                         </div>
                                     </div>
@@ -223,7 +229,7 @@ export default function AdminDriveConfigPage() {
                                     <p className="text-sm text-slate-500 mb-4">{round.description || 'No description'}</p>
                                     <div className="flex items-center justify-between text-sm text-slate-600">
                                         <span>{round.questions.length} Questions</span>
-                                        <span>{round.durationMinutes} Minutes</span>
+                                        <span>{round.type === 'CODING' ? 30 : round.durationMinutes} Minutes</span>
                                     </div>
                                     <Button variant="outline" size="sm" className="w-full mt-4" asChild>
                                         <Link href={`/admin/mock-drives/${id}/rounds/${round.id}`}>

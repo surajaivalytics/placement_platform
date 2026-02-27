@@ -73,7 +73,7 @@ export function RoundCard({ round, status, isLocked, driveId }: RoundCardProps) 
                 <div className="flex items-center justify-between text-xs text-slate-500 font-medium mb-4">
                     <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-md">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{round.durationMinutes} mins</span>
+                        <span>{round?.type === 'CODING' ? 30 : round.durationMinutes} mins</span>
                     </div>
                     {/* Add more metadata icons here if needed */}
                 </div>

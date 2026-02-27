@@ -4,10 +4,10 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
     try {
-        const { name, email, password, phone } = await req.json();
+        const { name, email, password, phone, collegeName } = await req.json();
 
         // Validate input
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !collegeName) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
@@ -35,6 +35,7 @@ export async function POST(req: Request) {
                 name,
                 email,
                 phone, // Add phone number
+                collegeName,
                 password: hashedPassword,
                 role: 'user', // Default role
             },
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
                 email: true,
                 role: true,
                 phone: true,
+                collegeName: true,
             },
         });
 
